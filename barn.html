@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>やまやま牧場 - 牛舎</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background:#1a1208;
+  font-family:'Hiragino Mincho ProN','Yu Mincho',serif;
+  max-width:375px;margin:0 auto;
+  user-select:none;-webkit-user-select:none;
+  display:flex;flex-direction:column;min-height:100vh;
+  overflow-x:hidden;
+}
+/* 共通ヘッダー（指示書_共通ヘッダー実装.md対応） */
+.game-header {
+  width:100%; max-width:375px;
+  background: rgba(10, 10, 10, 0.88);
+  padding: 6px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #444;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
+}
+.header-date { font-size: 11px; color: #c8c080; letter-spacing: 1px; }
+.header-day  { font-size: 10px; color: #708060; }
+.header-stats { display: flex; gap: 10px; align-items: center; }
+.header-stats span { font-size: 12px; font-weight: bold; }
+.stat-mana { color: #90d060; }
+.stat-gold { color: #f0d060; }
+.stat-wara { color: #e0e0d0; display: flex; align-items: center; gap: 3px; }
+.wrap-icon { width: 18px; height: 18px; image-rendering: pixelated; }
+.back-row{
+  background:#0e0a04;padding:6px 16px;border-bottom:1px solid #2a1e0a;flex-shrink:0;
+}
+#btn-back{
+  background:none;border:1px solid #4a3818;color:#a89050;font-size:11px;
+  border-radius:6px;padding:4px 10px;cursor:pointer;font-family:inherit;
+}
+.canvas-wrap{position:relative;flex-shrink:0;}
+#gameCanvas{
+  display:block;width:375px;
+  image-rendering:pixelated;
+  cursor:pointer;
+}
+/* sheet */
+.sheet-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0);
+  display:none;z-index:50;align-items:flex-end;
+}
+.sheet-overlay.open{display:flex;background:rgba(0,0,0,0.7);}
+.sheet{
+  width:100%;max-width:375px;margin:0 auto;
+  background:
+    repeating-linear-gradient(180deg,transparent 0,transparent 22px,rgba(0,0,0,0.07) 22px,rgba(0,0,0,0.07) 23px),
+    linear-gradient(180deg,#3e2e12 0%,#241a08 100%);
+  border-top:2px solid #7a5a28;border-radius:14px 14px 0 0;padding:0 0 28px;
+}
+.sheet-handle{text-align:center;padding:10px 0 6px;}
+.sheet-handle::after{content:'';display:inline-block;width:32px;height:3px;background:#4a3818;border-radius:2px;}
+.sheet-header{display:flex;align-items:center;gap:14px;padding:8px 16px 12px;}
+#sheetCanvas{image-rendering:pixelated;width:88px;height:auto;flex-shrink:0;}
+.sheet-info{flex:1;}
+.sheet-name{font-size:24px;font-weight:bold;color:#f0e090;letter-spacing:2px;}
+.sheet-age{font-size:11px;color:#706040;letter-spacing:1px;margin-bottom:8px;}
+.cond-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+.cond-lbl{font-size:9px;color:#706040;width:22px;}
+.cond-bg{flex:1;height:5px;background:rgba(0,0,0,0.4);border-radius:3px;overflow:hidden;}
+.cond-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#40a830,#80d050);}
+.cond-num{font-size:11px;color:#80c060;width:12px;text-align:right;}
+.qual-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.qual-lbl{font-size:9px;color:#706040;}
+.qual-val{font-size:13px;font-weight:bold;color:#c0a040;}
+.skill-text{font-size:10px;color:#407080;letter-spacing:1px;}
+hr.divider{border:none;border-top:1px solid #3a2e18;margin:0 16px 12px;}
+.sheet-comment{font-size:13px;line-height:1.9;color:#c8b870;text-align:center;padding:0 20px;letter-spacing:1px;}
+.sheet-close-btn{
+  display:block;margin:16px auto 0;padding:8px 20px;background:#141008;
+  border:1px solid #3a2e18;border-radius:3px;color:#706040;
+  font-size:11px;letter-spacing:2px;font-family:inherit;cursor:pointer;
+}
+/* 床替えシート */
+.poop-comment{font-size:12px;color:#c88860;text-align:center;padding:0 20px 8px;letter-spacing:1px;min-height:1em;}
+.poop-title{font-size:16px;color:#f0e090;text-align:center;padding:0 16px 14px;letter-spacing:1px;}
+.poop-option-btn{
+  display:block;width:calc(100% - 32px);margin:0 auto 10px;padding:12px 0;
+  background:linear-gradient(135deg,#3e6018,#2a4810);color:#e8f8c0;
+  border:1px solid #5a8a28;border-radius:8px;font-size:14px;font-weight:bold;
+  font-family:inherit;letter-spacing:1px;cursor:pointer;
+}
+.poop-option-btn:disabled{
+  background:#242018;color:#605840;border-color:#3a3428;cursor:default;
+}
+</style>
+</head>
+<body>
+<div id="gameHeader" class="game-header"></div>
+<div class="back-row">
+  <button id="btn-back"></button>
+</div>
+<div class="canvas-wrap">
+  <canvas id="gameCanvas" width="375" height="666"></canvas>
+</div>
+
+<div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <canvas id="sheetCanvas"></canvas>
+      <div class="sheet-info">
+        <div class="sheet-name" id="sName"></div>
+        <div class="sheet-age" id="sAge"></div>
+        <div class="cond-row">
+          <span class="cond-lbl" id="sCondLbl"></span>
+          <div class="cond-bg"><div class="cond-fill" id="sCondFill"></div></div>
+          <span class="cond-num" id="sCondNum"></span>
+        </div>
+        <div class="qual-row">
+          <span class="qual-lbl" id="sQualLbl"></span>
+          <span class="qual-val" id="sQual"></span>
+        </div>
+        <div class="skill-text" id="sSkill"></div>
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="sheet-comment" id="sComment"></div>
+    <button class="sheet-close-btn" id="sCloseBtn" onclick="closeSheet()"></button>
+  </div>
+</div>
+
+<div class="sheet-overlay" id="poopSheetOverlay" onclick="closePoopSheet()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="poop-comment" id="poopComment"></div>
+    <div class="poop-title" id="poopTitle"></div>
+    <button class="poop-option-btn" id="poopBtnSelf" onclick="confirmPoopSelf()"></button>
+    <button class="poop-option-btn" id="poopBtnShop" onclick="confirmPoopShop()"></button>
+    <button class="sheet-close-btn" id="poopBtnCancel" onclick="closePoopSheet()"></button>
+  </div>
+</div>
+
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/common.js"></script>
+<script src="assets/js/barn.js"></script>
+</body>
+</html>

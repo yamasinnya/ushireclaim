@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>やまやま牧場 - 1日の始まり</title>
+<link rel="stylesheet" href="assets/css/common.css">
+<style>
+.upkeep-text { color:#d8e8c0; font-size:15px; line-height:1.8; margin:8px 0 4px; }
+</style>
+</head>
+<body>
+
+<div id="gameHeader" class="game-header"></div>
+<div class="screen-wrap">
+  <div class="screen-title" id="title"></div>
+  <div class="upkeep-text" id="upkeep-text"></div>
+  <button class="btn-main" id="btn-next"></button>
+</div>
+
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+(async function () {
+  await loadDict();
+
+  // 床替え：3日に1回、母牛の💩を+1（上限4）。4個で品質ポイントも-1（指示書_牛舎実装フェーズ2_床替え.md対応、頻度は口頭で3日に1回と修正）
+  const state = loadLoopState();
+  if (state.day % 3 === 0) {
+    state.cows.forEach(cow => {
+      if (cow.type === 'mother') {
+        cow.poopCount = Math.min(4, (cow.poopCount || 0) + 1);
+      }
+    });
+  }
+  state.cows.forEach(cow => {
+    if (cow.poopCount >= 4) {
+      state.qualityPoint = Math.max(0, state.qualityPoint - 5);
+    }
+  });
+
+  // 妊娠経過日数を+1（指示書_プロローグ更新版.md追記対応）
+  // 「18日到達で出産予定日判定」は既存ロジックが実際には存在しないため、今回は日数カウントのみ実装。
+  // 難産イベント判定との接続は別途指示書が必要（下記報告参照）。
+  state.cows.forEach(cow => {
+    if (cow.pregnantDay > 0) {
+      cow.pregnantDay += 1;
+    }
+  });
+
+  saveLoopState(state);
+  renderHeader('gameHeader');
+
+  // アップキープイベント判定（if文でベタ書き。JSON化はまだしない）
+  // 重み：特になし70% / 発情15% / 難産15%（仮置き。数値イベントは未実装、テキスト表示のみ）
+  const r = Math.random();
+  let eventKey;
+  if (r < 0.70) {
+    eventKey = 'upkeep_none';
+  } else if (r < 0.85) {
+    eventKey = 'upkeep_heat';
+  } else {
+    eventKey = 'upkeep_difficult_birth';
+  }
+
+  document.getElementById('title').textContent = t('upkeep_title');
+  document.getElementById('upkeep-text').textContent = t(eventKey);
+
+  const btn = document.getElementById('btn-next');
+  btn.textContent = t('btn_go_home');
+  btn.addEventListener('click', () => { location.href = 'home.html'; });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>やまやま牧場 - タイトル</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#0a1506; min-height:100vh;
+  font-family:'Hiragino Mincho ProN','Yu Mincho',serif;
+  display:flex; flex-direction:column; align-items:center;
+}
+.screen-wrap {
+  width:100%; max-width:440px;
+  min-height:100vh;
+  display:flex; flex-direction:column;
+}
+.bg-img {
+  width:100%; height:auto;
+  display:block;
+}
+
+/* タイトル画像は横長のため、幅フィット（レターボックス）で全体を欠けさせずに表示する。
+   下の余白は画像の地面色に近いトーンで塗って自然につなげる。 */
+.bg-wrap {
+  width:100%; background:#8a7040;
+}
+
+.menu-panel {
+  flex:1;
+  padding:24px 28px 40px;
+  background:linear-gradient(180deg, #241a08 0%, #0a1506 100%);
+  display:flex; flex-direction:column; justify-content:center; gap:12px;
+  z-index:5;
+}
+.title-btn {
+  width:100%; padding:14px 0;
+  background:rgba(20,16,8,0.75);
+  border:1.5px solid #7a5a28; border-radius:10px;
+  color:#f0e090; font-size:17px; font-weight:bold;
+  letter-spacing:3px; font-family:inherit;
+  cursor:pointer;
+  box-shadow:0 2px 10px rgba(0,0,0,0.5);
+}
+.title-btn:disabled {
+  color:#665a3c; border-color:#4a3818; background:rgba(20,16,8,0.5);
+  cursor:default;
+}
+
+/* モーダル（確認ダイアログ・準備中） */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.7);
+  display:none; align-items:center; justify-content:center;
+  z-index:50;
+}
+.modal-overlay.open { display:flex; }
+.modal-box {
+  width:80%; max-width:340px;
+  background:linear-gradient(180deg,#3e2e12 0%,#241a08 100%);
+  border:1.5px solid #7a5a28; border-radius:12px;
+  padding:24px 20px; text-align:center;
+}
+.modal-text {
+  color:#e8d8a0; font-size:14px; line-height:1.9; letter-spacing:1px;
+  margin-bottom:20px; white-space:pre-line;
+}
+.modal-btn-row { display:flex; gap:10px; }
+.modal-btn {
+  flex:1; padding:10px 0;
+  background:rgba(20,16,8,0.8); border:1px solid #7a5a28; border-radius:8px;
+  color:#f0e090; font-size:14px; font-family:inherit; cursor:pointer;
+}
+.modal-btn.secondary { color:#a89060; }
+</style>
+</head>
+<body>
+
+<div class="screen-wrap">
+  <div class="bg-wrap">
+    <img class="bg-img" src="titleback.png" alt="うしリクレイム">
+  </div>
+
+  <div class="menu-panel">
+    <button class="title-btn" id="btn-start"></button>
+    <button class="title-btn" id="btn-continue"></button>
+    <button class="title-btn" id="btn-password"></button>
+    <button class="title-btn" id="btn-about"></button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirmOverlay">
+  <div class="modal-box">
+    <div class="modal-text" id="confirmText"></div>
+    <div class="modal-btn-row">
+      <button class="modal-btn" id="confirmYes"></button>
+      <button class="modal-btn secondary" id="confirmNo"></button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="soonOverlay">
+  <div class="modal-box">
+    <div class="modal-text" id="soonText"></div>
+    <button class="modal-btn secondary" id="soonClose" style="width:100%;"></button>
+  </div>
+</div>
+
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+function hasSaveData() {
+  return localStorage.getItem(LOOP_SAVE_KEY) !== null;
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+(async function () {
+  await loadDict();
+
+  const startBtn = document.getElementById('btn-start');
+  const continueBtn = document.getElementById('btn-continue');
+  const passwordBtn = document.getElementById('btn-password');
+  const aboutBtn = document.getElementById('btn-about');
+
+  startBtn.textContent = t('title_start');
+  continueBtn.textContent = t('title_continue');
+  passwordBtn.textContent = t('title_password');
+  aboutBtn.textContent = t('title_about');
+
+  const saveExists = hasSaveData();
+  continueBtn.disabled = !saveExists;
+
+  startBtn.addEventListener('click', () => {
+    if (hasSaveData()) {
+      document.getElementById('confirmText').textContent = t('title_confirm_delete_message');
+      document.getElementById('confirmYes').textContent = t('title_confirm_yes');
+      document.getElementById('confirmNo').textContent = t('title_confirm_no');
+      openModal('confirmOverlay');
+    } else {
+      location.href = 'prologue.html';
+    }
+  });
+
+  document.getElementById('confirmYes').addEventListener('click', () => {
+    localStorage.removeItem(LOOP_SAVE_KEY);
+    localStorage.removeItem('yamayama_explore_v1'); // 探索セーブも削除（指示書_プロローグ更新版.md追記対応。牛データ増殖防止）
+    location.href = 'prologue.html';
+  });
+  document.getElementById('confirmNo').addEventListener('click', () => {
+    closeModal('confirmOverlay');
+  });
+
+  continueBtn.addEventListener('click', () => {
+    if (!hasSaveData()) return;
+    location.href = 'home.html';
+  });
+
+  passwordBtn.addEventListener('click', () => {
+    document.getElementById('soonText').textContent = t('btn_coming_soon');
+    document.getElementById('soonClose').textContent = t('barn_close_btn');
+    openModal('soonOverlay');
+  });
+  document.getElementById('soonClose').addEventListener('click', () => closeModal('soonOverlay'));
+
+  aboutBtn.addEventListener('click', () => { location.href = 'about.html'; });
+})();
+</script>
+
+</body>
+</html>

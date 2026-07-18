@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>やまやま牧場 - 日付転換</title>
+<link rel="stylesheet" href="assets/css/common.css">
+<style>
+.date-text { color:#e8d090; font-size:22px; letter-spacing:2px; margin:10px 0 4px; }
+.day-num { color:#5a8a40; font-size:12px; }
+</style>
+</head>
+<body>
+
+<div id="gameHeader" class="game-header"></div>
+<div class="screen-wrap">
+  <div class="screen-title" id="title"></div>
+  <div class="date-text" id="date-text"></div>
+  <div class="day-num" id="day-num"></div>
+  <button class="btn-main" id="btn-next"></button>
+</div>
+
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+(async function () {
+  await loadDict();
+
+  const state = loadLoopState();
+  state.day += 1;
+  state.manaUsed = 0; // 新しい1日なので魔力消費量をリセット
+  saveLoopState(state);
+  renderHeader('gameHeader');
+
+  const date = formatDate(state.day);
+  document.getElementById('title').textContent = t('date_change_title');
+  document.getElementById('date-text').textContent = date.text;
+  document.getElementById('day-num').textContent = `Day ${state.day}`;
+
+  const btn = document.getElementById('btn-next');
+  btn.textContent = t('btn_next');
+  btn.addEventListener('click', () => { location.href = 'mana_gain.html'; });
+})();
+</script>
+
+</body>
+</html>

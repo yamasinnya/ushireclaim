@@ -1,0 +1,65 @@
+[
+  {
+    "name": "cow_mother",
+    "label_ja": "黒毛和牛 母牛",
+    "file": "assets/sprites_mons/cow_mother.png",
+    "width": 300,
+    "height": 243
+  },
+  {
+    "name": "cow_10m",
+    "label_ja": "黒毛和牛 10ヶ月",
+    "file": "assets/sprites_mons/cow_10m.png",
+    "width": 241,
+    "height": 196
+  },
+  {
+    "name": "cow_4m",
+    "label_ja": "黒毛和牛 子牛4ヶ月",
+    "file": "assets/sprites_mons/cow_4m.png",
+    "width": 208,
+    "height": 167
+  },
+  {
+    "name": "cow_2m",
+    "label_ja": "黒毛和牛 子牛2ヶ月（未登録）",
+    "file": "assets/sprites_mons/cow_2m.png",
+    "width": 186,
+    "height": 149
+  },
+  {
+    "name": "cow_newborn",
+    "label_ja": "黒毛和牛 子牛 生まれたて（未登録）",
+    "file": "assets/sprites_mons/cow_newborn.png",
+    "width": 166,
+    "height": 103
+  },
+  {
+    "name": "karasu",
+    "label_ja": "カラス",
+    "file": "assets/sprites_mons/karasu.png",
+    "width": 249,
+    "height": 216
+  },
+  {
+    "name": "yamakagashi",
+    "label_ja": "ヤマカガシ",
+    "file": "assets/sprites_mons/yamakagashi.png",
+    "width": 224,
+    "height": 182
+  },
+  {
+    "name": "nihon_nousagi",
+    "label_ja": "ニホンノウサギ",
+    "file": "assets/sprites_mons/nihon_nousagi.png",
+    "width": 197,
+    "height": 218
+  },
+  {
+    "name": "kususan_youchu",
+    "label_ja": "クスサン（幼虫）",
+    "file": "assets/sprites_mons/kususan_youchu.png",
+    "width": 263,
+    "height": 158
+  }
+]

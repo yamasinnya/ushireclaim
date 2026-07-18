@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>やまやま牧場 - 街</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background:#1a1208;
+  font-family:'Hiragino Mincho ProN','Yu Mincho',serif;
+  max-width:432px;margin:0 auto;
+  user-select:none;-webkit-user-select:none;
+  display:flex;flex-direction:column;min-height:100vh;
+  overflow-x:hidden;
+}
+/* 共通ヘッダー（指示書_共通ヘッダー実装.md対応） */
+.game-header {
+  width:100%; max-width:432px;
+  background: rgba(10, 10, 10, 0.88);
+  padding: 6px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #444;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
+}
+.header-date { font-size: 11px; color: #c8c080; letter-spacing: 1px; }
+.header-day  { font-size: 10px; color: #708060; }
+.header-stats { display: flex; gap: 10px; align-items: center; }
+.header-stats span { font-size: 12px; font-weight: bold; }
+.stat-mana { color: #90d060; }
+.stat-gold { color: #f0d060; }
+.stat-wara { color: #e0e0d0; display: flex; align-items: center; gap: 3px; }
+.wrap-icon { width: 18px; height: 18px; image-rendering: pixelated; }
+
+.back-row{
+  background:#0e0a04;padding:6px 16px;border-bottom:1px solid #2a1e0a;flex-shrink:0;
+}
+#btn-back{
+  background:none;border:1px solid #4a3818;color:#a89050;font-size:11px;
+  border-radius:6px;padding:4px 10px;cursor:pointer;font-family:inherit;
+}
+
+.street-wrap{position:relative;flex-shrink:0;width:100%;}
+.street-wrap img{width:100%;display:block;}
+.shop-zone{position:absolute;cursor:pointer;}
+
+/* sheet（牛舎の詳細シートとデザイン統一） */
+.sheet-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0);
+  display:none;z-index:50;align-items:flex-end;
+}
+.sheet-overlay.open{display:flex;background:rgba(0,0,0,0.7);}
+.sheet{
+  width:100%;max-width:432px;margin:0 auto;
+  background:
+    repeating-linear-gradient(180deg,transparent 0,transparent 22px,rgba(0,0,0,0.07) 22px,rgba(0,0,0,0.07) 23px),
+    linear-gradient(180deg,#3e2e12 0%,#241a08 100%);
+  border-top:2px solid #7a5a28;border-radius:14px 14px 0 0;padding:0 0 20px;
+  max-height:80vh;overflow-y:auto;
+}
+.sheet-handle{text-align:center;padding:10px 0 6px;}
+.sheet-handle::after{content:'';display:inline-block;width:32px;height:3px;background:#4a3818;border-radius:2px;}
+.shop-name{font-size:22px;font-weight:bold;color:#f0e090;letter-spacing:2px;text-align:center;padding:4px 16px 4px;}
+.shop-desc{font-size:12px;color:#a89060;text-align:center;padding:0 20px 12px;letter-spacing:1px;}
+hr.divider{border:none;border-top:1px solid #3a2e18;margin:0 16px 12px;}
+.product-row{display:flex;justify-content:space-between;align-items:center;padding:8px 20px;gap:12px;}
+.product-name{font-size:14px;color:#d8c8a0;}
+.product-note{font-size:10px;color:#786040;padding:0 20px 8px;text-align:right;}
+.btn-coming-soon {
+  background: #2a2a2a;
+  border: 1px solid #444;
+  color: #555;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: default;
+  font-family:inherit;
+  white-space:nowrap;
+}
+.btn-buy{
+  background:linear-gradient(135deg,#3e6018,#2a4810);
+  border:1px solid #5a8a28;color:#e8f8c0;
+  padding:8px 16px;border-radius:4px;font-size:12px;font-weight:bold;
+  cursor:pointer;font-family:inherit;white-space:nowrap;
+}
+.btn-buy-disabled{
+  background:#2a2a2a;border:1px solid #444;color:#555;
+  padding:8px 16px;border-radius:4px;font-size:12px;
+  cursor:default;font-family:inherit;white-space:nowrap;
+}
+.shop-msg{
+  position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(10px);
+  background:rgba(20,16,8,0.95);border:1px solid #7a5a28;color:#f0e090;
+  padding:10px 20px;border-radius:8px;font-size:13px;letter-spacing:1px;
+  white-space:nowrap;opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;
+  z-index:60;
+}
+.shop-msg.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.sheet-close-btn{
+  display:block;margin:16px auto 0;padding:8px 20px;background:#141008;
+  border:1px solid #3a2e18;border-radius:3px;color:#706040;
+  font-size:11px;letter-spacing:2px;font-family:inherit;cursor:pointer;
+}
+</style>
+</head>
+<body>
+<div id="gameHeader" class="game-header"></div>
+<div class="back-row">
+  <button id="btn-back"></button>
+</div>
+
+<div class="street-wrap">
+  <img src="streetback.png" alt="街の背景">
+  <div class="shop-zone" data-shop="shop_nandemo" style="left:2.3%;top:9.77%;width:44.0%;height:24.1%;"></div>
+  <div class="shop-zone" data-shop="shop_juui" style="left:60.2%;top:9.77%;width:35.9%;height:21.5%;"></div>
+  <div class="shop-zone" data-shop="shop_contractor" style="left:1.16%;top:35.5%;width:41.7%;height:23.1%;"></div>
+  <div class="shop-zone" data-shop="shop_kensetsu" style="left:57.9%;top:38.4%;width:40.5%;height:20.8%;"></div>
+  <div class="shop-zone" data-shop="shop_seri" style="left:19.1%;top:60.9%;width:65.4%;height:21.2%;"></div>
+</div>
+
+<div class="sheet-overlay" id="shopSheetOverlay" onclick="closeShopSheet()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="shop-name" id="shopName"></div>
+    <div class="shop-desc" id="shopDesc"></div>
+    <hr class="divider">
+    <div id="shopProducts"></div>
+    <button class="sheet-close-btn" id="shopCloseBtn" onclick="closeShopSheet()"></button>
+  </div>
+</div>
+
+<div class="shop-msg" id="shopMsg"></div>
+
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/common.js"></script>
+<script src="assets/js/street.js"></script>
+</body>
+</html>

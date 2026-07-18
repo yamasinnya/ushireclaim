@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>やまやま牧場 - このゲームについて</title>
+<link rel="stylesheet" href="assets/css/common.css">
+<style>
+.about-name { color:#f0e090; font-size:20px; font-weight:bold; letter-spacing:3px; margin-bottom:18px; }
+.about-body { color:#d8c8a0; font-size:14px; line-height:2.1; letter-spacing:1px; white-space:pre-line; margin-bottom:24px; }
+</style>
+</head>
+<body>
+
+<div class="screen-wrap">
+  <div class="about-name" id="aboutName"></div>
+  <div class="about-body" id="aboutBody"></div>
+  <button class="btn-main" id="btn-back"></button>
+</div>
+
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+(async function () {
+  await loadDict();
+  document.getElementById('aboutName').textContent = t('about_game_name');
+  document.getElementById('aboutBody').textContent = t('about_body');
+  const btn = document.getElementById('btn-back');
+  btn.textContent = t('about_back_btn');
+  btn.addEventListener('click', () => { location.href = 'title.html'; });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>やまやま牧場 - 魔力収集</title>
+<link rel="stylesheet" href="assets/css/common.css">
+<style>
+.mana-amount { color:#a8d0ff; font-size:20px; margin:6px 0 0; }
+</style>
+</head>
+<body>
+
+<div id="gameHeader" class="game-header"></div>
+<div class="screen-wrap">
+  <div class="screen-title" id="title"></div>
+  <img class="screen-gif" src="mana_collect.gif" alt="魔力収集">
+  <!-- 今後：人間の魔力ボーナス演出をここに追加予定 -->
+  <div class="mana-amount" id="mana-amount"></div>
+  <div class="screen-note" id="note"></div>
+  <button class="btn-main" id="btn-next"></button>
+</div>
+
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+(async function () {
+  await loadDict();
+
+  const state = loadLoopState();
+  const magic = calcTotalMagic(state.cows);
+  renderHeader('gameHeader');
+
+  document.getElementById('title').textContent = t('mana_gain_title');
+  document.getElementById('mana-amount').textContent =
+    `${t('mana_gain_amount_prefix')}：🔮 ${magic}（${conditionToLabel(state.cows[0].condition)}）`;
+  document.getElementById('note').textContent = t('mana_gain_note');
+
+  const btn = document.getElementById('btn-next');
+  btn.textContent = t('btn_next');
+  btn.addEventListener('click', () => { location.href = 'upkeep.html'; });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,62 @@
+/* やまやま牧場：画面共通ベーススタイル（縦画面・タップ操作前提） */
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+  background:#0a1506;
+  min-height:100vh;
+  font-family:'Hiragino Kaku Gothic ProN','MS Gothic',sans-serif;
+  display:flex; flex-direction:column; align-items:center;
+}
+
+.screen-wrap {
+  width:100%; max-width:440px;
+  min-height:100vh;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:24px 20px;
+  text-align:center;
+}
+
+.screen-title {
+  color:#c8a030; font-size:18px; letter-spacing:2px; margin-bottom:18px;
+}
+
+.screen-note {
+  color:#5a8a40; font-size:11px; margin-top:10px;
+}
+
+.screen-gif {
+  width:80%; max-width:280px; border-radius:12px;
+  box-shadow:0 4px 20px #0008; margin-bottom:20px;
+}
+
+.btn-main {
+  width:100%; padding:13px 0;
+  background:linear-gradient(135deg,#2a5a10dd,#3a8018dd);
+  color:#d8f8a0; font-size:17px; font-weight:bold;
+  border:1.5px solid #5a9a28; border-radius:12px;
+  cursor:pointer; font-family:inherit; letter-spacing:1px;
+  box-shadow:0 2px 12px #00000066;
+  margin-top:18px;
+}
+
+/* 共通ヘッダー（指示書_共通ヘッダー実装.md対応） */
+.game-header {
+  width:100%; max-width:440px;
+  background: rgba(10, 10, 10, 0.88);
+  padding: 6px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #444;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.header-date { font-size: 11px; color: #c8c080; letter-spacing: 1px; }
+.header-day  { font-size: 10px; color: #708060; }
+.header-stats { display: flex; gap: 10px; align-items: center; }
+.header-stats span { font-size: 12px; font-weight: bold; }
+.stat-mana { color: #90d060; }
+.stat-gold { color: #f0d060; }
+.stat-wara { color: #e0e0d0; display: flex; align-items: center; gap: 3px; }
+.wrap-icon { width: 18px; height: 18px; image-rendering: pixelated; }

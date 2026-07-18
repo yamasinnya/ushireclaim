@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>やまやま牧場 - 序章</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#0a1506; min-height:100vh;
+  font-family:'Hiragino Kaku Gothic ProN','MS Gothic',sans-serif;
+  display:flex; flex-direction:column; align-items:center;
+}
+.scene-wrap {
+  width:100%; max-width:440px;
+  min-height:100vh;
+  position:relative;
+  overflow:hidden;
+  aspect-ratio: 941 / 1350;
+  cursor:pointer;
+  user-select:none; -webkit-user-select:none;
+}
+.bg-img {
+  position:absolute; top:0; left:0;
+  width:100%; display:block;
+}
+.dark-overlay {
+  position:absolute; inset:0;
+  background:rgba(0,0,0,0.5);
+  transition:opacity 0.6s;
+  opacity:1;
+  pointer-events:none;
+  z-index:2;
+}
+.dark-overlay.normal { opacity:0; }
+
+/* スプライト（既存素材を流用。位置はCSSクラス切り替えのみの簡易実装） */
+.sprite {
+  position:absolute;
+  image-rendering:pixelated;
+  transition: left 0.5s ease, top 0.5s ease, width 0.5s ease, transform 0.5s ease, opacity 0.3s;
+  z-index:3;
+}
+/* 軽トラ：常に画面右寄り固定（truck:'right'のみ使用） */
+.truck-sprite { left:68%; top:56%; width:24%; }
+
+/* 牛：主人公から見て左側に配置 */
+.cow-sprite.cow-far    { left:66%; top:36%; width:9%; }
+.cow-sprite.cow-near   { left:26%; top:63%; width:16%; }
+.cow-sprite.cow-nuzzle { left:35%; top:64%; width:16%; }
+
+/* 主人公：牛の右側に配置。lying/sittingは専用スプライトが無いため回転・縮小で近似 */
+.player-sprite { width:13%; }
+.player-sprite.player-lying    { left:47%; top:74%; width:17%; transform:rotate(90deg); }
+.player-sprite.player-sitting  { left:49%; top:68%; width:13%; transform:scaleY(0.72) translateY(11%); }
+.player-sprite.player-standing { left:49%; top:58%; width:13%; transform:none; }
+.player-sprite.player-face_cow { left:49%; top:58%; width:13%; transform:none; }
+
+/* 会話ボックス */
+.dialogue-box {
+  position:absolute; left:0; right:0; bottom:0;
+  background:linear-gradient(180deg, rgba(10,8,4,0) 0%, rgba(10,8,4,0.94) 30%);
+  padding:22px 24px 26px;
+  min-height:110px;
+  z-index:20;
+}
+.speaker-name {
+  color:#f0e090; font-size:14px; font-weight:bold; letter-spacing:3px;
+  margin-bottom:8px;
+}
+.dialogue-text {
+  color:#e8d8c0; font-size:15px; line-height:1.9; letter-spacing:1px;
+}
+.dialogue-text.narration {
+  font-style:italic; text-align:center; color:#a89878;
+}
+.tap-hint {
+  text-align:right; color:#786040; font-size:11px; margin-top:10px; letter-spacing:1px;
+}
+
+/* 名前入力UI */
+.naming-box {
+  position:absolute; left:0; right:0; bottom:0;
+  background:linear-gradient(180deg, rgba(10,8,4,0) 0%, rgba(10,8,4,0.96) 20%);
+  padding:22px 24px 26px;
+  z-index:22;
+  display:none;
+  text-align:center;
+}
+.naming-box.show { display:block; }
+.naming-title {
+  color:#f0e090; font-size:15px; font-weight:bold; letter-spacing:2px;
+  margin-bottom:14px;
+}
+.naming-input {
+  width:100%; padding:12px 14px;
+  background:rgba(0,0,0,0.4); border:1.5px solid #7a5a28; border-radius:8px;
+  color:#f0e8d0; font-size:16px; letter-spacing:1px;
+  font-family:inherit; text-align:center;
+  margin-bottom:8px;
+}
+.naming-hint {
+  color:#a89060; font-size:11px; margin-bottom:6px; letter-spacing:1px;
+}
+.naming-error {
+  color:#e08060; font-size:11px; margin-bottom:10px; letter-spacing:1px; min-height:1.2em;
+}
+.naming-confirm-btn {
+  width:100%; padding:12px 0;
+  background:rgba(20,16,8,0.85); border:1.5px solid #7a5a28; border-radius:8px;
+  color:#f0e090; font-size:15px; font-weight:bold; letter-spacing:2px;
+  cursor:pointer; font-family:inherit;
+}
+.naming-confirm-btn:disabled {
+  color:#665a3c; border-color:#4a3818; background:rgba(20,16,8,0.5);
+  cursor:default;
+}
+
+/* 暗転→タイトルロゴ */
+.title-fade-overlay {
+  position:absolute; inset:0; background:#000;
+  opacity:0; z-index:40;
+  display:flex; align-items:center; justify-content:center;
+  transition:opacity 0.8s;
+  pointer-events:none;
+}
+.title-fade-overlay.show { opacity:1; }
+.title-fade-overlay img {
+  width:88%; opacity:0;
+  transition:opacity 0.8s 0.4s;
+}
+.title-fade-overlay.show img { opacity:1; }
+</style>
+</head>
+<body>
+
+<div class="scene-wrap" id="sceneWrap">
+  <img class="bg-img" src="mapback.png" alt="牧場背景">
+  <div class="dark-overlay" id="darkOverlay"></div>
+
+  <img class="sprite truck-sprite" id="truckSprite" src="assets/sprites/keitora.png" alt="軽トラック">
+  <img class="sprite cow-sprite" id="cowSprite" src="assets/sprites/cow_mother.png" alt="牛">
+  <img class="sprite player-sprite" id="playerSprite" src="assets/sprites/char_down.png" alt="主人公">
+
+  <div class="title-fade-overlay" id="titleFadeOverlay">
+    <img src="titleback.png" alt="うしリクレイム">
+  </div>
+
+  <div class="naming-box" id="namingBox">
+    <div class="naming-title" id="namingTitle"></div>
+    <input class="naming-input" id="namingInput" type="text" inputmode="hiragana" maxlength="8">
+    <div class="naming-hint" id="namingHint"></div>
+    <div class="naming-error" id="namingError"></div>
+    <button class="naming-confirm-btn" id="namingConfirmBtn" disabled></button>
+  </div>
+
+  <div class="dialogue-box" id="dialogueBox">
+    <div class="speaker-name" id="speakerName"></div>
+    <div class="dialogue-text" id="dialogueText"></div>
+    <div class="tap-hint" id="tapHint"></div>
+  </div>
+</div>
+
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/common.js"></script>
+<script src="assets/js/naming.js"></script>
+<script>
+// 指示書_プロローグ更新版.md対応：セリフ・演出を配列で管理し、タップでindex++して進める
+const PROLOGUE_SCENES = [
+  { key:'prologue_00', filter:'dark', cow:'far', cowScale:0.7, player:'lying', truck:'right', speaker:null, isNarration:true },
+  { key:'prologue_01', filter:'dark', cow:'nuzzle', player:'lying', truck:'right', speaker:'truck' },
+  { key:'prologue_02', filter:'dark', cow:'nuzzle', player:'lying', truck:'right', speaker:'truck' },
+  { key:'prologue_03', filter:'dark', cow:'near', player:'sitting', truck:'right', speaker:'truck' },
+  { key:'prologue_04', filter:'dark', cow:'near', player:'sitting', truck:'right', speaker:'truck' },
+  { key:'prologue_05', filter:'dark', cow:'near', player:'sitting', truck:'right', speaker:'truck' },
+  { key:'prologue_06', filter:'dark', cow:'near', player:'sitting', truck:'right', speaker:'truck' },
+  { key:'prologue_07', filter:'dark', cow:'near', player:'sitting', truck:'right', speaker:'truck' },
+  { key:'prologue_08', filter:'dark', cow:'near', player:'sitting', truck:'right', speaker:'truck' },
+  { key:'prologue_09', filter:'dark', cow:'nuzzle', player:'sitting', truck:'right', speaker:'truck' },
+  { key:'prologue_10', filter:'dark', cow:'nuzzle', player:'sitting', truck:'right', speaker:'truck' },
+  { key:'prologue_11', filter:'dark', cow:'near', player:'sitting', truck:'right', speaker:'truck' },
+  { key:'prologue_12', filter:'dark', cow:'near', player:'sitting', truck:'right', speaker:'truck' },
+  { key:'prologue_13', filter:'dark', cow:'near', player:'sitting', truck:'right', speaker:'truck' },
+  { key:'prologue_14', filter:'dark', cow:'near', player:'sitting', truck:'right', speaker:'truck' },
+  { key:'prologue_15', filter:'dark', cow:'near', player:'sitting', truck:'right', speaker:'truck' },
+  { key:'prologue_16', filter:'dark', cow:'near', player:'sitting', truck:'right', speaker:'truck' },
+  { key:'prologue_17', filter:'dark', cow:'near', player:'sitting', truck:'right', speaker:'truck' },
+  { key:'prologue_18', filter:'dark', cow:'near', player:'standing', truck:'right', speaker:'truck' },
+  { key:'prologue_19', filter:'dark', cow:'near', player:'standing', truck:'right', speaker:'truck' },
+  { key:'prologue_20', filter:'dark', cow:'near', player:'standing', truck:'right', speaker:'truck' },
+  { key:'prologue_21', filter:'brightening', cow:'near', player:'standing', truck:'right', speaker:'truck' },
+  { key:'prologue_22', filter:'normal', cow:'near', player:'standing', truck:'right', speaker:'truck' },
+  { key:'prologue_23', filter:'normal', cow:'near', player:'standing', truck:'right', speaker:'truck' },
+  { key:'prologue_24', filter:'normal', cow:'nuzzle', player:'face_cow', truck:'right', speaker:null, isNarration:true },
+  { key:'prologue_25', filter:'normal', cow:'nuzzle', player:'face_cow', truck:'right', speaker:'truck' },
+  { key:'prologue_26', filter:'normal', cow:'nuzzle', player:'face_cow', truck:'right', speaker:'truck' },
+  { key:'prologue_27', filter:'normal', cow:'nuzzle', player:'face_cow', truck:'right', speaker:'truck', isBeforeNaming:true },
+  { isNaming:true, gender:'female' },
+  { key:'prologue_29', filter:'normal', cow:'near', player:'standing', truck:'right', speaker:'truck' },
+  { key:'prologue_30', filter:'normal', cow:'near', player:'standing', truck:'right', speaker:'truck' },
+  { isFadeToTitle:true },
+  { key:'prologue_32', filter:'normal', cow:'near', player:'standing', truck:'right', speaker:'truck' },
+  { key:'prologue_33', filter:'normal', cow:'near', player:'standing', truck:'right', speaker:'truck' },
+  { key:'prologue_34', filter:'normal', cow:'near', player:'standing', truck:'right', speaker:'truck', isLast:true },
+];
+
+let sceneIndex = 0;
+let transitioning = false;
+let cowName = ''; // 命名確定後に入る
+
+// 牛の位置(left%)と主人公の基準位置(left%)を比べて、向くべき方向のスプライトを決める
+const COW_LEFT_PERCENT = { far:66, near:26, nuzzle:35 };
+const PLAYER_BASE_LEFT_PERCENT = 49;
+function playerFacingCowSprite(cowStateKey) {
+  const cowLeft = COW_LEFT_PERCENT[cowStateKey];
+  return cowLeft < PLAYER_BASE_LEFT_PERCENT ? 'assets/sprites/char_left.png' : 'assets/sprites/char_right.png';
+}
+
+function resolveText(key) {
+  return t(key).replace('{cowName}', cowName);
+}
+
+function showScene(i) {
+  const scene = PROLOGUE_SCENES[i];
+  if (!scene) return;
+
+  if (scene.isFadeToTitle) { playTitleFade(); return; }
+  if (scene.isNaming) { showNamingUI(); return; }
+
+  document.getElementById('namingBox').classList.remove('show');
+  document.getElementById('dialogueBox').style.display = 'block';
+
+  // フィルター（brighteningはdark→normalへゆっくり遷移させるため一時的にtransitionを延長）
+  const overlay = document.getElementById('darkOverlay');
+  overlay.style.transitionDuration = scene.filter === 'brightening' ? '2.5s' : '';
+  overlay.classList.toggle('normal', scene.filter === 'normal' || scene.filter === 'brightening');
+
+  // 牛
+  const cow = document.getElementById('cowSprite');
+  cow.className = 'sprite cow-sprite cow-' + scene.cow;
+  cow.style.transform = scene.cowScale ? `scale(${scene.cowScale})` : '';
+
+  // 主人公
+  const player = document.getElementById('playerSprite');
+  if (scene.player === 'face_cow') {
+    player.className = 'sprite player-sprite player-face_cow';
+    player.src = playerFacingCowSprite(scene.cow);
+  } else {
+    player.className = 'sprite player-sprite player-' + scene.player;
+    player.src = 'assets/sprites/char_down.png';
+  }
+
+  // 会話 / ト書き
+  const speakerEl = document.getElementById('speakerName');
+  if (scene.speaker) {
+    speakerEl.style.display = 'block';
+    speakerEl.textContent = t('prologue_speaker_' + scene.speaker);
+  } else {
+    speakerEl.style.display = 'none';
+  }
+  const textEl = document.getElementById('dialogueText');
+  textEl.textContent = resolveText(scene.key);
+  textEl.classList.toggle('narration', !!scene.isNarration);
+}
+
+function nextScene() {
+  if (transitioning) return;
+  const scene = PROLOGUE_SCENES[sceneIndex];
+  if (scene && scene.isLast) { location.href = 'home.html'; return; }
+  sceneIndex++;
+  if (sceneIndex >= PROLOGUE_SCENES.length) { location.href = 'home.html'; return; }
+  showScene(sceneIndex);
+}
+
+function playTitleFade() {
+  transitioning = true;
+  const overlay = document.getElementById('titleFadeOverlay');
+  overlay.classList.add('show');
+  setTimeout(() => {
+    overlay.classList.remove('show');
+    transitioning = false;
+    sceneIndex++;
+    showScene(sceneIndex);
+  }, 2000);
+}
+
+// ── 名前入力（naming.jsのvalidateCowNameを使用） ──
+function showNamingUI() {
+  document.getElementById('dialogueBox').style.display = 'none';
+  const box = document.getElementById('namingBox');
+  const rule = NAMING_RULES.female;
+  document.getElementById('namingTitle').textContent = t('naming_title');
+  document.getElementById('namingHint').textContent = t(rule.hintKey);
+  const input = document.getElementById('namingInput');
+  input.placeholder = t(rule.placeholderKey);
+  input.value = '';
+  document.getElementById('namingError').textContent = '';
+  document.getElementById('namingConfirmBtn').textContent = t('naming_confirm_btn');
+  document.getElementById('namingConfirmBtn').disabled = true;
+  box.classList.add('show');
+  input.focus();
+}
+
+function checkNamingInput() {
+  const input = document.getElementById('namingInput');
+  const result = validateCowName(input.value, 'female');
+  const btn = document.getElementById('namingConfirmBtn');
+  const errorEl = document.getElementById('namingError');
+  btn.disabled = !result.valid;
+  errorEl.textContent = (!result.valid && input.value.length > 0) ? t(result.errorKey) : '';
+}
+
+function confirmNaming() {
+  const input = document.getElementById('namingInput');
+  const result = validateCowName(input.value, 'female');
+  if (!result.valid) return;
+
+  cowName = input.value;
+
+  // このタイミングで最初の牛データを正式に確定・保存する（指示書_プロローグ更新版.md追記対応）
+  const state = loadLoopState();
+  state.cows[0] = {
+    id: 'cow_001',
+    name: cowName,
+    gender: 'female',
+    age: 120,              // 5歳（1年=24日換算）
+    seed: Math.floor(Math.random() * 99999) + 1,
+    condition: 7,
+    quality: 2,
+    skill: 'roku',          // 第六感（cow.skill === 'roku' で判定する既存実装に合わせる）
+    type: 'mother',
+    pregnantDay: 5,
+    poopCount: 0,
+    diseaseAlert: false,
+  };
+  saveLoopState(state);
+
+  document.getElementById('namingBox').classList.remove('show');
+  nextScene();
+}
+
+document.getElementById('namingInput').addEventListener('input', checkNamingInput);
+document.getElementById('namingConfirmBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  confirmNaming();
+});
+document.getElementById('namingBox').addEventListener('click', (e) => e.stopPropagation());
+
+document.getElementById('sceneWrap').addEventListener('click', () => {
+  const scene = PROLOGUE_SCENES[sceneIndex];
+  if (scene && scene.isNaming) return; // 名前入力中は専用UIのみで進める
+  nextScene();
+});
+
+(async function () {
+  await loadDict();
+  document.getElementById('tapHint').textContent = t('prologue_tap_hint');
+  showScene(0);
+})();
+</script>
+
+</body>
+</html>

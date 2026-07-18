@@ -1,0 +1,466 @@
+[
+  {
+    "name": "gyusha_small",
+    "category": "building",
+    "label_ja": "牛舎（小）",
+    "file": "assets/sprites/gyusha_small.png",
+    "width": 124,
+    "height": 125
+  },
+  {
+    "name": "gyusha_large",
+    "category": "building",
+    "label_ja": "牛舎（大）",
+    "file": "assets/sprites/gyusha_large.png",
+    "width": 188,
+    "height": 160
+  },
+  {
+    "name": "shiryoko",
+    "category": "building",
+    "label_ja": "飼料庫",
+    "file": "assets/sprites/shiryoko.png",
+    "width": 164,
+    "height": 145
+  },
+  {
+    "name": "silo",
+    "category": "building",
+    "label_ja": "サイロ",
+    "file": "assets/sprites/silo.png",
+    "width": 88,
+    "height": 177
+  },
+  {
+    "name": "taihisha",
+    "category": "building",
+    "label_ja": "堆肥舎",
+    "file": "assets/sprites/taihisha.png",
+    "width": 161,
+    "height": 108
+  },
+  {
+    "name": "wrap_wara",
+    "category": "building",
+    "label_ja": "ラップ藁置き場",
+    "file": "assets/sprites/wrap_wara.png",
+    "width": 198,
+    "height": 121
+  },
+  {
+    "name": "sagyogoya",
+    "category": "building",
+    "label_ja": "作業小屋",
+    "file": "assets/sprites/sagyogoya.png",
+    "width": 121,
+    "height": 133
+  },
+  {
+    "name": "keitora",
+    "category": "vehicle",
+    "label_ja": "軽トラック",
+    "file": "assets/sprites/keitora.png",
+    "width": 135,
+    "height": 101
+  },
+  {
+    "name": "wheel_loader",
+    "category": "vehicle",
+    "label_ja": "ホイールローダ",
+    "file": "assets/sprites/wheel_loader.png",
+    "width": 177,
+    "height": 111
+  },
+  {
+    "name": "tractor",
+    "category": "vehicle",
+    "label_ja": "トラクター",
+    "file": "assets/sprites/tractor.png",
+    "width": 126,
+    "height": 113
+  },
+  {
+    "name": "shiryo_mixer",
+    "category": "vehicle",
+    "label_ja": "飼料ミキサー",
+    "file": "assets/sprites/shiryo_mixer.png",
+    "width": 124,
+    "height": 112
+  },
+  {
+    "name": "buggy",
+    "category": "vehicle",
+    "label_ja": "バギー",
+    "file": "assets/sprites/buggy.png",
+    "width": 107,
+    "height": 86
+  },
+  {
+    "name": "cow_newborn",
+    "category": "cow",
+    "label_ja": "生まれたて",
+    "file": "assets/sprites/cow_newborn.png",
+    "width": 75,
+    "height": 52
+  },
+  {
+    "name": "cow_2m",
+    "category": "cow",
+    "label_ja": "子牛2ヶ月",
+    "file": "assets/sprites/cow_2m.png",
+    "width": 83,
+    "height": 73
+  },
+  {
+    "name": "cow_4m",
+    "category": "cow",
+    "label_ja": "子牛4ヶ月",
+    "file": "assets/sprites/cow_4m.png",
+    "width": 91,
+    "height": 80
+  },
+  {
+    "name": "cow_10m",
+    "category": "cow",
+    "label_ja": "10ヶ月",
+    "file": "assets/sprites/cow_10m.png",
+    "width": 110,
+    "height": 94
+  },
+  {
+    "name": "cow_mother",
+    "category": "cow",
+    "label_ja": "母牛",
+    "file": "assets/sprites/cow_mother.png",
+    "width": 152,
+    "height": 113
+  },
+  {
+    "name": "tree_large",
+    "category": "env",
+    "label_ja": "木（大）",
+    "file": "assets/sprites/tree_large.png",
+    "width": 150,
+    "height": 120
+  },
+  {
+    "name": "tree_small",
+    "category": "env",
+    "label_ja": "木（小）",
+    "file": "assets/sprites/tree_small.png",
+    "width": 78,
+    "height": 100
+  },
+  {
+    "name": "rock",
+    "category": "env",
+    "label_ja": "岩",
+    "file": "assets/sprites/rock.png",
+    "width": 72,
+    "height": 62
+  },
+  {
+    "name": "kusamura",
+    "category": "env",
+    "label_ja": "草むら",
+    "file": "assets/sprites/kusamura.png",
+    "width": 86,
+    "height": 74
+  },
+  {
+    "name": "fence",
+    "category": "env",
+    "label_ja": "柵",
+    "file": "assets/sprites/fence.png",
+    "width": 161,
+    "height": 76
+  },
+  {
+    "name": "kanban",
+    "category": "env",
+    "label_ja": "看板",
+    "file": "assets/sprites/kanban.png",
+    "width": 100,
+    "height": 100
+  },
+  {
+    "name": "keijiban",
+    "category": "env",
+    "label_ja": "掲示板",
+    "file": "assets/sprites/keijiban.png",
+    "width": 117,
+    "height": 102
+  },
+  {
+    "name": "mizunomiba",
+    "category": "env",
+    "label_ja": "水飲み場",
+    "file": "assets/sprites/mizunomiba.png",
+    "width": 108,
+    "height": 69
+  },
+  {
+    "name": "ido",
+    "category": "env",
+    "label_ja": "井戸",
+    "file": "assets/sprites/ido.png",
+    "width": 86,
+    "height": 124
+  },
+  {
+    "name": "lamp",
+    "category": "env",
+    "label_ja": "ランプ",
+    "file": "assets/sprites/lamp.png",
+    "width": 51,
+    "height": 135
+  },
+  {
+    "name": "tile_kusachi",
+    "category": "tile",
+    "label_ja": "草地",
+    "file": "assets/sprites/tile_kusachi.png",
+    "width": 111,
+    "height": 105
+  },
+  {
+    "name": "tile_tochi",
+    "category": "tile",
+    "label_ja": "土地",
+    "file": "assets/sprites/tile_tochi.png",
+    "width": 109,
+    "height": 105
+  },
+  {
+    "name": "tile_bokujo_michi",
+    "category": "tile",
+    "label_ja": "牧場の道",
+    "file": "assets/sprites/tile_bokujo_michi.png",
+    "width": 109,
+    "height": 109
+  },
+  {
+    "name": "tile_ishidatami",
+    "category": "tile",
+    "label_ja": "石畳",
+    "file": "assets/sprites/tile_ishidatami.png",
+    "width": 109,
+    "height": 109
+  },
+  {
+    "name": "tile_saku_no_naka",
+    "category": "tile",
+    "label_ja": "柵の中",
+    "file": "assets/sprites/tile_saku_no_naka.png",
+    "width": 111,
+    "height": 111
+  },
+  {
+    "name": "tile_kusa_nagame",
+    "category": "tile",
+    "label_ja": "草（長め）",
+    "file": "assets/sprites/tile_kusa_nagame.png",
+    "width": 110,
+    "height": 109
+  },
+  {
+    "name": "tile_hatake",
+    "category": "tile",
+    "label_ja": "畑",
+    "file": "assets/sprites/tile_hatake.png",
+    "width": 111,
+    "height": 109
+  },
+  {
+    "name": "tile_doro",
+    "category": "tile",
+    "label_ja": "道路",
+    "file": "assets/sprites/tile_doro.png",
+    "width": 111,
+    "height": 109
+  },
+  {
+    "name": "kansoroll",
+    "category": "object",
+    "label_ja": "乾草ロール",
+    "file": "assets/sprites/kansoroll.png",
+    "width": 96,
+    "height": 90
+  },
+  {
+    "name": "kibako",
+    "category": "object",
+    "label_ja": "木箱",
+    "file": "assets/sprites/kibako.png",
+    "width": 93,
+    "height": 91
+  },
+  {
+    "name": "mizutank",
+    "category": "object",
+    "label_ja": "水タンク",
+    "file": "assets/sprites/mizutank.png",
+    "width": 79,
+    "height": 102
+  },
+  {
+    "name": "masekitank",
+    "category": "object",
+    "label_ja": "魔石タンク",
+    "file": "assets/sprites/masekitank.png",
+    "width": 77,
+    "height": 127
+  },
+  {
+    "name": "icon_mahou",
+    "category": "icon",
+    "label_ja": "魔力アイコン",
+    "file": "assets/sprites/icon_mahou.png",
+    "width": 52,
+    "height": 69
+  },
+  {
+    "name": "icon_taicho",
+    "category": "icon",
+    "label_ja": "体調アイコン",
+    "file": "assets/sprites/icon_taicho.png",
+    "width": 60,
+    "height": 59
+  },
+  {
+    "name": "icon_okane",
+    "category": "icon",
+    "label_ja": "お金アイコン",
+    "file": "assets/sprites/icon_okane.png",
+    "width": 60,
+    "height": 62
+  },
+  {
+    "name": "icon_event",
+    "category": "icon",
+    "label_ja": "イベント！",
+    "file": "assets/sprites/icon_event.png",
+    "width": 70,
+    "height": 68
+  },
+  {
+    "name": "icon_kirakira",
+    "category": "icon",
+    "label_ja": "キラキラ",
+    "file": "assets/sprites/icon_kirakira.png",
+    "width": 60,
+    "height": 61
+  },
+  {
+    "name": "icon_mahou_tsubu",
+    "category": "icon",
+    "label_ja": "魔力の粒",
+    "file": "assets/sprites/icon_mahou_tsubu.png",
+    "width": 55,
+    "height": 72
+  },
+  {
+    "name": "cursor",
+    "category": "cursor",
+    "label_ja": "カーソル",
+    "file": "assets/sprites/cursor.png",
+    "width": 55,
+    "height": 68
+  },
+  {
+    "name": "marker_destination",
+    "category": "cursor",
+    "label_ja": "行き先マーカー",
+    "file": "assets/sprites/marker_destination.png",
+    "width": 59,
+    "height": 55
+  },
+  {
+    "name": "marker_facility",
+    "category": "cursor",
+    "label_ja": "施設マーカー",
+    "file": "assets/sprites/marker_facility.png",
+    "width": 56,
+    "height": 79
+  },
+  {
+    "name": "ui_message_frame",
+    "category": "ui",
+    "label_ja": "メッセージ枠",
+    "file": "assets/sprites/ui_message_frame.png",
+    "width": 167,
+    "height": 93
+  },
+  {
+    "name": "ui_menu_panel",
+    "category": "ui",
+    "label_ja": "メニューパネル",
+    "file": "assets/sprites/ui_menu_panel.png",
+    "width": 160,
+    "height": 100
+  },
+  {
+    "name": "ui_button_example",
+    "category": "ui",
+    "label_ja": "ボタン（例）",
+    "file": "assets/sprites/ui_button_example.png",
+    "width": 128,
+    "height": 61
+  },
+  {
+    "name": "char_down",
+    "category": "char",
+    "label_ja": "下向き",
+    "file": "assets/sprites/char_down.png",
+    "width": 61,
+    "height": 85
+  },
+  {
+    "name": "char_up",
+    "category": "char",
+    "label_ja": "上向き",
+    "file": "assets/sprites/char_up.png",
+    "width": 59,
+    "height": 85
+  },
+  {
+    "name": "char_left",
+    "category": "char",
+    "label_ja": "左向き",
+    "file": "assets/sprites/char_left.png",
+    "width": 63,
+    "height": 85
+  },
+  {
+    "name": "char_right",
+    "category": "char",
+    "label_ja": "右向き",
+    "file": "assets/sprites/char_right.png",
+    "width": 60,
+    "height": 85
+  },
+  {
+    "name": "char_walk_down",
+    "category": "char",
+    "label_ja": "歩行（下）",
+    "file": "assets/sprites/char_walk_down.png",
+    "width": 61,
+    "height": 85
+  },
+  {
+    "name": "char_walk_left",
+    "category": "char",
+    "label_ja": "歩行（左）",
+    "file": "assets/sprites/char_walk_left.png",
+    "width": 62,
+    "height": 85
+  },
+  {
+    "name": "char_walk_right",
+    "category": "char",
+    "label_ja": "歩行（右）",
+    "file": "assets/sprites/char_walk_right.png",
+    "width": 60,
+    "height": 85
+  }
+]

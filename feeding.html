@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>やまやま牧場 - 餌やり</title>
+<link rel="stylesheet" href="assets/css/common.css">
+<style>
+.condition-note { color:#ffd060; font-size:15px; line-height:1.8; margin:8px 0 0; }
+.quality-note { color:#f0c060; font-size:15px; line-height:1.8; margin:4px 0 0; }
+.wara-note { color:#c8a878; font-size:13px; line-height:1.8; margin:4px 0 0; }
+</style>
+</head>
+<body>
+
+<div id="gameHeader" class="game-header"></div>
+<div class="screen-wrap">
+  <div class="screen-title" id="title"></div>
+  <img class="screen-gif" src="cow_feeding.gif" alt="餌やり">
+  <!-- 今後：牛のステータスUP演出をここに追加予定 -->
+  <div class="condition-note" id="condition-note"></div>
+  <div class="quality-note" id="quality-note"></div>
+  <div class="wara-note" id="wara-note"></div>
+  <div class="screen-note" id="note"></div>
+  <button class="btn-main" id="btn-next"></button>
+</div>
+
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+(async function () {
+  await loadDict();
+
+  const state = loadLoopState();
+
+  // 品質ポイント→品質変動（指示書_品質システム実装.md対応。薬草獲得→品質ポイントの経路のみ実装。体調差分経路はスコープ外）
+  // 閾値判定はcommon.jsのqualityThresholdFor()を使用（barn.htmlと共有）
+  let qualityNote = '';
+  if (state.qualityPoint >= qualityThresholdFor(state.cows[0].quality)) {
+    if (state.cows[0].quality < 4) {
+      state.cows.forEach(cow => {
+        if (cow.quality < 4) cow.quality += 1;
+      });
+      qualityNote = state.cows[0].name + t('quality_up');
+    }
+    state.qualityPoint = 0;
+  }
+
+  // ラップ藁による自動補填（指示書_ラップ藁購入機能.md対応。体調変動処理の直前に実行する）
+  // 現状grassStockは牛ごとではなく全頭共有のプールなので、頭数で割った平均が「維持ライン」未満の場合に
+  // 頭数分×5ptを満たすよう補填する（牛1頭のみの現状は指示書の1頭ぶんのロジックと数値上一致する）
+  let waraNote = '';
+  {
+    const cowCount = state.cows.length || 1;
+    if (state.grassStock / cowCount < 4 && state.wrapWara > 0) {
+      const neededTotal = Math.max(0, 5 * cowCount - state.grassStock);
+      const consume = Math.min(neededTotal, state.wrapWara);
+      if (consume > 0) {
+        state.wrapWara -= consume;
+        state.grassStock += consume;
+        waraNote = t('wara_auto_consumed');
+      }
+    }
+  }
+
+  // 草ポイント→体調変動（設計まとめ.md「草と体調の関係」の表に対応。if文でベタ書き、JSON化はしない）
+  const grassPerCow = state.cows.length ? state.grassStock / state.cows.length : 0;
+  let conditionDelta = 0;
+  if (grassPerCow <= 3) conditionDelta = -1;
+  else if (grassPerCow >= 9) conditionDelta = 1;
+  // 4〜8ptはconditionDelta=0（維持）
+
+  let conditionNote = '';
+  if (conditionDelta !== 0) {
+    state.cows.forEach(cow => {
+      cow.condition = Math.max(1, Math.min(10, cow.condition + conditionDelta));
+    });
+    conditionNote = state.cows[0].name + (conditionDelta > 0 ? t('condition_up') : t('condition_down'));
+  }
+  state.grassStock = 0;
+  saveLoopState(state);
+  renderHeader('gameHeader');
+
+  document.getElementById('title').textContent = t('feeding_title');
+  document.getElementById('condition-note').textContent = conditionNote;
+  document.getElementById('quality-note').textContent = qualityNote;
+  document.getElementById('wara-note').textContent = waraNote;
+  document.getElementById('note').textContent = t('feeding_note');
+
+  const btn = document.getElementById('btn-next');
+  btn.textContent = t('btn_next');
+  btn.addEventListener('click', () => { location.href = 'date_change.html'; });
+})();
+</script>
+
+</body>
+</html>

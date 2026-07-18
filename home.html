@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>やまやま牧場 - ホーム</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#0a1506; min-height:100vh;
+  font-family:'Hiragino Kaku Gothic ProN','MS Gothic',sans-serif;
+  display:flex; flex-direction:column; align-items:center;
+}
+.screen-wrap {
+  width:100%; max-width:440px;
+  position:relative;
+  overflow:hidden;
+  aspect-ratio: 941 / 1350;
+}
+.bg-img {
+  position:absolute; top:0; left:0;
+  width:100%; display:block;
+}
+
+/* 配置物（ドット素材） */
+.placed {
+  position:absolute;
+  image-rendering:pixelated;
+  filter:drop-shadow(0 6px 4px rgba(0,0,0,0.35));
+}
+.shadow-blob {
+  position:absolute;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0) 70%);
+  border-radius:50%;
+}
+
+/* 軽トラック（初期状態から固定配置。建物フラグの対象外） */
+.keitora { left:56%; top:62%; width:20%; z-index:3; cursor:pointer; }
+.keitora-shadow { left:57%; top:70%; width:18%; height:5%; z-index:1; }
+
+/* 軽トラの挨拶フキダシ */
+.truck-bubble{
+  position:absolute; left:66%; top:42%;
+  transform:translateX(-50%) translateY(10px);
+  background:#fff; color:#222;
+  font-size:12px; padding:8px 14px; border-radius:12px;
+  white-space:nowrap; z-index:20;
+  opacity:0; pointer-events:none;
+  transition:opacity 0.2s, transform 0.2s;
+  box-shadow:0 2px 8px rgba(0,0,0,0.3);
+}
+.truck-bubble::after{
+  content:''; position:absolute; left:50%; bottom:-8px;
+  transform:translateX(-50%);
+  border:8px solid transparent; border-top-color:#fff;
+}
+.truck-bubble.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* 共通ヘッダー（指示書_共通ヘッダー実装.md対応） */
+.game-header {
+  width:100%; max-width:440px;
+  background: rgba(10, 10, 10, 0.88);
+  padding: 6px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #444;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.header-date { font-size: 11px; color: #c8c080; letter-spacing: 1px; }
+.header-day  { font-size: 10px; color: #708060; }
+.header-stats { display: flex; gap: 10px; align-items: center; }
+.header-stats span { font-size: 12px; font-weight: bold; }
+.stat-mana { color: #90d060; }
+.stat-gold { color: #f0d060; }
+.stat-wara { color: #e0e0d0; display: flex; align-items: center; gap: 3px; }
+.wrap-icon { width: 18px; height: 18px; image-rendering: pixelated; }
+
+/* 下部ボタン群 */
+.bottom-ui {
+  position:absolute; bottom:0; left:0; right:0;
+  padding:8px 12px 12px;
+  background:linear-gradient(0deg,#000000cc 0%,transparent 100%);
+  z-index:10;
+}
+.btn-main {
+  width:100%; padding:13px 0;
+  background:linear-gradient(135deg,#2a5a10dd,#3a8018dd);
+  color:#d8f8a0; font-size:19px; font-weight:bold;
+  border:1.5px solid #5a9a28; border-radius:12px;
+  cursor:pointer; font-family:inherit; letter-spacing:1px;
+  margin-bottom:8px;
+  box-shadow:0 2px 12px #00000066;
+}
+.sub-row {
+  display:flex; gap:6px;
+}
+.btn-sub {
+  flex:1; padding:8px 0;
+  background:#0a2008cc; color:#90c060;
+  font-size:14px; border:1px solid #2a5010;
+  border-radius:8px; cursor:pointer; font-family:inherit;
+  text-align:center;
+}
+
+</style>
+</head>
+<body>
+
+<div id="gameHeader" class="game-header"></div>
+<div class="screen-wrap">
+  <img class="bg-img" src="mapback.png" alt="牧場背景">
+
+  <div id="buildingLayer"></div>
+
+  <div class="shadow-blob keitora-shadow"></div>
+  <img class="placed keitora" id="truck" src="assets/sprites/keitora.png" alt="軽トラック">
+  <div class="truck-bubble" id="truckBubble"></div>
+
+  <div id="cowLayer"></div>
+
+  <div class="bottom-ui">
+    <button class="btn-main" id="btn-explore"></button>
+    <div class="sub-row">
+      <button class="btn-sub" id="btn-barn">🐄 牛舎</button>
+      <button class="btn-sub" id="btn-shop">🏪 ショップ</button>
+      <button class="btn-sub">📖 日誌</button>
+      <button class="btn-sub">🔑 呪文</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+// 建物のスプライト定義（指示書_ホーム画面リニューアル.md対応）
+// state.buildings[key] === true のものだけ描画する。将来、建設屋で建てた施設をここに追加していく。
+const BUILDING_SPRITES = {
+  gyusha_small: {
+    src: 'assets/sprites/gyusha_small.png',
+    style: 'left:22%; top:54%; width:26%; z-index:2;',
+    shadow: 'left:23%; top:68%; width:22%; height:6.5%; z-index:1;',
+  },
+};
+
+function renderBuildings(state) {
+  const layer = document.getElementById('buildingLayer');
+  layer.innerHTML = '';
+  Object.keys(BUILDING_SPRITES).forEach(key => {
+    if (!state.buildings[key]) return;
+    const def = BUILDING_SPRITES[key];
+    const shadow = document.createElement('div');
+    shadow.className = 'shadow-blob';
+    shadow.style.cssText = def.shadow;
+    layer.appendChild(shadow);
+    const img = document.createElement('img');
+    img.className = 'placed';
+    img.style.cssText = def.style;
+    img.src = def.src;
+    img.alt = key;
+    layer.appendChild(img);
+  });
+}
+
+// 牛の固定座標テーブル（牛舎(小)付近に広がる形で最大6頭ぶん用意。頭数が増えたら順番に埋める）
+// 下部ボタンパネル（.bottom-ui）に隠れないよう、top上限は76%程度に収めている
+const COW_SLOTS = [
+  { left: 30, top: 67, width: 13 },
+  { left: 12, top: 71, width: 11 },
+  { left: 48, top: 71, width: 11 },
+  { left: 4,  top: 76, width: 10 },
+  { left: 27, top: 76, width: 10 },
+  { left: 50, top: 76, width: 10 },
+];
+
+// 月齢（age日数÷2）→ 成長段階スプライト（CLAUDE.md記載の5段階：生まれたて・2ヶ月・4ヶ月・10ヶ月・母牛）
+function cowSpriteForAge(ageDays) {
+  const months = ageDays / 2;
+  if (months < 2) return 'assets/sprites/cow_newborn.png';
+  if (months < 4) return 'assets/sprites/cow_2m.png';
+  if (months < 10) return 'assets/sprites/cow_4m.png';
+  if (months < 24) return 'assets/sprites/cow_10m.png';
+  return 'assets/sprites/cow_mother.png';
+}
+
+function renderCows(state) {
+  const layer = document.getElementById('cowLayer');
+  layer.innerHTML = '';
+  state.cows.forEach((cow, i) => {
+    const slot = COW_SLOTS[i];
+    if (!slot) return; // 座標テーブルの範囲を超える頭数は今回は非表示（テーブル拡張で対応）
+
+    const shadow = document.createElement('div');
+    shadow.className = 'shadow-blob';
+    shadow.style.cssText = `left:${slot.left + 1}%; top:${slot.top + 7}%; width:${slot.width - 1}%; height:2%; z-index:3;`;
+    layer.appendChild(shadow);
+
+    const img = document.createElement('img');
+    img.className = 'placed';
+    img.style.cssText = `left:${slot.left}%; top:${slot.top}%; width:${slot.width}%; z-index:4; cursor:pointer;`;
+    img.src = cowSpriteForAge(cow.age);
+    img.alt = cow.name;
+    img.addEventListener('click', () => { location.href = 'barn.html'; });
+    layer.appendChild(img);
+  });
+}
+
+// 軽トラの挨拶（時間帯別セリフ、指示書_ホーム画面リニューアル.md対応）
+function truckGreetingKey() {
+  const h = new Date().getHours();
+  if (h >= 5 && h <= 9) return 'truck_hello_morning';
+  if (h >= 10 && h <= 16) return 'truck_hello_day';
+  if (h >= 17 && h <= 20) return 'truck_hello_evening';
+  return 'truck_hello_night'; // 21-4時
+}
+let truckBubbleTimer = null;
+function showTruckGreeting() {
+  const bubble = document.getElementById('truckBubble');
+  bubble.textContent = t(truckGreetingKey());
+  bubble.classList.add('show');
+  clearTimeout(truckBubbleTimer);
+  truckBubbleTimer = setTimeout(() => bubble.classList.remove('show'), 2500);
+}
+
+(async function () {
+  await loadDict();
+  const state = loadLoopState();
+  renderHeader('gameHeader');
+  renderBuildings(state);
+  renderCows(state);
+
+  document.getElementById('truck').addEventListener('click', showTruckGreeting);
+
+  const btn = document.getElementById('btn-explore');
+  btn.textContent = t('go_explore');
+  btn.addEventListener('click', () => { location.href = 'map.html'; });
+
+  document.getElementById('btn-barn').addEventListener('click', () => { location.href = 'barn.html'; });
+  document.getElementById('btn-shop').addEventListener('click', () => { location.href = 'street.html'; });
+})();
+</script>
+
+</body>
+</html>
