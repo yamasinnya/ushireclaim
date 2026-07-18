@@ -80,9 +80,15 @@
   "shop_seri_desc": "子牛の競りへの参加と、母牛の購入ができます。",
   "product_seri_shuppin": "競り出品申込",
   "product_bogyuu_kounyuu": "母牛を購入する",
+  "market_gender_female": "メス",
+  "market_age_unit": "歳",
+  "market_skill_label": "スキル：",
+  "market_full": "牛房がいっぱいです",
+  "market_purchased_msg": "{name}を迎え入れました",
 
   "btn_buy": "購入する",
   "btn_cant_buy": "購入できません",
+  "btn_cancel": "キャンセル",
   "msg_wara_purchased": "ラップ藁を{days}日分購入しました",
   "wara_auto_consumed": "ラップ藁を使って草を補填しました",
 

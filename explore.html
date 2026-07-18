@@ -700,7 +700,12 @@ function leaveArea() {
     grassBanked = true;
     const loopState = loadLoopState();
     loopState.grassStock += calcGrassPoints(todayItems);
-    loopState.qualityPoint = (loopState.qualityPoint || 0) + calcQualityPoints(todayItems);
+    // 品質ポイントは牛ごとの値になったため、草ポイントと同様に全頭均等案分する
+    const qpEarned = calcQualityPoints(todayItems);
+    if (qpEarned > 0 && loopState.cows.length) {
+      const qpPerCow = qpEarned / loopState.cows.length;
+      loopState.cows.forEach(cow => { cow.qualityPoint = (cow.qualityPoint || 0) + qpPerCow; });
+    }
     saveLoopState(loopState);
   }
 

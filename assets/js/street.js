@@ -53,10 +53,20 @@ const SHOPS = {
     descKey: 'shop_seri_desc',
     products: [
       { nameKey: 'product_seri_shuppin' },
-      { nameKey: 'product_bogyuu_kounyuu' },
+      { nameKey: 'product_bogyuu_kounyuu', type: 'market_cow' },
     ],
   },
 };
+
+// 競り市場：購入できる母牛の固定ラインナップ（指示書_qualityPoint移行と母牛購入.md対応、1頭のみ）
+const MARKET_COW = {
+  skill: 'herdboys_eye',   // 牧童の目
+  age: 72,                 // 3歳（1年=24日換算）
+  condition: 6,
+  quality: 2,              // 可
+  price: 100,
+};
+const MARKET_MOTHER_LIMIT = 3;
 
 let currentShopId = null;
 
@@ -71,6 +81,11 @@ function openShopSheet(shopId) {
   const list = document.getElementById('shopProducts');
   list.innerHTML = '';
   shop.products.forEach(p => {
+    if (p.type === 'market_cow') {
+      list.appendChild(buildMarketCowRow(state));
+      return;
+    }
+
     const row = document.createElement('div');
     row.className = 'product-row';
     const nameSpan = document.createElement('span');
@@ -118,6 +133,107 @@ function handleBuyWara(product) {
   showShopMessage(t('msg_wara_purchased').replace('{days}', Math.floor(product.buy.pt / 5)));
 }
 
+// ── 競り市場：母牛購入（指示書_qualityPoint移行と母牛購入.md対応） ──
+function buildMarketCowRow(state) {
+  const wrap = document.createElement('div');
+  wrap.className = 'market-cow-row';
+
+  const skill = SKILL_DISPLAY[MARKET_COW.skill];
+  const summary = document.createElement('div');
+  summary.className = 'market-cow-summary';
+  summary.textContent = `🐄 ${t('market_gender_female')}・${Math.floor(MARKET_COW.age / 24)}${t('market_age_unit')}・${t('barn_condition_label')}${MARKET_COW.condition}・${t(qualityToLabelKey(MARKET_COW.quality))}`;
+  const skillLine = document.createElement('div');
+  skillLine.className = 'market-cow-skill';
+  skillLine.textContent = `${t('market_skill_label')}${skill ? skill.emoji + ' ' + t(skill.nameKey) : ''}`;
+  const price = document.createElement('div');
+  price.className = 'market-cow-price';
+  price.textContent = MARKET_COW.price + 'G';
+  wrap.appendChild(summary);
+  wrap.appendChild(skillLine);
+  wrap.appendChild(price);
+
+  const motherCount = state.cows.filter(c => c.type === 'mother').length;
+  const isFull = motherCount >= MARKET_MOTHER_LIMIT;
+  const canAfford = state.money >= MARKET_COW.price;
+  const enabled = canAfford && !isFull;
+
+  const btn = document.createElement('button');
+  btn.className = enabled ? 'btn-buy' : 'btn-buy-disabled';
+  btn.textContent = enabled ? t('btn_buy') : t('btn_cant_buy');
+  btn.disabled = !enabled;
+  if (enabled) btn.addEventListener('click', () => openMarketNaming());
+  wrap.appendChild(btn);
+
+  if (isFull) {
+    const note = document.createElement('div');
+    note.className = 'product-note';
+    note.textContent = t('market_full');
+    wrap.appendChild(note);
+  }
+
+  return wrap;
+}
+
+function openMarketNaming() {
+  const rule = NAMING_RULES.female;
+  document.getElementById('marketNamingTitle').textContent = t('naming_title');
+  document.getElementById('marketNamingHint').textContent = t(rule.hintKey);
+  const input = document.getElementById('marketNamingInput');
+  input.placeholder = t(rule.placeholderKey);
+  input.value = '';
+  document.getElementById('marketNamingError').textContent = '';
+  document.getElementById('marketNamingConfirmBtn').textContent = t('naming_confirm_btn');
+  document.getElementById('marketNamingConfirmBtn').disabled = true;
+  document.getElementById('marketNamingCancelBtn').textContent = t('btn_cancel');
+  document.getElementById('marketNamingOverlay').classList.add('open');
+  input.focus();
+}
+
+function closeMarketNaming() {
+  document.getElementById('marketNamingOverlay').classList.remove('open');
+}
+
+function checkMarketNamingInput() {
+  const input = document.getElementById('marketNamingInput');
+  const result = validateCowName(input.value, 'female');
+  document.getElementById('marketNamingConfirmBtn').disabled = !result.valid;
+  document.getElementById('marketNamingError').textContent = (!result.valid && input.value.length > 0) ? t(result.errorKey) : '';
+}
+
+function confirmMarketNaming() {
+  const input = document.getElementById('marketNamingInput');
+  const result = validateCowName(input.value, 'female');
+  if (!result.valid) return;
+
+  const state = loadLoopState();
+  const motherCount = state.cows.filter(c => c.type === 'mother').length;
+  if (state.money < MARKET_COW.price || motherCount >= MARKET_MOTHER_LIMIT) { closeMarketNaming(); return; }
+
+  state.money -= MARKET_COW.price;
+  const newCow = {
+    id: 'cow_' + Date.now(),
+    name: input.value,
+    gender: 'female',
+    age: MARKET_COW.age,
+    seed: Math.floor(Math.random() * 99999) + 1,
+    condition: MARKET_COW.condition,
+    quality: MARKET_COW.quality,
+    qualityPoint: 0,
+    skill: MARKET_COW.skill,
+    type: 'mother',
+    pregnantDay: 0,
+    poopCount: 0,
+    diseaseAlert: false,
+  };
+  state.cows.push(newCow);
+  saveLoopState(state);
+
+  closeMarketNaming();
+  renderHeader('gameHeader');
+  if (currentShopId) openShopSheet(currentShopId); // 所持金・満室状態を再描画
+  showShopMessage(t('market_purchased_msg').replace('{name}', newCow.name));
+}
+
 let shopMsgTimer = null;
 function showShopMessage(text) {
   const el = document.getElementById('shopMsg');
@@ -131,6 +247,17 @@ function showShopMessage(text) {
 document.querySelectorAll('.shop-zone').forEach(el => {
   el.addEventListener('click', () => openShopSheet(el.dataset.shop));
 });
+
+document.getElementById('marketNamingInput').addEventListener('input', checkMarketNamingInput);
+document.getElementById('marketNamingConfirmBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  confirmMarketNaming();
+});
+document.getElementById('marketNamingCancelBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  closeMarketNaming();
+});
+document.getElementById('marketNamingBox').addEventListener('click', (e) => e.stopPropagation());
 
 (async function () {
   await loadDict();

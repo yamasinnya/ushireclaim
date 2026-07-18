@@ -15,6 +15,7 @@ const LOOP_DEFAULT_STATE = {
       quality: 2,       // 品質（1-4）。初期値2＝可。今回は変動ロジックなし
       skill: 'zenno',
       type: 'mother',     // 'mother' | 'calf'（床替え等、母牛のみが対象の処理で使用）
+      qualityPoint: 0,   // 牛ごとの品質ポイント（薬草獲得から貯まる。閾値到達でfeeding.htmlにて品質を1段階上げ、0へリセット）
       pregnantDay: 0,    // 妊娠経過日数。0=非妊娠。毎日アップキープで+1（出産判定ロジックは別途実装予定）
       poopCount: 0,      // 💩の数（0〜4）。毎日アップキープで+1、床替えで0にリセット
       diseaseAlert: false, // 😷アイコン表示フラグ。フェーズ3で発動ロジックを実装予定
@@ -22,7 +23,6 @@ const LOOP_DEFAULT_STATE = {
   ],
   money: 0,
   grassStock: 0,  // 探索で集めた草の合計ポイント（翌日の体調変動に使い、アップキープ時に0へリセット）
-  qualityPoint: 0,  // 薬草（レア）獲得から貯まる品質ポイント（閾値到達でfeeding.htmlにて品質を1段階上げ、0へリセット）
   manaUsed: 0,  // 本日すでに消費した魔力の合計（探索・床替え等で共有。date_change.htmlで日付が変わるたびに0へリセット）
   wrapWara: 0,  // ラップ藁の在庫数。購入実装は別フェーズ、現時点では表示のみ
   buildings: {
@@ -42,6 +42,13 @@ function loadLoopState() {
     if (!raw) return { ...LOOP_DEFAULT_STATE };
     const parsed = JSON.parse(raw);
     if (!parsed || parsed.version !== LOOP_DEFAULT_STATE.version) return { ...LOOP_DEFAULT_STATE };
+    // 旧セーブ互換：state.qualityPoint（全頭共通）→ cows[0].qualityPoint（牛ごと）へ移行
+    if (typeof parsed.qualityPoint === 'number') {
+      if (parsed.cows && parsed.cows.length > 0) {
+        parsed.cows[0].qualityPoint = parsed.qualityPoint;
+      }
+      delete parsed.qualityPoint;
+    }
     const defaultCowsById = {};
     LOOP_DEFAULT_STATE.cows.forEach(c => { defaultCowsById[c.id] = c; });
     const mergedCows = (parsed.cows || []).map(saved => mergeCowWithDefault(saved, defaultCowsById[saved.id]));

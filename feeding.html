@@ -35,15 +35,20 @@
 
   // 品質ポイント→品質変動（指示書_品質システム実装.md対応。薬草獲得→品質ポイントの経路のみ実装。体調差分経路はスコープ外）
   // 閾値判定はcommon.jsのqualityThresholdFor()を使用（barn.htmlと共有）
+  // 品質ポイントは牛ごとの値（指示書_qualityPoint移行と母牛購入.md対応）なので、牛ごとに独立して判定する
   let qualityNote = '';
-  if (state.qualityPoint >= qualityThresholdFor(state.cows[0].quality)) {
-    if (state.cows[0].quality < 4) {
-      state.cows.forEach(cow => {
-        if (cow.quality < 4) cow.quality += 1;
-      });
-      qualityNote = state.cows[0].name + t('quality_up');
+  const leveledUpNames = [];
+  state.cows.forEach(cow => {
+    if ((cow.qualityPoint || 0) >= qualityThresholdFor(cow.quality)) {
+      if (cow.quality < 4) {
+        cow.quality += 1;
+        leveledUpNames.push(cow.name);
+      }
+      cow.qualityPoint = 0;
     }
-    state.qualityPoint = 0;
+  });
+  if (leveledUpNames.length) {
+    qualityNote = leveledUpNames.join('、') + t('quality_up');
   }
 
   // ラップ藁による自動補填（指示書_ラップ藁購入機能.md対応。体調変動処理の直前に実行する）

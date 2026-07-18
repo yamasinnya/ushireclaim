@@ -35,7 +35,7 @@
   }
   state.cows.forEach(cow => {
     if (cow.poopCount >= 4) {
-      state.qualityPoint = Math.max(0, state.qualityPoint - 5);
+      cow.qualityPoint = Math.max(0, (cow.qualityPoint || 0) - 5);
     }
   });
 

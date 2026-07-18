@@ -106,6 +106,43 @@ hr.divider{border:none;border-top:1px solid #3a2e18;margin:0 16px 12px;}
   border:1px solid #3a2e18;border-radius:3px;color:#706040;
   font-size:11px;letter-spacing:2px;font-family:inherit;cursor:pointer;
 }
+
+/* 競り市場：母牛購入行 */
+.market-cow-row{padding:10px 20px 14px;}
+.market-cow-summary{font-size:14px;color:#d8c8a0;margin-bottom:4px;}
+.market-cow-skill{font-size:12px;color:#a89060;margin-bottom:8px;}
+.market-cow-price{font-size:15px;color:#f0d060;font-weight:bold;margin-bottom:10px;}
+
+/* 命名モーダル（prologue.htmlのnaming-boxをfixedオーバーレイに調整） */
+.naming-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0);
+  display:none;z-index:70;align-items:flex-end;
+}
+.naming-overlay.open{display:flex;background:rgba(0,0,0,0.75);}
+.naming-box{
+  width:100%;max-width:432px;margin:0 auto;
+  background:linear-gradient(180deg,#3e2e12 0%,#241a08 100%);
+  border-top:2px solid #7a5a28;border-radius:14px 14px 0 0;
+  padding:20px 24px 26px;text-align:center;
+}
+.naming-title{color:#f0e090;font-size:15px;font-weight:bold;letter-spacing:2px;margin-bottom:14px;}
+.naming-input{
+  width:100%;padding:12px 14px;background:rgba(0,0,0,0.4);
+  border:1.5px solid #7a5a28;border-radius:8px;color:#f0e8d0;
+  font-size:16px;letter-spacing:1px;font-family:inherit;text-align:center;margin-bottom:8px;
+}
+.naming-hint{color:#a89060;font-size:11px;margin-bottom:6px;letter-spacing:1px;}
+.naming-error{color:#e08060;font-size:11px;margin-bottom:10px;letter-spacing:1px;min-height:1.2em;}
+.naming-confirm-btn{
+  width:100%;padding:12px 0;background:rgba(20,16,8,0.85);
+  border:1.5px solid #7a5a28;border-radius:8px;color:#f0e090;
+  font-size:15px;font-weight:bold;letter-spacing:2px;cursor:pointer;font-family:inherit;margin-bottom:8px;
+}
+.naming-confirm-btn:disabled{color:#665a3c;border-color:#4a3818;background:rgba(20,16,8,0.5);cursor:default;}
+.naming-cancel-btn{
+  width:100%;padding:10px 0;background:none;border:1px solid #4a3818;
+  border-radius:8px;color:#a89050;font-size:12px;letter-spacing:1px;cursor:pointer;font-family:inherit;
+}
 </style>
 </head>
 <body>
@@ -136,8 +173,20 @@ hr.divider{border:none;border-top:1px solid #3a2e18;margin:0 16px 12px;}
 
 <div class="shop-msg" id="shopMsg"></div>
 
+<div class="naming-overlay" id="marketNamingOverlay" onclick="closeMarketNaming()">
+  <div class="naming-box" id="marketNamingBox">
+    <div class="naming-title" id="marketNamingTitle"></div>
+    <input class="naming-input" id="marketNamingInput" type="text" inputmode="hiragana" maxlength="8">
+    <div class="naming-hint" id="marketNamingHint"></div>
+    <div class="naming-error" id="marketNamingError"></div>
+    <button class="naming-confirm-btn" id="marketNamingConfirmBtn" disabled></button>
+    <button class="naming-cancel-btn" id="marketNamingCancelBtn"></button>
+  </div>
+</div>
+
 <script src="assets/js/i18n.js"></script>
 <script src="assets/js/common.js"></script>
+<script src="assets/js/naming.js"></script>
 <script src="assets/js/street.js"></script>
 </body>
 </html>
