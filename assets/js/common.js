@@ -30,12 +30,10 @@ const LOOP_DEFAULT_STATE = {
   },
 };
 
-// 牛ごとのマージ：skillは常にcommon.js側（開発時のデバッグ差し替え）を優先し、
-// それ以外（体調・品質など進行中の値）はセーブ側を優先する。
-// これにより「ふうかに持たせるスキルを変える」だけの調整で、既存の進捗（体調・品質・所持金等）を消さずに反映できる。
+// 牛ごとのマージ：デフォルトに無いフィールドの補完のみ行い、skillを含め進行中の値はセーブ側を優先する。
 function mergeCowWithDefault(savedCow, defaultCow) {
   if (!defaultCow) return savedCow; // デフォルトに居ない牛（将来のガチャ牛など）はそのまま
-  return { ...defaultCow, ...savedCow, skill: defaultCow.skill };
+  return { ...defaultCow, ...savedCow };
 }
 
 function loadLoopState() {
