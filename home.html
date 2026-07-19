@@ -244,8 +244,10 @@ function showTruckGreeting() {
   document.getElementById('btn-shop').addEventListener('click', () => { location.href = 'street.html'; });
 
   // 序盤(Day1〜2)は「餌を集めにいく」以外のメニューを封じる（指示書_チュートリアルセリフ差し替えとメニュー制限.md対応）
+  // 牛舎のみDay2から解放（2日目チュートリアルで牛舎に触れる案内をするため。口頭指示で修正）
+  document.getElementById('btn-barn').disabled = state.day <= 1;
   const isTutorial = state.day <= 2;
-  ['btn-barn', 'btn-shop', 'btn-diary', 'btn-spell'].forEach(id => {
+  ['btn-shop', 'btn-diary', 'btn-spell'].forEach(id => {
     document.getElementById(id).disabled = isTutorial;
   });
 })();

@@ -51,24 +51,57 @@
   saveLoopState(state);
   renderHeader('gameHeader');
 
+  const titleEl = document.getElementById('title');
+  const textEl = document.getElementById('upkeep-text');
+  const btn = document.getElementById('btn-next');
+
   // アップキープイベント判定（if文でベタ書き。JSON化はまだしない）
   // 重み：特になし70% / 発情15% / 難産15%（仮置き。数値イベントは未実装、テキスト表示のみ）
-  const r = Math.random();
-  let eventKey;
-  if (r < 0.70) {
-    eventKey = 'upkeep_none';
-  } else if (r < 0.85) {
-    eventKey = 'upkeep_heat';
-  } else {
-    eventKey = 'upkeep_difficult_birth';
+  function showUpkeepMain() {
+    const r = Math.random();
+    let eventKey;
+    if (r < 0.70) {
+      eventKey = 'upkeep_none';
+    } else if (r < 0.85) {
+      eventKey = 'upkeep_heat';
+    } else {
+      eventKey = 'upkeep_difficult_birth';
+    }
+
+    titleEl.textContent = t('upkeep_title');
+    textEl.textContent = t(eventKey);
+    btn.textContent = t('btn_go_home');
+    btn.onclick = () => { location.href = 'home.html'; };
   }
 
-  document.getElementById('title').textContent = t('upkeep_title');
-  document.getElementById('upkeep-text').textContent = t(eventKey);
+  // 2日目チュートリアル（指示書：2日目チュートリアル（スキル・病気説明）対応）
+  // イベント判定はチュートリアル終了後に実行し、それまで待機させる
+  if (state.day === 2) {
+    const QUALITY_LABEL = { 1:'劣', 2:'可', 3:'良', 4:'優' };
+    const cowQuality = QUALITY_LABEL[state.cows[0].quality] || '可';
+    const TUTORIAL_DAY2_KEYS = [
+      'tutorial_day2_00', 'tutorial_day2_01', 'tutorial_day2_02', 'tutorial_day2_03', 'tutorial_day2_04',
+      'tutorial_day2_05', 'tutorial_day2_06', 'tutorial_day2_07', 'tutorial_day2_08', 'tutorial_day2_09',
+    ];
+    let tutorialIndex = 0;
+    titleEl.textContent = t('prologue_speaker_truck');
 
-  const btn = document.getElementById('btn-next');
-  btn.textContent = t('btn_go_home');
-  btn.addEventListener('click', () => { location.href = 'home.html'; });
+    function showTutorialLine() {
+      textEl.textContent = t(TUTORIAL_DAY2_KEYS[tutorialIndex]).replace('{cowQuality}', cowQuality);
+      btn.textContent = t('btn_next');
+      btn.onclick = () => {
+        tutorialIndex++;
+        if (tutorialIndex >= TUTORIAL_DAY2_KEYS.length) {
+          showUpkeepMain();
+        } else {
+          showTutorialLine();
+        }
+      };
+    }
+    showTutorialLine();
+  } else {
+    showUpkeepMain();
+  }
 })();
 </script>
 
