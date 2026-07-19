@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>やまやま牧場 - 軽トラとの会話</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#0a1506; min-height:100vh;
+  font-family:'Hiragino Kaku Gothic ProN','MS Gothic',sans-serif;
+  display:flex; flex-direction:column; align-items:center;
+}
+.scene-wrap {
+  width:100%; max-width:440px;
+  min-height:100vh;
+  position:relative;
+  overflow:hidden;
+  aspect-ratio: 941 / 1350;
+  cursor:pointer;
+  user-select:none; -webkit-user-select:none;
+}
+.bg-img {
+  position:absolute; top:0; left:0;
+  width:100%; display:block;
+}
+
+/* スプライト（プロローグの配置を流用。本ページはシーンごとの状態変化を持たない固定レイアウト） */
+.sprite {
+  position:absolute;
+  image-rendering:pixelated;
+  z-index:3;
+}
+.truck-sprite  { left:68%; top:56%; width:24%; }
+.cow-sprite    { left:26%; top:63%; width:16%; }
+.player-sprite { left:49%; top:58%; width:13%; }
+
+/* 会話ボックス（プロローグと共通の演出） */
+.dialogue-box {
+  position:absolute; left:0; right:0; bottom:0;
+  background:linear-gradient(180deg, rgba(10,8,4,0) 0%, rgba(10,8,4,0.94) 30%);
+  padding:22px 24px 26px;
+  min-height:110px;
+  z-index:20;
+}
+.speaker-name {
+  color:#f0e090; font-size:14px; font-weight:bold; letter-spacing:3px;
+  margin-bottom:8px;
+}
+.dialogue-text {
+  color:#e8d8c0; font-size:15px; line-height:1.9; letter-spacing:1px;
+}
+.tap-hint {
+  text-align:right; color:#786040; font-size:11px; margin-top:10px; letter-spacing:1px;
+}
+</style>
+</head>
+<body>
+
+<div class="scene-wrap" id="sceneWrap">
+  <img class="bg-img" src="mapback.png" alt="牧場背景">
+
+  <img class="sprite truck-sprite" src="assets/sprites/keitora.png" alt="軽トラック">
+  <img class="sprite cow-sprite" src="assets/sprites/cow_mother.png" alt="牛">
+  <img class="sprite player-sprite" src="assets/sprites/char_down.png" alt="主人公">
+
+  <div class="dialogue-box">
+    <div class="speaker-name" id="speakerName"></div>
+    <div class="dialogue-text" id="dialogueText"></div>
+    <div class="tap-hint" id="tapHint"></div>
+  </div>
+</div>
+
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+// 軽トラが喋る汎用会話ページ（指示書_軽トラ会話汎用ページ(truck_talk.html)の実装.md対応）
+// シーンIDを追加するだけで新しい会話イベントに流用できる
+const SCENE_DEF = {
+  day2_tutorial: [
+    { speaker: '軽トラ', textKey: 'tutorial_day2_00' },
+    { speaker: '軽トラ', textKey: 'tutorial_day2_01' },
+    { speaker: '軽トラ', textKey: 'tutorial_day2_02' },
+    { speaker: '軽トラ', textKey: 'tutorial_day2_03' },
+    { speaker: '軽トラ', textKey: 'tutorial_day2_04' },
+    { speaker: '軽トラ', textKey: 'tutorial_day2_05' },
+    { speaker: '軽トラ', textKey: 'tutorial_day2_06' },
+    { speaker: '軽トラ', textKey: 'tutorial_day2_07' },
+    { speaker: '軽トラ', textKey: 'tutorial_day2_08' },
+    { speaker: '軽トラ', textKey: 'tutorial_day2_09' },
+  ],
+  // 将来のイベントもここに追加していく
+};
+
+const QUALITY_LABEL = { 1:'劣', 2:'可', 3:'良', 4:'優' };
+
+let sceneIndex = 0;
+let scenes = [];
+let nextUrl = 'home.html';
+let placeholders = {};
+
+function resolveText(key) {
+  let text = t(key);
+  Object.keys(placeholders).forEach(name => {
+    text = text.replace('{' + name + '}', placeholders[name]);
+  });
+  return text;
+}
+
+function showLine(i) {
+  const line = scenes[i];
+  document.getElementById('speakerName').textContent = line.speaker;
+  document.getElementById('dialogueText').textContent = resolveText(line.textKey);
+}
+
+function nextLine() {
+  sceneIndex++;
+  if (sceneIndex >= scenes.length) {
+    location.href = nextUrl;
+    return;
+  }
+  showLine(sceneIndex);
+}
+
+document.getElementById('sceneWrap').addEventListener('click', nextLine);
+
+(async function () {
+  await loadDict();
+
+  const params = new URLSearchParams(location.search);
+  const sceneId = params.get('scene');
+  nextUrl = params.get('next') || 'home.html'; // URLSearchParamsが自動でデコードする
+
+  scenes = SCENE_DEF[sceneId] || [];
+  if (scenes.length === 0) {
+    location.href = nextUrl;
+    return;
+  }
+
+  // {cowQuality}プレースホルダー用（day2_tutorial以外のシーンでは未使用のまま無害）
+  const state = loadLoopState();
+  placeholders.cowQuality = QUALITY_LABEL[state.cows[0].quality] || '可';
+
+  document.getElementById('tapHint').textContent = t('prologue_tap_hint');
+  showLine(0);
+})();
+</script>
+
+</body>
+</html>

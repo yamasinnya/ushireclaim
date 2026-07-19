@@ -24,8 +24,18 @@
 (async function () {
   await loadDict();
 
-  // 床替え：3日に1回、母牛の💩を+1（上限4）。4個で品質ポイントも-1（指示書_牛舎実装フェーズ2_床替え.md対応、頻度は口頭で3日に1回と修正）
   const state = loadLoopState();
+
+  // 2日目チュートリアルはtruck_talk.htmlに移譲（指示書_軽トラ会話汎用ページ(truck_talk.html)の実装.md対応）
+  const params = new URLSearchParams(location.search);
+  const skipTutorial = params.get('skip_tutorial') === '1';
+  if (state.day === 2 && !skipTutorial) {
+    const nextUrl = encodeURIComponent('upkeep.html?skip_tutorial=1');
+    location.href = `truck_talk.html?scene=day2_tutorial&next=${nextUrl}`;
+    return;
+  }
+
+  // 床替え：3日に1回、母牛の💩を+1（上限4）。4個で品質ポイントも-1（指示書_牛舎実装フェーズ2_床替え.md対応、頻度は口頭で3日に1回と修正）
   if (state.day % 3 === 0) {
     state.cows.forEach(cow => {
       if (cow.type === 'mother') {
@@ -74,34 +84,7 @@
     btn.onclick = () => { location.href = 'home.html'; };
   }
 
-  // 2日目チュートリアル（指示書：2日目チュートリアル（スキル・病気説明）対応）
-  // イベント判定はチュートリアル終了後に実行し、それまで待機させる
-  if (state.day === 2) {
-    const QUALITY_LABEL = { 1:'劣', 2:'可', 3:'良', 4:'優' };
-    const cowQuality = QUALITY_LABEL[state.cows[0].quality] || '可';
-    const TUTORIAL_DAY2_KEYS = [
-      'tutorial_day2_00', 'tutorial_day2_01', 'tutorial_day2_02', 'tutorial_day2_03', 'tutorial_day2_04',
-      'tutorial_day2_05', 'tutorial_day2_06', 'tutorial_day2_07', 'tutorial_day2_08', 'tutorial_day2_09',
-    ];
-    let tutorialIndex = 0;
-    titleEl.textContent = t('prologue_speaker_truck');
-
-    function showTutorialLine() {
-      textEl.textContent = t(TUTORIAL_DAY2_KEYS[tutorialIndex]).replace('{cowQuality}', cowQuality);
-      btn.textContent = t('btn_next');
-      btn.onclick = () => {
-        tutorialIndex++;
-        if (tutorialIndex >= TUTORIAL_DAY2_KEYS.length) {
-          showUpkeepMain();
-        } else {
-          showTutorialLine();
-        }
-      };
-    }
-    showTutorialLine();
-  } else {
-    showUpkeepMain();
-  }
+  showUpkeepMain();
 })();
 </script>
 
