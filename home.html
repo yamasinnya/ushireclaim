@@ -104,6 +104,9 @@ body {
   border-radius:8px; cursor:pointer; font-family:inherit;
   text-align:center;
 }
+.btn-sub:disabled {
+  opacity:0.35; cursor:not-allowed;
+}
 
 </style>
 </head>
@@ -126,8 +129,8 @@ body {
     <div class="sub-row">
       <button class="btn-sub" id="btn-barn">🐄 牛舎</button>
       <button class="btn-sub" id="btn-shop">🏪 ショップ</button>
-      <button class="btn-sub">📖 日誌</button>
-      <button class="btn-sub">🔑 呪文</button>
+      <button class="btn-sub" id="btn-diary">📖 日誌</button>
+      <button class="btn-sub" id="btn-spell">🔑 呪文</button>
     </div>
   </div>
 </div>
@@ -239,6 +242,12 @@ function showTruckGreeting() {
 
   document.getElementById('btn-barn').addEventListener('click', () => { location.href = 'barn.html'; });
   document.getElementById('btn-shop').addEventListener('click', () => { location.href = 'street.html'; });
+
+  // 序盤(Day1〜2)は「餌を集めにいく」以外のメニューを封じる（指示書_チュートリアルセリフ差し替えとメニュー制限.md対応）
+  const isTutorial = state.day <= 2;
+  ['btn-barn', 'btn-shop', 'btn-diary', 'btn-spell'].forEach(id => {
+    document.getElementById(id).disabled = isTutorial;
+  });
 })();
 </script>
 
