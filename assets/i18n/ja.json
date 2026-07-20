@@ -58,6 +58,7 @@
   "barn_condition_label": "体調",
   "barn_quality_label": "品質",
   "barn_months_suffix": "ヶ月",
+  "barn_pregnant_days": "🤰 あと{days}日で出産予定",
   "barn_empty_stall_name": "空き牛房",
   "barn_empty_stall_comment": "空き牛房です。草を敷いて待っています。",
   "barn_coat_comment_1": "最近少し元気がないかも…",

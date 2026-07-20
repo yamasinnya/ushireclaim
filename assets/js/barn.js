@@ -317,6 +317,10 @@ function openSheet(stall) {
     const skill = SKILL_DISPLAY[c.skill];
     document.getElementById('sSkill').textContent = skill ? (skill.emoji + ' ' + t(skill.nameKey)) : '';
 
+    // 出産予定表示（指示書_牛舎詳細シートに出産予定表示を追加.md対応）
+    document.getElementById('sPregnant').textContent =
+      c.pregnantDay > 0 ? t('barn_pregnant_days').replace('{days}', 18 - c.pregnantDay) : '';
+
     const threshold = qualityThresholdFor(c.quality);
     const pct = threshold ? ((c.qualityPoint || 0) / threshold) : 0;
     document.getElementById('sComment').textContent =
