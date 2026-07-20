@@ -89,6 +89,25 @@ const SCENE_DEF = {
     { speaker: '軽トラ', textKey: 'tutorial_day2_08' },
     { speaker: '軽トラ', textKey: 'tutorial_day2_09' },
   ],
+  day3_tutorial: [
+    { speaker: '軽トラ', textKey: 'tutorial_day3_00' },
+    { speaker: '軽トラ', textKey: 'tutorial_day3_01' },
+    { speaker: '軽トラ', textKey: 'tutorial_day3_02' },
+    { speaker: '軽トラ', textKey: 'tutorial_day3_03' },
+    { speaker: '軽トラ', textKey: 'tutorial_day3_04' },
+    { speaker: '軽トラ', textKey: 'tutorial_day3_05' },
+    { speaker: '軽トラ', textKey: 'tutorial_day3_06' },
+    { speaker: '軽トラ', textKey: 'tutorial_day3_07' },
+    { speaker: '軽トラ', textKey: 'tutorial_day3_08' },
+    { speaker: '軽トラ', textKey: 'tutorial_day3_09' },
+    { speaker: '軽トラ', textKey: 'tutorial_day3_10' },
+    { speaker: '軽トラ', textKey: 'tutorial_day3_11' },
+    { speaker: '軽トラ', textKey: 'tutorial_day3_12' },
+    { speaker: '軽トラ', textKey: 'tutorial_day3_13' },
+    { speaker: '軽トラ', textKey: 'tutorial_day3_14' },
+    { speaker: '軽トラ', textKey: 'tutorial_day3_15' },
+    { speaker: '軽トラ', textKey: 'tutorial_day3_16' },
+  ],
   // 将来のイベントもここに追加していく
 };
 
@@ -137,9 +156,11 @@ document.getElementById('sceneWrap').addEventListener('click', nextLine);
     return;
   }
 
-  // {cowQuality}プレースホルダー用（day2_tutorial以外のシーンでは未使用のまま無害）
+  // {cowQuality}/{cowName}/{daysUntilBirth}プレースホルダー用（未使用のシーンでは無害）
   const state = loadLoopState();
   placeholders.cowQuality = QUALITY_LABEL[state.cows[0].quality] || '可';
+  placeholders.cowName = state.cows[0].name;
+  placeholders.daysUntilBirth = 18 - (state.cows[0].pregnantDay || 0);
 
   document.getElementById('tapHint').textContent = t('prologue_tap_hint');
   showLine(0);

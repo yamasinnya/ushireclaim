@@ -26,12 +26,14 @@
 
   const state = loadLoopState();
 
-  // 2日目チュートリアルはtruck_talk.htmlに移譲（指示書_軽トラ会話汎用ページ(truck_talk.html)の実装.md対応）
+  // 序盤チュートリアルはtruck_talk.htmlに移譲（指示書_軽トラ会話汎用ページ(truck_talk.html)の実装.md、指示書_3日目チュートリアル（街の説明）.md対応）
   const params = new URLSearchParams(location.search);
   const skipTutorial = params.get('skip_tutorial') === '1';
-  if (state.day === 2 && !skipTutorial) {
+  const TUTORIAL_SCENE_FOR_DAY = { 2: 'day2_tutorial', 3: 'day3_tutorial' };
+  const tutorialScene = TUTORIAL_SCENE_FOR_DAY[state.day];
+  if (tutorialScene && !skipTutorial) {
     const nextUrl = encodeURIComponent('upkeep.html?skip_tutorial=1');
-    location.href = `truck_talk.html?scene=day2_tutorial&next=${nextUrl}`;
+    location.href = `truck_talk.html?scene=${tutorialScene}&next=${nextUrl}`;
     return;
   }
 

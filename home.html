@@ -241,15 +241,26 @@ function showTruckGreeting() {
   btn.addEventListener('click', () => { location.href = 'map.html'; });
 
   document.getElementById('btn-barn').addEventListener('click', () => { location.href = 'barn.html'; });
-  document.getElementById('btn-shop').addEventListener('click', () => { location.href = 'street.html'; });
+
+  // 街へ行くと魔力を1消費する（指示書_3日目チュートリアル（街の説明）.md対応）
+  const shopBtn = document.getElementById('btn-shop');
+  shopBtn.addEventListener('click', () => {
+    if (manaRemaining(loadLoopState()) <= 0) return;
+    spendMana(1);
+    location.href = 'street.html';
+  });
 
   // 序盤(Day1〜2)は「餌を集めにいく」以外のメニューを封じる（指示書_チュートリアルセリフ差し替えとメニュー制限.md対応）
   // 牛舎のみDay2から解放（2日目チュートリアルで牛舎に触れる案内をするため。口頭指示で修正）
   document.getElementById('btn-barn').disabled = state.day <= 1;
   const isTutorial = state.day <= 2;
-  ['btn-shop', 'btn-diary', 'btn-spell'].forEach(id => {
+  ['btn-diary', 'btn-spell'].forEach(id => {
     document.getElementById(id).disabled = isTutorial;
   });
+
+  const shopNoMana = manaRemaining(state) <= 0;
+  shopBtn.disabled = isTutorial || shopNoMana;
+  if (!isTutorial && shopNoMana) shopBtn.textContent = t('shop_no_mana');
 })();
 </script>
 
