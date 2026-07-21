@@ -35,9 +35,16 @@ const EXIT_POINT = { x:187, y:620 };
 const EXIT_HITBOX = { x1:0, y1:605, x2:375, y2:666 };
 
 const loopState = loadLoopState();
-// 指示書_qualityPoint移行と母牛購入.md対応：複数頭を先頭スロットから順に配置する
-loopState.cows.forEach((c, i) => {
-  if (STALLS[i]) { STALLS[i].type = 'cow'; STALLS[i].cowRef = c; }
+// 母牛は上段(s0〜s2)固定・子牛は下段(s4〜s6)固定でスロットに割り当てる（指示書_牛舎スロットの固定割り当て.md対応）
+const MOTHER_SLOT_IDS = ['s0', 's1', 's2'];
+const CALF_SLOT_IDS = ['s4', 's5', 's6'];
+loopState.cows.filter(c => c.type === 'mother').forEach((cow, i) => {
+  const stall = STALLS.find(s => s.id === MOTHER_SLOT_IDS[i]);
+  if (stall) { stall.type = 'cow'; stall.cowRef = cow; }
+});
+loopState.cows.filter(c => c.type === 'calf').forEach((cow, i) => {
+  const stall = STALLS.find(s => s.id === CALF_SLOT_IDS[i]);
+  if (stall) { stall.type = 'cow'; stall.cowRef = cow; }
 });
 
 // ── 画像ロード ──
@@ -117,6 +124,22 @@ function preRenderCow(seed, cowId) {
   });
 }
 
+// ── 子牛のスプライト・表示ラベル（指示書_子牛の牛舎表示実装.md対応） ──
+function getCalfSprite(age) {
+  if (age >= 20) return 'cow_10m';
+  if (age >= 8)  return 'cow_4m';
+  if (age >= 4)  return 'cow_2m';
+  return 'cow_newborn';
+}
+function getAgeLabel(age) {
+  if (age >= 20) return t('calf_age_10m');
+  if (age >= 8)  return t('calf_age_4m');
+  if (age >= 4)  return t('calf_age_2m');
+  return t('calf_age_newborn');
+}
+// 牛舎内での表示幅(px)。母牛の描画スケール(0.52*0.7、元画像298x240→約108px幅)より小さく、月齢が進むほど大きくする
+const CALF_SPRITE_DISPLAY_WIDTH = { cow_newborn: 46, cow_2m: 56, cow_4m: 66, cow_10m: 80 };
+
 // ── プレイヤー ──
 let player = { ...PLAYER_HOME, dir: 'down', walking: false, anim: 0 };
 let walkTimer = null;
@@ -140,6 +163,17 @@ function draw() {
 
   STALLS.forEach(s => {
     if (s.type !== 'cow' || !s.cowRef) return;
+    if (s.cowRef.type === 'calf') {
+      const key = getCalfSprite(s.cowRef.age);
+      const img = IMG[key];
+      if (img) {
+        const dw = CALF_SPRITE_DISPLAY_WIDTH[key];
+        const dh = img.height * (dw / img.width);
+        ctx.drawImage(img, s.cx - dw / 2, s.cy - dh / 2 + 8, dw, dh);
+      }
+      drawStatusIcons(s);
+      return;
+    }
     const oc = cowOCMap[s.cowRef.id];
     if (oc) {
       const scale = 0.52 * 0.7;
@@ -322,6 +356,38 @@ function showBirthComment(stall, key) {
 // ── 詳細シート ──
 function openSheet(stall) {
   const c = stall.cowRef;
+
+  // 子牛専用シート（指示書_子牛の牛舎表示実装.md対応。品質・妊娠関連は今回スコープ外）
+  if (c && c.type === 'calf') {
+    const genderIcon = c.gender === 'female' ? t('calf_gender_female') : t('calf_gender_male');
+    document.getElementById('sName').textContent = `${genderIcon} ${c.name}`;
+    document.getElementById('sAge').textContent = getAgeLabel(c.age);
+    document.getElementById('sCondLbl').textContent = t('barn_condition_label');
+    document.getElementById('sCondFill').style.width = (c.condition * 10) + '%';
+    document.getElementById('sCondNum').textContent = c.condition;
+    document.getElementById('sQualLbl').textContent = '';
+    document.getElementById('sQual').textContent = '';
+    const calfSkill = SKILL_DISPLAY[c.skill];
+    document.getElementById('sSkill').textContent = calfSkill ? (calfSkill.emoji + ' ' + t(calfSkill.nameKey)) : '';
+    document.getElementById('sPregnant').textContent = '';
+    // 成牛(21日目)までの日数はメスのみ表示。オスは競りに出すだけなので表示しない
+    document.getElementById('sComment').textContent =
+      c.gender === 'female' ? t('calf_days_to_adult').replace('{days}', 21 - c.age) : '';
+
+    const calfSc = document.getElementById('sheetCanvas');
+    const calfImg = IMG[getCalfSprite(c.age)];
+    if (calfImg) {
+      calfSc.width = calfImg.width; calfSc.height = calfImg.height;
+      calfSc.getContext('2d').drawImage(calfImg, 0, 0);
+    } else {
+      calfSc.getContext('2d').clearRect(0, 0, calfSc.width, calfSc.height);
+    }
+
+    document.getElementById('sCloseBtn').textContent = t('barn_close_btn');
+    document.getElementById('sheetOverlay').classList.add('open');
+    return;
+  }
+
   if (c && c.pregnantDay >= 15) {
     if (c.actualBirthDay > 0 && c.pregnantDay >= c.actualBirthDay) {
       location.href = `birth.html?cowId=${c.id}`;
@@ -453,9 +519,14 @@ async function initBarn() {
     loadImg('player_walk_down', 'assets/sprites/char_walk_down.png'),
     loadImg('player_walk_left', 'assets/sprites/char_walk_left.png'),
     loadImg('player_walk_right', 'assets/sprites/char_walk_right.png'),
+    loadImg('cow_newborn', 'assets/sprites/cow_newborn.png'),
+    loadImg('cow_2m', 'assets/sprites/cow_2m.png'),
+    loadImg('cow_4m', 'assets/sprites/cow_4m.png'),
+    loadImg('cow_10m', 'assets/sprites/cow_10m.png'),
   ]);
   await Promise.all(
-    STALLS.filter(s => s.cowRef).map(s => preRenderCow(s.cowRef.seed, s.cowRef.id))
+    // 子牛は静的スプライトで描画するため、ブチ模様プリレンダー(preRenderCow)は母牛のみでよい
+    STALLS.filter(s => s.cowRef && s.cowRef.type !== 'calf').map(s => preRenderCow(s.cowRef.seed, s.cowRef.id))
   );
   loop();
 }

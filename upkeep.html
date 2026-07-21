@@ -85,6 +85,13 @@
     }
   });
 
+  // 子牛の日齢を+1（指示書_子牛の牛舎表示実装.md対応）
+  state.cows.forEach(cow => {
+    if (cow.type === 'calf') {
+      cow.age = (cow.age || 0) + 1;
+    }
+  });
+
   saveLoopState(state);
   renderHeader('gameHeader');
 

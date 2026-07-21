@@ -73,6 +73,14 @@
   "birth_gender_reveal_female": "……女の子だ。",
   "birth_gender_reveal_male": "……男の子だ。",
 
+  "calf_days_to_adult": "成牛まであと{days}日",
+  "calf_gender_female": "♀",
+  "calf_gender_male": "♂",
+  "calf_age_newborn": "生まれたて",
+  "calf_age_2m": "2ヶ月",
+  "calf_age_4m": "4ヶ月",
+  "calf_age_10m": "10ヶ月",
+
   "condition_up": "の体調が上がった！",
   "condition_down": "が少し元気がなさそうだ…",
   "quality_up": "の品質が上がった！",
