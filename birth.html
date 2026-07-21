@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>やまやま牧場 - 出産</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#0a1506; min-height:100vh;
+  font-family:'Hiragino Kaku Gothic ProN','MS Gothic',sans-serif;
+  display:flex; flex-direction:column; align-items:center;
+}
+.scene-wrap {
+  width:100%; max-width:440px;
+  min-height:100vh;
+  position:relative;
+  overflow:hidden;
+  aspect-ratio: 941 / 1672;
+  cursor:pointer;
+  user-select:none; -webkit-user-select:none;
+}
+.bg-img {
+  position:absolute; top:0; left:0;
+  width:100%; display:block;
+}
+
+.sprite {
+  position:absolute;
+  image-rendering:pixelated;
+  z-index:3;
+}
+/* 母牛：左寄り、通常より少し大きめ */
+.cow-sprite    { left:20%; top:56%; width:24%; }
+/* 主人公：右寄り */
+.player-sprite { left:62%; top:60%; width:14%; }
+
+/* 会話ボックス（プロローグと共通の演出） */
+.dialogue-box {
+  position:absolute; left:0; right:0; bottom:0;
+  background:linear-gradient(180deg, rgba(10,8,4,0) 0%, rgba(10,8,4,0.94) 30%);
+  padding:22px 24px 26px;
+  min-height:110px;
+  z-index:20;
+}
+.dialogue-text {
+  color:#e8d8c0; font-size:15px; line-height:1.9; letter-spacing:1px;
+  font-style:italic; text-align:center; color:#a89878;
+}
+.tap-hint {
+  text-align:right; color:#786040; font-size:11px; margin-top:10px; letter-spacing:1px;
+}
+
+/* 名前入力UI（プロローグと共通の演出） */
+.naming-box {
+  position:absolute; left:0; right:0; bottom:0;
+  background:linear-gradient(180deg, rgba(10,8,4,0) 0%, rgba(10,8,4,0.96) 20%);
+  padding:22px 24px 26px;
+  z-index:22;
+  display:none;
+  text-align:center;
+}
+.naming-box.show { display:block; }
+.naming-title {
+  color:#f0e090; font-size:15px; font-weight:bold; letter-spacing:2px;
+  margin-bottom:14px;
+}
+.naming-input {
+  width:100%; padding:12px 14px;
+  background:rgba(0,0,0,0.4); border:1.5px solid #7a5a28; border-radius:8px;
+  color:#f0e8d0; font-size:16px; letter-spacing:1px;
+  font-family:inherit; text-align:center;
+  margin-bottom:8px;
+}
+.naming-hint {
+  color:#a89060; font-size:11px; margin-bottom:6px; letter-spacing:1px;
+}
+.naming-error {
+  color:#e08060; font-size:11px; margin-bottom:10px; letter-spacing:1px; min-height:1.2em;
+}
+.naming-confirm-btn {
+  width:100%; padding:12px 0;
+  background:rgba(20,16,8,0.85); border:1.5px solid #7a5a28; border-radius:8px;
+  color:#f0e090; font-size:15px; font-weight:bold; letter-spacing:2px;
+  cursor:pointer; font-family:inherit;
+}
+.naming-confirm-btn:disabled {
+  color:#665a3c; border-color:#4a3818; background:rgba(20,16,8,0.5);
+  cursor:default;
+}
+</style>
+</head>
+<body>
+
+<div class="scene-wrap" id="sceneWrap">
+  <img class="bg-img" src="assets/images/birth_bg.png" alt="産室">
+
+  <img class="sprite cow-sprite" src="assets/sprites/cow_mother.png" alt="母牛">
+  <img class="sprite player-sprite" src="assets/sprites/char_down.png" alt="主人公">
+
+  <div class="naming-box" id="namingBox">
+    <div class="naming-title" id="namingTitle"></div>
+    <input class="naming-input" id="namingInput" type="text" maxlength="8">
+    <div class="naming-hint" id="namingHint"></div>
+    <div class="naming-error" id="namingError"></div>
+    <button class="naming-confirm-btn" id="namingConfirmBtn" disabled></button>
+  </div>
+
+  <div class="dialogue-box" id="dialogueBox">
+    <div class="dialogue-text" id="dialogueText"></div>
+    <div class="tap-hint" id="tapHint"></div>
+  </div>
+</div>
+
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/common.js"></script>
+<script src="assets/js/naming.js"></script>
+<script>
+// 出産演出ページ（指示書_出産システムの実装.md対応）。軽トラは登場しない。
+// セリフはプロローグと同様t()経由で取得する（プロジェクト規約：文字列直書き禁止）
+const BIRTH_SCENES = [
+  { key:'birth_scene_00', isNarration:true },
+  { key:'birth_scene_01', isNarration:true },
+  { key:'birth_scene_02', isNarration:true },
+  { key:'birth_scene_03', isNarration:true },
+  { isNaming:true },
+];
+
+let sceneIndex = 0;
+let transitioning = false;
+let calfGender = Math.random() < 0.5 ? 'female' : 'male';
+let motherCow = null;
+
+function showScene(i) {
+  const scene = BIRTH_SCENES[i];
+  if (!scene) return;
+  if (scene.isNaming) { showNamingUI(); return; }
+
+  document.getElementById('namingBox').classList.remove('show');
+  document.getElementById('dialogueBox').style.display = 'block';
+  document.getElementById('dialogueText').textContent = t(scene.key);
+}
+
+function nextScene() {
+  if (transitioning) return;
+  sceneIndex++;
+  if (sceneIndex >= BIRTH_SCENES.length) return;
+  showScene(sceneIndex);
+}
+
+document.getElementById('sceneWrap').addEventListener('click', () => {
+  const scene = BIRTH_SCENES[sceneIndex];
+  if (scene && scene.isNaming) return; // 名前入力中は専用UIのみで進める
+  nextScene();
+});
+
+// ── 名前入力（naming.jsのvalidateCowNameを使用。子牛の性別に応じたルールを適用） ──
+function showNamingUI() {
+  document.getElementById('dialogueBox').style.display = 'none';
+  const box = document.getElementById('namingBox');
+  const rule = NAMING_RULES[calfGender];
+  document.getElementById('namingTitle').textContent = t('naming_title');
+  document.getElementById('namingHint').textContent = t(rule.hintKey);
+  const input = document.getElementById('namingInput');
+  input.placeholder = t(rule.placeholderKey);
+  input.value = '';
+  document.getElementById('namingError').textContent = '';
+  document.getElementById('namingConfirmBtn').textContent = t('naming_confirm_btn');
+  document.getElementById('namingConfirmBtn').disabled = true;
+  box.classList.add('show');
+  input.focus();
+}
+
+function checkNamingInput() {
+  const input = document.getElementById('namingInput');
+  const result = validateCowName(input.value, calfGender);
+  const btn = document.getElementById('namingConfirmBtn');
+  const errorEl = document.getElementById('namingError');
+  btn.disabled = !result.valid;
+  errorEl.textContent = (!result.valid && input.value.length > 0) ? t(result.errorKey) : '';
+}
+
+// 子牛データの生成（指示書_出産システムの実装.md対応。種+母牛品質によるスキル決定は将来対応）
+function createCalf(calfName, gender) {
+  const skills = ['herdboys_eye', 'trace', 'roku'];
+  return {
+    id: 'cow_' + Date.now(),
+    name: calfName,
+    gender: gender,
+    age: 0,
+    seed: Math.floor(Math.random() * 99999) + 1,
+    condition: 7,
+    quality: 1,           // 子牛は劣スタート（育成で上げる）
+    qualityPoint: 0,
+    skill: skills[Math.floor(Math.random() * skills.length)],
+    type: 'calf',
+    pregnantDay: 0,
+    actualBirthDay: 0,
+    poopCount: 0,
+    diseaseAlert: false,
+  };
+}
+
+function confirmNaming() {
+  const input = document.getElementById('namingInput');
+  const result = validateCowName(input.value, calfGender);
+  if (!result.valid) return;
+
+  const state = loadLoopState();
+  const mother = state.cows.find(c => c.id === motherCow.id);
+  if (mother) {
+    mother.pregnantDay = 0;
+    mother.actualBirthDay = 0;
+  }
+  state.cows.push(createCalf(input.value, calfGender));
+  saveLoopState(state);
+
+  document.getElementById('namingBox').classList.remove('show');
+  location.href = 'home.html';
+}
+
+document.getElementById('namingInput').addEventListener('input', checkNamingInput);
+document.getElementById('namingConfirmBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  confirmNaming();
+});
+document.getElementById('namingBox').addEventListener('click', (e) => e.stopPropagation());
+
+(async function () {
+  await loadDict();
+  const params = new URLSearchParams(location.search);
+  const cowId = params.get('cowId');
+  const state = loadLoopState();
+  motherCow = state.cows.find(c => c.id === cowId);
+  if (!motherCow) { location.href = 'home.html'; return; }
+
+  document.getElementById('tapHint').textContent = t('prologue_tap_hint');
+  showScene(0);
+})();
+</script>
+
+</body>
+</html>

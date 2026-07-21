@@ -98,6 +98,19 @@ hr.divider{border:none;border-top:1px solid #3a2e18;margin:0 16px 12px;}
 .poop-option-btn:disabled{
   background:#242018;color:#605840;border-color:#3a3428;cursor:default;
 }
+/* 出産インタラクションの吹き出し（指示書_出産システムの実装.md対応） */
+.birth-bubble{
+  position:absolute; z-index:15;
+  transform:translate(-50%, -100%);
+  background:#fff; color:#222;
+  font-size:12px; padding:8px 14px; border-radius:12px;
+  max-width:220px; text-align:center; letter-spacing:0.5px;
+  white-space:normal;
+  opacity:0; pointer-events:none;
+  transition:opacity 0.2s;
+  box-shadow:0 2px 8px rgba(0,0,0,0.3);
+}
+.birth-bubble.show{ opacity:1; }
 </style>
 </head>
 <body>
@@ -107,6 +120,7 @@ hr.divider{border:none;border-top:1px solid #3a2e18;margin:0 16px 12px;}
 </div>
 <div class="canvas-wrap">
   <canvas id="gameCanvas" width="375" height="666"></canvas>
+  <div class="birth-bubble" id="birthBubble"></div>
 </div>
 
 <div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()">

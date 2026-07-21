@@ -37,6 +37,33 @@
     return;
   }
 
+  // 出産予定日の確定：pregnantDayが15に達した時点でactualBirthDayをランダム確定（指示書_出産システムの実装.md対応）
+  state.cows.forEach(cow => {
+    if (cow.pregnantDay === 15 && !cow.actualBirthDay) {
+      cow.actualBirthDay = 16 + Math.floor(Math.random() * 5); // 16〜20のランダム
+    }
+  });
+
+  // 流産判定：立ち会い流産（出産日を過ぎても牛舎に行かなかった）／品質劣による流産リスク（毎日10%）
+  // 1頭でも流産したらtruck_talk.htmlで告知して即遷移するため、複数頭が同時該当しても先頭の1頭のみ処理する
+  function triggerMiscarriage(cow, reason) {
+    cow.pregnantDay = 0;
+    cow.actualBirthDay = 0;
+    saveLoopState(state);
+    const nextUrl = encodeURIComponent('upkeep.html?skip_tutorial=1');
+    location.href = `truck_talk.html?scene=miscarriage&next=${nextUrl}`;
+  }
+  for (const cow of state.cows) {
+    if (cow.pregnantDay > 0 && cow.actualBirthDay > 0 && cow.pregnantDay > cow.actualBirthDay) {
+      triggerMiscarriage(cow, 'missed');
+      return;
+    }
+    if (cow.pregnantDay > 0 && cow.quality === 1 && Math.random() < 0.10) {
+      triggerMiscarriage(cow, 'quality');
+      return;
+    }
+  }
+
   // 床替え：3日に1回、母牛の💩を+1（上限4）。4個で品質ポイントも-1（指示書_牛舎実装フェーズ2_床替え.md対応、頻度は口頭で3日に1回と修正）
   if (state.day % 3 === 0) {
     state.cows.forEach(cow => {
@@ -51,9 +78,7 @@
     }
   });
 
-  // 妊娠経過日数を+1（指示書_プロローグ更新版.md追記対応）
-  // 「18日到達で出産予定日判定」は既存ロジックが実際には存在しないため、今回は日数カウントのみ実装。
-  // 難産イベント判定との接続は別途指示書が必要（下記報告参照）。
+  // 妊娠経過日数を+1（指示書_プロローグ更新版.md追記対応。出産予定日確定・流産判定は上記の出産システム実装対応）
   state.cows.forEach(cow => {
     if (cow.pregnantDay > 0) {
       cow.pregnantDay += 1;

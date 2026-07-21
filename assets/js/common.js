@@ -16,7 +16,8 @@ const LOOP_DEFAULT_STATE = {
       skill: 'zenno',
       type: 'mother',     // 'mother' | 'calf'（床替え等、母牛のみが対象の処理で使用）
       qualityPoint: 0,   // 牛ごとの品質ポイント（薬草獲得から貯まる。閾値到達でfeeding.htmlにて品質を1段階上げ、0へリセット）
-      pregnantDay: 0,    // 妊娠経過日数。0=非妊娠。毎日アップキープで+1（出産判定ロジックは別途実装予定）
+      pregnantDay: 0,    // 妊娠経過日数。0=非妊娠。毎日アップキープで+1
+      actualBirthDay: 0, // 実際の出産日（pregnantDayの値、16〜20のランダム）。0=未確定。pregnantDay===15でupkeep.htmlが確定させる
       poopCount: 0,      // 💩の数（0〜4）。毎日アップキープで+1、床替えで0にリセット
       diseaseAlert: false, // 😷アイコン表示フラグ。フェーズ3で発動ロジックを実装予定
     },

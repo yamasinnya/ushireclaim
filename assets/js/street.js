@@ -222,6 +222,7 @@ function confirmMarketNaming() {
     skill: MARKET_COW.skill,
     type: 'mother',
     pregnantDay: 0,
+    actualBirthDay: 0,
     poopCount: 0,
     diseaseAlert: false,
   };

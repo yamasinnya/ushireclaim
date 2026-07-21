@@ -303,9 +303,35 @@ function walkToExit() {
   tick();
 }
 
+// ── 出産インタラクション（指示書_出産システムの実装.md対応） ──
+// pregnantDay>=15の母牛タップ時は、通常の詳細シートの代わりに出産予定の状況を返す
+let birthBubbleTimer = null;
+function showBirthComment(stall, key) {
+  const bubble = document.getElementById('birthBubble');
+  bubble.textContent = t(key);
+  bubble.style.left = stall.cx + 'px';
+  bubble.style.top = (stall.cy - 30) + 'px';
+  bubble.classList.add('show');
+  clearTimeout(birthBubbleTimer);
+  birthBubbleTimer = setTimeout(() => {
+    bubble.classList.remove('show');
+    walkHome();
+  }, 2200);
+}
+
 // ── 詳細シート ──
 function openSheet(stall) {
   const c = stall.cowRef;
+  if (c && c.pregnantDay >= 15) {
+    if (c.actualBirthDay > 0 && c.pregnantDay >= c.actualBirthDay) {
+      location.href = `birth.html?cowId=${c.id}`;
+    } else if (c.actualBirthDay > 0 && c.pregnantDay >= c.actualBirthDay - 1) {
+      showBirthComment(stall, 'birth_soon');
+    } else {
+      showBirthComment(stall, 'birth_not_yet');
+    }
+    return;
+  }
   if (c) {
     document.getElementById('sName').textContent = c.name;
     document.getElementById('sAge').textContent = Math.floor(c.age * 0.5) + t('barn_months_suffix');
@@ -317,9 +343,11 @@ function openSheet(stall) {
     const skill = SKILL_DISPLAY[c.skill];
     document.getElementById('sSkill').textContent = skill ? (skill.emoji + ' ' + t(skill.nameKey)) : '';
 
-    // 出産予定表示（指示書_牛舎詳細シートに出産予定表示を追加.md対応）
+    // 出産予定表示（指示書_牛舎詳細シートに出産予定表示を追加.md、指示書_出産システムの実装.md対応）
+    // actualBirthDayが確定済みならそちらを使う（未確定の間は18日目産まれ予定として概算表示）
+    const scheduledDay = c.actualBirthDay > 0 ? c.actualBirthDay : 18;
     document.getElementById('sPregnant').textContent =
-      c.pregnantDay > 0 ? t('barn_pregnant_days').replace('{days}', 18 - c.pregnantDay) : '';
+      c.pregnantDay > 0 ? t('barn_pregnant_days').replace('{days}', scheduledDay - c.pregnantDay) : '';
 
     const threshold = qualityThresholdFor(c.quality);
     const pct = threshold ? ((c.qualityPoint || 0) / threshold) : 0;
