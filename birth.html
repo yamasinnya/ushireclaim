@@ -123,6 +123,7 @@ const BIRTH_SCENES = [
   { key:'birth_scene_01', isNarration:true },
   { key:'birth_scene_02', isNarration:true },
   { key:'birth_scene_03', isNarration:true },
+  { isGenderReveal:true },
   { isNaming:true },
 ];
 
@@ -138,7 +139,10 @@ function showScene(i) {
 
   document.getElementById('namingBox').classList.remove('show');
   document.getElementById('dialogueBox').style.display = 'block';
-  document.getElementById('dialogueText').textContent = t(scene.key);
+  const key = scene.isGenderReveal
+    ? (calfGender === 'female' ? 'birth_gender_reveal_female' : 'birth_gender_reveal_male')
+    : scene.key;
+  document.getElementById('dialogueText').textContent = t(key);
 }
 
 function nextScene() {

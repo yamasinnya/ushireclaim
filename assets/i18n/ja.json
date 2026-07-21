@@ -70,6 +70,8 @@
   "birth_scene_01": "しばらくして。",
   "birth_scene_02": "産まれた。",
   "birth_scene_03": "小さな命が、藁の上に横たわっている。",
+  "birth_gender_reveal_female": "……女の子だ。",
+  "birth_gender_reveal_male": "……男の子だ。",
 
   "condition_up": "の体調が上がった！",
   "condition_down": "が少し元気がなさそうだ…",
