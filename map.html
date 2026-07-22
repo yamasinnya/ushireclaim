@@ -161,9 +161,12 @@ body {
   document.getElementById('btn-back-home').addEventListener('click', () => { location.href = 'home.html'; });
 })();
 
+// 湿地帯（旧フィローネ草原）はDay5から解禁（指示書_5日目チュートリアル（湿地帯解放）.md対応）
+const wetlandUnlocked = loadLoopState().day >= 5;
+
 const ZONES = [
   {id:1, num:"①", name:"ゲルド平原", elev:"約160m", cattle:3, activity:"放牧中", color:"#7ecb5088", points:"0.0,90.3 12.5,95.8 41.7,108.3 41.7,113.9 27.8,125.0 8.3,122.2 0.0,108.3", lx:18.8, ly:109.1, icon:"assets/sprites_mons/nihon_nousagi.png", iw:10, ih:11.1, dialog:"ゲルド平原。子牛たちがのびのびしている。うさぎの足あとがある。", dest:"explore.html"},
-  {id:2, num:"②", name:"フィローネ草原", elev:"約150m", cattle:4, activity:"放牧中", color:"#90d86888", points:"41.7,108.3 47.2,97.2 83.3,102.8 84.7,118.1 63.9,125.0 45.8,120.8", lx:61.1, ly:112.0, icon:"assets/sprites_mons/nihon_nousagi.png", iw:10, ih:11.1, dialog:"フィローネ草原。母牛たちのお気に入りエリアだ。うさぎをみかけた。……まだ移動できないようだ。", dest:null},
+  {id:2, num:"②", name:"湿地帯", elev:"約150m", cattle:0, activity: wetlandUnlocked ? "探索エリア" : "立入禁止", color:"#90d86888", points:"41.7,108.3 47.2,97.2 83.3,102.8 84.7,118.1 63.9,125.0 45.8,120.8", lx:61.1, ly:112.0, icon:"assets/sprites_mons/nihon_nousagi.png", iw:10, ih:11.1, dialog: wetlandUnlocked ? "湿地帯。じめじめしているが、お宝が眠るという。" : "湿地帯。じめじめした沼地が広がる。……Day5で解禁。", dest: wetlandUnlocked ? "explore.html?field=wetland" : null},
   {id:3, num:"③", name:"ハイラル牧場本部", elev:"約180m", cattle:0, activity:"施設エリア", color:"#c8b06088", points:"38.1,63.2 65.2,61.1 67.3,70.8 72.8,84.7 67.3,95.8 38.1,83.3 25.6,77.8 25.6,63.2", lx:50.0, ly:75.0, icon:"assets/sprites/gyusha_large.png", iw:16, ih:13.6, dialog:"ハイラル牧場本部。今日の作業を確認しよう。", dest:"home.html"},
   {id:4, num:"④", name:"オルディン牧草地", elev:"約250〜300m", cattle:5, activity:"放牧中", color:"#68c04088", points:"41.7,12.6 66.7,9.8 77.8,18.1 83.3,32.0 77.8,50.1 66.7,62.6 55.6,68.1 45.8,59.8 40.3,41.7 38.9,25.1", lx:59.4, ly:38.0, icon:"assets/sprites_mons/kususan_youchu.png", iw:11, ih:6.6, dialog:"オルディン牧草地。段々畑が広がる主力エリアだ。クスサンの幼虫がいる。……まだ移動できないようだ。", dest:null},
   {id:5, num:"⑤", name:"新森", elev:"約220m", cattle:2, activity:"自由行動", color:"#2a6a2888", points:"0.0,41.7 0.0,66.7 12.5,75.7 39.6,73.6 38.2,57.6 16.7,54.9", lx:17.8, ly:61.7, icon:"assets/sprites_mons/kususan_youchu.png", iw:10, ih:6.0, dialog:"新森。暑い日に牛たちが涼を求めて集まる。クスサンの幼虫がいる。……まだ移動できないようだ。", dest:null},
@@ -235,6 +238,7 @@ ZONES.forEach(z => {
 let currentZone = null;
 const DEST_BTN_LABEL = {
   'explore.html': '🌿 探索に行く',
+  'explore.html?field=wetland': '🌊 探索に行く',
   'home.html': '🏠 牧場へ戻る',
 };
 function openDialog(z) {
