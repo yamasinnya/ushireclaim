@@ -303,11 +303,11 @@ const FIELD_DEF = {
       uncommon:  9,   // 18枚
       rare:      1,   //  2枚
     },
-    // カード1枚あたりのコイン範囲 [min, max]
+    // カード1枚あたりのコイン範囲 [min, max]（湿地帯実装前の元の経済に戻す。レア度に関係なく一律10〜30G）
     coinRange: {
-      common:   [1, 3],
-      uncommon: [3, 8],
-      rare:     [10, 20],
+      common:   [10, 30],
+      uncommon: [10, 30],
+      rare:     [10, 30],
     },
     // ペア成立ボーナス（0=ボーナスなし）
     pairBonus: {
@@ -332,17 +332,22 @@ const FIELD_DEF = {
       uncommon:  4,   //  8枚
       rare:      1,   //  2枚
     },
-    // コイン単価は野原の約1.5〜2倍
+    // 偶然めくって獲得できるコイン範囲（レア度に関係なく一律30〜50G。口頭指示で変更）
     coinRange: {
-      common:   [2, 5],
-      uncommon: [5, 15],
-      rare:     [15, 30],
+      common:   [30, 50],
+      uncommon: [30, 50],
+      rare:     [30, 50],
     },
     // ペア成立ボーナス
     pairBonus: {
       common:   0,
-      uncommon: 100,   // アンコモンペア成立で+100G
+      uncommon: 200,   // アンコモンペア成立で+200G（口頭指示で100→200に変更）
       rare:     500,   // レアペア成立で+500G
+    },
+    // アンコモン・レアの見た目をお金系の絵柄に変更（口頭指示対応。buildDeckDef参照）
+    cardDisplay: {
+      uncommon: { label:'古銭', emoji:'🪙' },
+      rare:     { label:'金塊', emoji:'💰' },
     },
     specialRules: {
       hideOnFlip: false,
@@ -355,12 +360,18 @@ let SAVE_KEY = FIELD_DEF.plain.saveKey;
 let field = FIELD_DEF.plain;
 
 // カード種の見た目定義（枚数はフィールドごとにfield.pairsから読み取る。buildDeckDef参照）
+// フィールドがcardDisplayでlabel/emojiを上書きしている場合はそちらを優先する（湿地帯のお金系絵柄など）
+const DEFAULT_CARD_DISPLAY = {
+  common:   { label:'雑草',     emoji:'🌿' },
+  uncommon: { label:'良い牧草', emoji:'🌾' },
+  rare:     { label:'幻の薬草', emoji:'✨' },
+};
 function buildDeckDef(f) {
-  return [
-    { key:'common',   label:'雑草',     emoji:'🌿', pairs:f.pairs.common },
-    { key:'uncommon', label:'良い牧草', emoji:'🌾', pairs:f.pairs.uncommon },
-    { key:'rare',     label:'幻の薬草', emoji:'✨', pairs:f.pairs.rare },
-  ];
+  const overrides = f.cardDisplay || {};
+  return ['common', 'uncommon', 'rare'].map(key => {
+    const display = overrides[key] || DEFAULT_CARD_DISPLAY[key];
+    return { key, label: display.label, emoji: display.emoji, pairs: f.pairs[key] };
+  });
 }
 let DECK_DEF = buildDeckDef(field);
 
