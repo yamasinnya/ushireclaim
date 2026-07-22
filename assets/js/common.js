@@ -84,9 +84,18 @@ function conditionToLabel(condition) {
   return '危険';
 }
 
-// 全頭の体調から算出した魔力の合計（現状は1頭のみだが将来の複数頭に備える）
+// 子牛の成長ステージ（指示書_子牛の成長ステージと特殊ルール実装.md対応）
+function getCalfStage(age) {
+  if (age < 4) return 'nursing';   // 哺乳期（生まれたて〜2ヶ月）
+  if (age < 8) return 'weaning';   // 離乳移行期（2〜4ヶ月）
+  return 'growing';                 // 育成期（4ヶ月〜）
+}
+
+// 母牛の体調から算出した魔力の合計（子牛は魔力を持たない）
 function calcTotalMagic(cows) {
-  return cows.reduce((sum, cow) => sum + conditionToMagic(cow.condition), 0);
+  return cows
+    .filter(cow => cow.type === 'mother')
+    .reduce((sum, cow) => sum + conditionToMagic(cow.condition), 0);
 }
 
 // 本日の残り魔力（探索・床替え等で共有のmanaUsedを差し引いた値）

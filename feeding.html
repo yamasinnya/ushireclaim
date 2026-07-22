@@ -68,16 +68,32 @@
     }
   }
 
+  // 草ポイントの分配重み（指示書_子牛の成長ステージと特殊ルール実装.md対応）
+  // 哺乳期(nursing)=0（分母に含めない）／離乳移行期(weaning)=0.5／育成期(growing)・母牛=1.0
+  function calcEffectiveHeads(cows) {
+    return cows.reduce((sum, cow) => {
+      if (cow.type === 'mother') return sum + 1.0;
+      const stage = getCalfStage(cow.age || 0);
+      if (stage === 'nursing') return sum + 0;
+      if (stage === 'weaning') return sum + 0.5;
+      return sum + 1.0; // growing
+    }, 0);
+  }
+
   // 草ポイント→体調変動（設計まとめ.md「草と体調の関係」の表に対応。if文でベタ書き、JSON化はしない）
-  const grassPerCow = state.cows.length ? state.grassStock / state.cows.length : 0;
+  const effectiveHeads = calcEffectiveHeads(state.cows);
+  const grassPerHead = effectiveHeads > 0 ? state.grassStock / effectiveHeads : 0;
   let conditionDelta = 0;
-  if (grassPerCow <= 3) conditionDelta = -1;
-  else if (grassPerCow >= 9) conditionDelta = 1;
+  if (grassPerHead <= 3) conditionDelta = -1;
+  else if (grassPerHead >= 9) conditionDelta = 1;
   // 4〜8ptはconditionDelta=0（維持）
 
+  // 体調変動は母牛・育成期の子牛のみに適用（哺乳期・離乳移行期は母乳で補われるため変動なし）
   let conditionNote = '';
   if (conditionDelta !== 0) {
     state.cows.forEach(cow => {
+      const affected = cow.type === 'mother' || getCalfStage(cow.age || 0) === 'growing';
+      if (!affected) return;
       cow.condition = Math.max(1, Math.min(10, cow.condition + conditionDelta));
     });
     conditionNote = state.cows[0].name + (conditionDelta > 0 ? t('condition_up') : t('condition_down'));

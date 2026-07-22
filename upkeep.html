@@ -72,7 +72,9 @@
       }
     });
   }
+  // 💩ペナルティは母牛のみ対象（子牛は床替えシステム対象外。指示書_子牛の成長ステージと特殊ルール実装.md対応）
   state.cows.forEach(cow => {
+    if (cow.type !== 'mother') return;
     if (cow.poopCount >= 4) {
       cow.qualityPoint = Math.max(0, (cow.qualityPoint || 0) - 5);
     }

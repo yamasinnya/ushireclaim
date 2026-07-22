@@ -790,11 +790,13 @@ function leaveArea() {
     grassBanked = true;
     const loopState = loadLoopState();
     loopState.grassStock += calcGrassPoints(todayItems);
-    // 品質ポイントは牛ごとの値になったため、草ポイントと同様に全頭均等案分する
+    // 品質ポイントは牛ごとの値になったため、母牛の間で均等案分する
+    // 子牛には加算しない（指示書_子牛の成長ステージと特殊ルール実装.md対応。将来のショップアイテムで対応）
     const qpEarned = calcQualityPoints(todayItems);
-    if (qpEarned > 0 && loopState.cows.length) {
-      const qpPerCow = qpEarned / loopState.cows.length;
-      loopState.cows.forEach(cow => { cow.qualityPoint = (cow.qualityPoint || 0) + qpPerCow; });
+    const qpTargetCows = loopState.cows.filter(cow => cow.type === 'mother');
+    if (qpEarned > 0 && qpTargetCows.length) {
+      const qpPerCow = qpEarned / qpTargetCows.length;
+      qpTargetCows.forEach(cow => { cow.qualityPoint = (cow.qualityPoint || 0) + qpPerCow; });
     }
     saveLoopState(loopState);
   }
@@ -845,11 +847,14 @@ function start() {
 
   const loopState = loadLoopState();
   MAX_MANA = calcTotalMagic(loopState.cows);
-  hasHerdboyseye = loopState.cows.some(c => c.skill === 'herdboys_eye');
-  hasSixthSense = loopState.cows.some(c => c.skill === 'roku');
-  hasHarvestMemory = loopState.cows.some(c => c.skill === 'trace');
-  hasZennoshin = loopState.cows.some(c => c.skill === 'zenno');
-  skillMaxUsesToday = rotationSlashMaxUses(loopState.cows.length ? loopState.cows[0].quality : 0);
+  // 子牛のスキルは母牛になるまで無効（指示書_子牛の成長ステージと特殊ルール実装.md対応）
+  hasHerdboyseye = loopState.cows.some(c => c.type === 'mother' && c.skill === 'herdboys_eye');
+  hasSixthSense = loopState.cows.some(c => c.type === 'mother' && c.skill === 'roku');
+  hasHarvestMemory = loopState.cows.some(c => c.type === 'mother' && c.skill === 'trace');
+  hasZennoshin = loopState.cows.some(c => c.type === 'mother' && c.skill === 'zenno');
+  // 回転斬りも子牛は対象外（母牛の品質のみで判定。口頭指示対応）
+  const primaryMother = loopState.cows.find(cow => cow.type === 'mother');
+  skillMaxUsesToday = rotationSlashMaxUses(primaryMother ? primaryMother.quality : 0);
   updatePassiveIcons();
 
   let autoHarvested = [];
