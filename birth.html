@@ -196,6 +196,7 @@ function createCalf(calfName, gender) {
     condition: 7,
     quality: 1,           // 子牛は劣スタート（育成で上げる）
     qualityPoint: 0,
+    lastFedDay: 0,        // 育成飼料を最後にあげた日（指示書_子牛の育成飼料による品質ポイント加算実装.md対応）
     skill: skills[Math.floor(Math.random() * skills.length)],
     type: 'calf',
     pregnantDay: 0,

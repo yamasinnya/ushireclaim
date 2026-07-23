@@ -80,6 +80,8 @@
   "calf_age_2m": "2ヶ月",
   "calf_age_4m": "4ヶ月",
   "calf_age_10m": "10ヶ月",
+  "calf_feed_btn": "🌾 育成飼料をあげる（{cost}G）",
+  "calf_feed_done": "本日はあげ済み",
 
   "tutorial_day5_00": "順調か？",
   "tutorial_day5_01": "街で買い物するにも、金がいるが……なかなか貯まらねぇよな",

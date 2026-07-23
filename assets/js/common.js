@@ -84,6 +84,12 @@ function conditionToLabel(condition) {
   return '危険';
 }
 
+// 育成飼料1回あたりの品質ポイント増加量（指示書_子牛の育成飼料による品質ポイント加算実装.md対応）
+// サイロ建設前は+1、建設後(buildings.silo === true)は+2（サイロ建設処理自体は別フェーズ）
+function getCalfFeedGain(buildings) {
+  return buildings && buildings.silo ? 2 : 1;
+}
+
 // 子牛の成長ステージ（指示書_子牛の成長ステージと特殊ルール実装.md対応）
 function getCalfStage(age) {
   if (age < 4) return 'nursing';   // 哺乳期（生まれたて〜2ヶ月）

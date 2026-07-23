@@ -353,12 +353,50 @@ function showBirthComment(stall, key) {
   }, 2200);
 }
 
+// ── 育成飼料（指示書_子牛の育成飼料による品質ポイント加算実装.md対応） ──
+const CALF_FEED_COST = 100;
+let currentCalfStall = null;
+
+// 所持金・給餌済みかどうかは最新のセーブ値を見て毎回判定する（購入直後の再描画にも使う）
+function updateCalfFeedBtn(cow) {
+  const state = loadLoopState();
+  const freshCow = state.cows.find(x => x.id === cow.id) || cow;
+  const alreadyFed = freshCow.lastFedDay === state.day;
+  const canAfford = state.money >= CALF_FEED_COST;
+  const btn = document.getElementById('calfFeedBtn');
+  btn.style.display = 'block';
+  btn.disabled = alreadyFed || !canAfford;
+  btn.textContent = alreadyFed ? t('calf_feed_done') : t('calf_feed_btn').replace('{cost}', CALF_FEED_COST);
+}
+
+function confirmCalfFeed() {
+  if (!currentCalfStall) return;
+  const state = loadLoopState();
+  const targetCow = state.cows.find(c => c.id === currentCalfStall.cowRef.id);
+  if (!targetCow) return;
+  if (targetCow.lastFedDay === state.day) return; // 1頭につき1日1回のみ
+  if (state.money < CALF_FEED_COST) return;
+
+  state.money -= CALF_FEED_COST;
+  targetCow.qualityPoint = (targetCow.qualityPoint || 0) + getCalfFeedGain(state.buildings);
+  targetCow.lastFedDay = state.day;
+  saveLoopState(state);
+
+  currentCalfStall.cowRef.qualityPoint = targetCow.qualityPoint; // 表示中のcowオブジェクト（drawが参照）にも反映
+  currentCalfStall.cowRef.lastFedDay = targetCow.lastFedDay;
+
+  renderHeader('gameHeader');
+  updateCalfFeedBtn(currentCalfStall.cowRef);
+}
+
 // ── 詳細シート ──
 function openSheet(stall) {
   const c = stall.cowRef;
+  document.getElementById('calfFeedBtn').style.display = 'none'; // 子牛以外では非表示（子牛の分岐内で表示に切り替える）
 
   // 子牛専用シート（指示書_子牛の牛舎表示実装.md対応。品質・妊娠関連は今回スコープ外）
   if (c && c.type === 'calf') {
+    currentCalfStall = stall;
     const genderIcon = c.gender === 'female' ? t('calf_gender_female') : t('calf_gender_male');
     document.getElementById('sName').textContent = `${genderIcon} ${c.name}`;
     document.getElementById('sAge').textContent = getAgeLabel(c.age);
@@ -382,6 +420,8 @@ function openSheet(stall) {
     } else {
       calfSc.getContext('2d').clearRect(0, 0, calfSc.width, calfSc.height);
     }
+
+    updateCalfFeedBtn(c);
 
     document.getElementById('sCloseBtn').textContent = t('barn_close_btn');
     document.getElementById('sheetOverlay').classList.add('open');
