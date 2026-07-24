@@ -18,6 +18,11 @@ const LOOP_DEFAULT_STATE = {
       qualityPoint: 0,   // 牛ごとの品質ポイント（薬草獲得から貯まる。閾値到達でfeeding.htmlにて品質を1段階上げ、0へリセット）
       pregnantDay: 0,    // 妊娠経過日数。0=非妊娠。毎日アップキープで+1
       actualBirthDay: 0, // 実際の出産日（pregnantDayの値、16〜20のランダム）。0=未確定。pregnantDay===15でupkeep.htmlが確定させる
+      // 繁殖状態（指示書_発情・種付け・妊娠システム実装.md対応）。表示優先度はbarn.js参照
+      // 'none'=通常 / 'estrus'=発情中 / 'inseminated'=種付け済み(着床判定〜結果通知まで) / 'pregnant'=妊娠確定済み / 'failed'=着床失敗（次の発情まで表示）
+      breedingState: 'none',
+      breedingGrade: null, // 直近の種付けで使ったグレード('cheap'/'normal'/'premium')。出産時の子牛品質ポイントロールに使用
+      inseminatedDay: 0,   // 種付けを実行した日（着床判定は+1日後、結果通知は+2日後）
       poopCount: 0,      // 💩の数（0〜4）。毎日アップキープで+1、床替えで0にリセット
       diseaseAlert: false, // 😷アイコン表示フラグ。フェーズ3で発動ロジックを実装予定
     },
@@ -95,6 +100,16 @@ function getCalfStage(age) {
   if (age < 4) return 'nursing';   // 哺乳期（生まれたて〜2ヶ月）
   if (age < 8) return 'weaning';   // 離乳移行期（2〜4ヶ月）
   return 'growing';                 // 育成期（4ヶ月〜）
+}
+
+// 発情確率（品質ティア別。指示書_発情・種付け・妊娠システム実装.md対応。優90%/良75%/可50%/劣25%）
+const ESTRUS_PROBABILITY = { 4: 0.90, 3: 0.75, 2: 0.50, 1: 0.25 };
+
+// 種付けグレード別、出産時の子牛品質ポイントスタート値ロール
+function rollCalfStartQualityPoint(grade) {
+  if (grade === 'premium') return 15 + Math.floor(Math.random() * 6); // 15〜20の一様乱数
+  if (grade === 'normal') return 5 + Math.floor(Math.random() * 14); // 5〜18の一様乱数
+  return 0; // cheap（安い）は固定0
 }
 
 // 母牛の体調から算出した魔力の合計（子牛は魔力を持たない）

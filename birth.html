@@ -185,7 +185,8 @@ function checkNamingInput() {
 }
 
 // 子牛データの生成（指示書_出産システムの実装.md対応。種+母牛品質によるスキル決定は将来対応）
-function createCalf(calfName, gender) {
+// qualityPointのスタート値は母牛の種付けグレードに応じてロールする（指示書_発情・種付け・妊娠システム実装.md対応）
+function createCalf(calfName, gender, breedingGrade) {
   const skills = ['herdboys_eye', 'trace', 'roku'];
   return {
     id: 'cow_' + Date.now(),
@@ -195,7 +196,7 @@ function createCalf(calfName, gender) {
     seed: Math.floor(Math.random() * 99999) + 1,
     condition: 7,
     quality: 1,           // 子牛は劣スタート（育成で上げる）
-    qualityPoint: 0,
+    qualityPoint: rollCalfStartQualityPoint(breedingGrade),
     lastFedDay: 0,        // 育成飼料を最後にあげた日（指示書_子牛の育成飼料による品質ポイント加算実装.md対応）
     skill: skills[Math.floor(Math.random() * skills.length)],
     type: 'calf',
@@ -213,11 +214,15 @@ function confirmNaming() {
 
   const state = loadLoopState();
   const mother = state.cows.find(c => c.id === motherCow.id);
+  const breedingGrade = mother ? mother.breedingGrade : null;
   if (mother) {
     mother.pregnantDay = 0;
     mother.actualBirthDay = 0;
+    mother.breedingState = 'none';
+    mother.breedingGrade = null;
+    mother.inseminatedDay = 0;
   }
-  state.cows.push(createCalf(input.value, calfGender));
+  state.cows.push(createCalf(input.value, calfGender, breedingGrade));
   saveLoopState(state);
 
   document.getElementById('namingBox').classList.remove('show');

@@ -449,11 +449,21 @@ function openSheet(stall) {
     const skill = SKILL_DISPLAY[c.skill];
     document.getElementById('sSkill').textContent = skill ? (skill.emoji + ' ' + t(skill.nameKey)) : '';
 
-    // 出産予定表示（指示書_牛舎詳細シートに出産予定表示を追加.md、指示書_出産システムの実装.md対応）
-    // actualBirthDayが確定済みならそちらを使う（未確定の間は18日目産まれ予定として概算表示）
-    const scheduledDay = c.actualBirthDay > 0 ? c.actualBirthDay : 18;
-    document.getElementById('sPregnant').textContent =
-      c.pregnantDay > 0 ? t('barn_pregnant_days').replace('{days}', scheduledDay - c.pregnantDay) : '';
+    // 繁殖状態の表示（指示書_発情・種付け・妊娠システム実装.md対応）
+    // breedingStateのみを見て判定する。着床の成否は'inseminated'の間は伏せたままにするため、
+    // pregnantDay自体はこの時点で>0でも「妊娠中」表示には切り替えない（妊娠確定イベントで初めて切り替わる）
+    if (c.breedingState === 'pregnant') {
+      const scheduledDay = c.actualBirthDay > 0 ? c.actualBirthDay : 18;
+      document.getElementById('sPregnant').textContent = t('barn_pregnant_days').replace('{days}', scheduledDay - c.pregnantDay);
+    } else if (c.breedingState === 'inseminated') {
+      document.getElementById('sPregnant').textContent = t('barn_state_inseminated');
+    } else if (c.breedingState === 'estrus') {
+      document.getElementById('sPregnant').textContent = t('barn_state_estrus');
+    } else if (c.breedingState === 'failed') {
+      document.getElementById('sPregnant').textContent = t('barn_state_failed');
+    } else {
+      document.getElementById('sPregnant').textContent = '';
+    }
 
     const threshold = qualityThresholdFor(c.quality);
     const pct = threshold ? ((c.qualityPoint || 0) / threshold) : 0;

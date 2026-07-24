@@ -37,6 +37,18 @@
     return;
   }
 
+  // 妊娠確定／着床失敗の通知：種付けから2日後（＝着床判定の翌日）の「1日の始まり」で発火する
+  // プレイヤーはこのイベントで初めて結果を知る（着床失敗でも同様。指示書_発情・種付け・妊娠システム実装.md対応）
+  const revealingCow = state.cows.find(cow => cow.breedingState === 'inseminated' && cow.inseminatedDay > 0 && state.day === cow.inseminatedDay + 2);
+  if (revealingCow && !skipTutorial) {
+    const success = revealingCow.pregnantDay > 0;
+    revealingCow.breedingState = success ? 'pregnant' : 'failed';
+    saveLoopState(state);
+    const nextUrl = encodeURIComponent('upkeep.html?skip_tutorial=1');
+    location.href = `truck_talk.html?scene=${success ? 'pregnancy_confirmed' : 'pregnancy_failed'}&next=${nextUrl}`;
+    return;
+  }
+
   // 出産予定日の確定：pregnantDayが15に達した時点でactualBirthDayをランダム確定（指示書_出産システムの実装.md対応）
   state.cows.forEach(cow => {
     if (cow.pregnantDay === 15 && !cow.actualBirthDay) {
@@ -49,6 +61,7 @@
   function triggerMiscarriage(cow, reason) {
     cow.pregnantDay = 0;
     cow.actualBirthDay = 0;
+    cow.breedingState = 'none'; // 通常の発情待ちループに戻す（指示書_発情・種付け・妊娠システム実装.md対応）
     saveLoopState(state);
     const nextUrl = encodeURIComponent('upkeep.html?skip_tutorial=1');
     location.href = `truck_talk.html?scene=miscarriage&next=${nextUrl}`;
@@ -84,6 +97,32 @@
   state.cows.forEach(cow => {
     if (cow.pregnantDay > 0) {
       cow.pregnantDay += 1;
+    }
+  });
+
+  // 着床判定：種付け実行の翌日に一律80%（指示書_発情・種付け・妊娠システム実装.md対応）
+  // 結果はここでは通知しない。プレイヤーへの明示は2日後の妊娠確定/着床失敗イベントで行う（上記のrevealingCow参照）
+  state.cows.forEach(cow => {
+    if (cow.breedingState === 'inseminated' && cow.inseminatedDay > 0 && state.day === cow.inseminatedDay + 1) {
+      if (Math.random() < 0.80) {
+        cow.pregnantDay = 1;
+      }
+      // 失敗時はpregnantDayを0のまま据え置き、breedingStateは'inseminated'を維持する（reveal日まで表示を変えないため）
+    }
+  });
+
+  // 発情判定：非妊娠・未授精の母牛を対象に、品質ティア別の確率で毎日判定（指示書_発情・種付け・妊娠システム実装.md対応）
+  // 発情を逃した（前日発情のまま種付けしなかった）場合は機会が消え、この判定で新しくやり直す。
+  // 着床失敗表示('failed')は次の発情が来る（この判定で成功する）まで維持する
+  state.cows.forEach(cow => {
+    if (cow.type !== 'mother') return;
+    if (cow.pregnantDay > 0) return;
+    if (cow.breedingState === 'inseminated') return;
+    const prob = ESTRUS_PROBABILITY[cow.quality] || 0;
+    if (Math.random() < prob) {
+      cow.breedingState = 'estrus';
+    } else if (cow.breedingState !== 'failed') {
+      cow.breedingState = 'none';
     }
   });
 

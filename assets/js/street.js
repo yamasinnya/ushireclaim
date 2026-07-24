@@ -24,9 +24,10 @@ const SHOPS = {
     nameKey: 'shop_juui_name',
     descKey: 'shop_juui_desc',
     products: [
-      { nameKey: 'product_tanetsuke_koukyu' },
-      { nameKey: 'product_tanetsuke_futsuu' },
-      { nameKey: 'product_tanetsuke_yasui' },
+      // 種付け（指示書_発情・種付け・妊娠システム実装.md対応。発情中の母牛にのみ実行可能）
+      { nameKey: 'product_tanetsuke_koukyu', type: 'insemination', grade: 'premium', cost: 20000 },
+      { nameKey: 'product_tanetsuke_futsuu', type: 'insemination', grade: 'normal', cost: 5000 },
+      { nameKey: 'product_tanetsuke_yasui', type: 'insemination', grade: 'cheap', cost: 1000 },
       { nameKey: 'product_byouki_chiryo' },
     ],
   },
@@ -85,6 +86,10 @@ function openShopSheet(shopId) {
       list.appendChild(buildMarketCowRow(state));
       return;
     }
+    if (p.type === 'insemination') {
+      list.appendChild(buildInseminationRow(state, p));
+      return;
+    }
 
     const row = document.createElement('div');
     row.className = 'product-row';
@@ -131,6 +136,90 @@ function handleBuyWara(product) {
   renderHeader('gameHeader');
   if (currentShopId) openShopSheet(currentShopId); // 所持金・ボタン状態を再描画
   showShopMessage(t('msg_wara_purchased').replace('{days}', Math.floor(product.buy.pt / 5)));
+}
+
+// ── 獣医：種付け（指示書_発情・種付け・妊娠システム実装.md対応） ──
+function buildInseminationRow(state, product) {
+  const wrap = document.createElement('div');
+  wrap.className = 'product-row';
+
+  const nameSpan = document.createElement('span');
+  nameSpan.className = 'product-name';
+  nameSpan.textContent = t(product.nameKey);
+  wrap.appendChild(nameSpan);
+
+  const estrusCows = state.cows.filter(c => c.type === 'mother' && c.breedingState === 'estrus');
+  const canAfford = state.money >= product.cost;
+  const enabled = canAfford && estrusCows.length > 0;
+
+  const btn = document.createElement('button');
+  btn.className = enabled ? 'btn-buy' : 'btn-buy-disabled';
+  btn.textContent = enabled ? t('btn_buy') : t('btn_cant_buy');
+  btn.disabled = !enabled;
+  if (enabled) {
+    btn.addEventListener('click', () => {
+      // 発情中が1頭ならそのまま適用、2頭以上なら選択させる（口頭指示対応）
+      if (estrusCows.length === 1) {
+        applyInsemination(estrusCows[0].id, product);
+      } else {
+        openCowPicker(estrusCows, product);
+      }
+    });
+  }
+  wrap.appendChild(btn);
+
+  if (canAfford && estrusCows.length === 0) {
+    const note = document.createElement('div');
+    note.className = 'product-note';
+    note.textContent = t('vet_no_estrus_cow');
+    wrap.appendChild(note);
+  }
+
+  return wrap;
+}
+
+function applyInsemination(cowId, product) {
+  const state = loadLoopState();
+  const cow = state.cows.find(c => c.id === cowId);
+  if (!cow || cow.breedingState !== 'estrus') return;
+  if (state.money < product.cost) return;
+
+  state.money -= product.cost;
+  cow.breedingState = 'inseminated';
+  cow.breedingGrade = product.grade;
+  cow.inseminatedDay = state.day;
+  saveLoopState(state);
+
+  renderHeader('gameHeader');
+  if (currentShopId) openShopSheet(currentShopId); // 所持金・発情牛の一覧を再描画
+  showShopMessage(t('vet_insemination_done').replace('{name}', cow.name));
+}
+
+// 発情中の母牛が複数いる時だけ表示する対象選択リスト
+let pendingInseminationProduct = null;
+function openCowPicker(cows, product) {
+  pendingInseminationProduct = product;
+  document.getElementById('cowPickerTitle').textContent = t('vet_pick_cow_title');
+  const list = document.getElementById('cowPickerList');
+  list.innerHTML = '';
+  cows.forEach(cow => {
+    const btn = document.createElement('button');
+    btn.className = 'naming-confirm-btn';
+    btn.style.marginBottom = '8px';
+    btn.textContent = cow.name;
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      applyInsemination(cow.id, pendingInseminationProduct);
+      closeCowPicker();
+    });
+    list.appendChild(btn);
+  });
+  document.getElementById('cowPickerCancelBtn').textContent = t('btn_cancel');
+  document.getElementById('cowPickerOverlay').classList.add('open');
+}
+function closeCowPicker() {
+  document.getElementById('cowPickerOverlay').classList.remove('open');
+  pendingInseminationProduct = null;
 }
 
 // ── 競り市場：母牛購入（指示書_qualityPoint移行と母牛購入.md対応） ──
@@ -223,6 +312,9 @@ function confirmMarketNaming() {
     type: 'mother',
     pregnantDay: 0,
     actualBirthDay: 0,
+    breedingState: 'none',
+    breedingGrade: null,
+    inseminatedDay: 0,
     poopCount: 0,
     diseaseAlert: false,
   };
@@ -259,6 +351,12 @@ document.getElementById('marketNamingCancelBtn').addEventListener('click', (e) =
   closeMarketNaming();
 });
 document.getElementById('marketNamingBox').addEventListener('click', (e) => e.stopPropagation());
+
+document.getElementById('cowPickerCancelBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  closeCowPicker();
+});
+document.getElementById('cowPickerBox').addEventListener('click', (e) => e.stopPropagation());
 
 (async function () {
   await loadDict();

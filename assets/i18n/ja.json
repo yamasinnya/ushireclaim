@@ -96,6 +96,9 @@
   "tutorial_calf_08": "メスでも母牛にせず、売るってのも一つの手だ。資金繰りが楽になりゃ、次はもっといい餌で育ててやれる",
   "tutorial_calf_09": "正解はない。大事なのは、産まれた子牛を大事に育てることだ。それが、お前さんの仕事だ。がんばれよ",
 
+  "tutorial_pregnancy_confirmed_00": "（仮セリフ）どうやら、うまく着床したみたいだ。妊娠確定だな",
+  "tutorial_pregnancy_failed_00": "（仮セリフ）……今回はダメだったみたいだ。また次の発情を待とう",
+
   "tutorial_day5_00": "順調か？",
   "tutorial_day5_01": "街で買い物するにも、金がいるが……なかなか貯まらねぇよな",
   "tutorial_day5_02": "だから一つ、いい場所を教えてやる",
@@ -113,6 +116,9 @@
   "barn_quality_label": "品質",
   "barn_months_suffix": "ヶ月",
   "barn_pregnant_days": "🤰 あと{days}日で出産予定",
+  "barn_state_estrus": "🐮 発情",
+  "barn_state_inseminated": "💉 授精済み",
+  "barn_state_failed": "😢 妊娠失敗",
   "barn_empty_stall_name": "空き牛房",
   "barn_empty_stall_comment": "空き牛房です。草を敷いて待っています。",
   "barn_coat_comment_1": "最近少し元気がないかも…",
@@ -148,6 +154,10 @@
   "product_tanetsuke_futsuu": "種付け 普通",
   "product_tanetsuke_yasui": "種付け 安い",
   "product_byouki_chiryo": "病気治療",
+
+  "vet_no_estrus_cow": "発情中の牛がいません",
+  "vet_insemination_done": "{name}に種付けした",
+  "vet_pick_cow_title": "どの牛に種付けする？",
 
   "shop_contractor_name": "コントラクター",
   "shop_contractor_desc": "農業機械を使った作業を請け負います。",
