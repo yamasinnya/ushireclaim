@@ -35,6 +35,8 @@ const EXIT_POINT = { x:187, y:620 };
 const EXIT_HITBOX = { x1:0, y1:605, x2:375, y2:666 };
 
 const loopState = loadLoopState();
+// 魔法の水飲み場：建設済みならqualityPointの実数値をティア表示に添える（指示書_建設屋「魔法の水飲み場」実装.md対応）
+const magicWaterTroughBuilt = !!loopState.buildings.magicWaterTrough;
 // 母牛は上段(s0〜s2)固定・子牛は下段(s4〜s6)固定でスロットに割り当てる（指示書_牛舎スロットの固定割り当て.md対応）
 const MOTHER_SLOT_IDS = ['s0', 's1', 's2'];
 const CALF_SLOT_IDS = ['s4', 's5', 's6'];
@@ -403,8 +405,14 @@ function openSheet(stall) {
     document.getElementById('sCondLbl').textContent = t('barn_condition_label');
     document.getElementById('sCondFill').style.width = (c.condition * 10) + '%';
     document.getElementById('sCondNum').textContent = c.condition;
-    document.getElementById('sQualLbl').textContent = '';
-    document.getElementById('sQual').textContent = '';
+    // 魔法の水飲み場が建設済みならqualityPointの実数値を表示（子牛は品質ティア自体は今回スコープ外のまま）
+    if (magicWaterTroughBuilt) {
+      document.getElementById('sQualLbl').textContent = t('barn_quality_point_label');
+      document.getElementById('sQual').textContent = c.qualityPoint || 0;
+    } else {
+      document.getElementById('sQualLbl').textContent = '';
+      document.getElementById('sQual').textContent = '';
+    }
     const calfSkill = SKILL_DISPLAY[c.skill];
     document.getElementById('sSkill').textContent = calfSkill ? (calfSkill.emoji + ' ' + t(calfSkill.nameKey)) : '';
     document.getElementById('sPregnant').textContent = '';
@@ -445,7 +453,9 @@ function openSheet(stall) {
     document.getElementById('sCondFill').style.width = (c.condition * 10) + '%';
     document.getElementById('sCondNum').textContent = c.condition;
     document.getElementById('sQualLbl').textContent = t('barn_quality_label');
-    document.getElementById('sQual').textContent = t(qualityToLabelKey(c.quality));
+    // 魔法の水飲み場が建設済みならqualityPointの実数値をティア表示に添える
+    document.getElementById('sQual').textContent = t(qualityToLabelKey(c.quality)) +
+      (magicWaterTroughBuilt ? ` (${c.qualityPoint || 0})` : '');
     const skill = SKILL_DISPLAY[c.skill];
     document.getElementById('sSkill').textContent = skill ? (skill.emoji + ' ' + t(skill.nameKey)) : '';
 

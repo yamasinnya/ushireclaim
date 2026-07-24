@@ -123,6 +123,7 @@
   "barn_close_btn": "閉じる",
   "barn_condition_label": "体調",
   "barn_quality_label": "品質",
+  "barn_quality_point_label": "品質PT",
   "barn_months_suffix": "ヶ月",
   "barn_pregnant_days": "🤰 あと{days}日で出産予定",
   "barn_state_estrus": "🐮 発情",
@@ -180,6 +181,9 @@
   "product_gyusha_kakuchou": "牛舎拡張",
   "product_it_catalog": "IT化設備カタログ",
   "product_it_catalog_note": "※行商人が来た時に購入できます",
+  "product_magic_water_trough": "魔法の水飲み場",
+  "building_already_built": "建設済み",
+  "msg_building_purchased": "{name}を建設した",
 
   "shop_seri_name": "競り市場",
   "shop_seri_desc": "子牛の競りへの参加と、母牛の購入ができます。",

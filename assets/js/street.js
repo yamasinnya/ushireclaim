@@ -47,6 +47,9 @@ const SHOPS = {
       { nameKey: 'product_mahou_taihisha' },
       { nameKey: 'product_gyusha_kakuchou' },
       { nameKey: 'product_it_catalog', noteKey: 'product_it_catalog_note' },
+      // 魔法の水飲み場（指示書_建設屋「魔法の水飲み場」実装.md対応）
+      // 本来10万G想定だが、デバッグ目的も兼ねて今回は100Gに設定
+      { nameKey: 'product_magic_water_trough', type: 'building', buildingKey: 'magicWaterTrough', cost: 100 },
     ],
   },
   shop_seri: {
@@ -88,6 +91,10 @@ function openShopSheet(shopId) {
     }
     if (p.type === 'insemination') {
       list.appendChild(buildInseminationRow(state, p));
+      return;
+    }
+    if (p.type === 'building') {
+      list.appendChild(buildBuildingRow(state, p));
       return;
     }
 
@@ -220,6 +227,48 @@ function openCowPicker(cows, product) {
 function closeCowPicker() {
   document.getElementById('cowPickerOverlay').classList.remove('open');
   pendingInseminationProduct = null;
+}
+
+// ── 建設屋：一度買うと恒久的にbuildings.{buildingKey}=trueになる施設（指示書_建設屋「魔法の水飲み場」実装.md対応） ──
+function buildBuildingRow(state, product) {
+  const row = document.createElement('div');
+  row.className = 'product-row';
+
+  const nameSpan = document.createElement('span');
+  nameSpan.className = 'product-name';
+  nameSpan.textContent = t(product.nameKey);
+  row.appendChild(nameSpan);
+
+  const built = !!state.buildings[product.buildingKey];
+  const canAfford = state.money >= product.cost;
+  const btn = document.createElement('button');
+  if (built) {
+    btn.className = 'btn-buy-disabled';
+    btn.disabled = true;
+    btn.textContent = t('building_already_built');
+  } else {
+    btn.className = canAfford ? 'btn-buy' : 'btn-buy-disabled';
+    btn.disabled = !canAfford;
+    btn.textContent = canAfford ? t('btn_buy') : t('btn_cant_buy');
+    if (canAfford) btn.addEventListener('click', () => handleBuyBuilding(product));
+  }
+  row.appendChild(btn);
+
+  return row;
+}
+
+function handleBuyBuilding(product) {
+  const state = loadLoopState();
+  if (state.buildings[product.buildingKey]) return;
+  if (state.money < product.cost) return;
+
+  state.money -= product.cost;
+  state.buildings[product.buildingKey] = true;
+  saveLoopState(state);
+
+  renderHeader('gameHeader');
+  if (currentShopId) openShopSheet(currentShopId); // ボタン状態（建設済み）を再描画
+  showShopMessage(t('msg_building_purchased').replace('{name}', t(product.nameKey)));
 }
 
 // ── 競り市場：母牛購入（指示書_qualityPoint移行と母牛購入.md対応） ──
