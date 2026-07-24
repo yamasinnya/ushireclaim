@@ -353,6 +353,51 @@ const FIELD_DEF = {
       hideOnFlip: false,
     },
   },
+
+  // 台地：子牛用の濃厚飼料を入手する専用フィールド（指示書_探索エリア「台地」追加.md対応）
+  plateau: {
+    id: 'plateau',
+    name: '台地',
+    emoji: '⛰️',
+    sub: '見晴らしがいい。子牛用の濃厚飼料が採れるという',
+    saveKey: 'yamayama_explore_plateau_v1',
+    pairs: {
+      common:   33,   // 66枚
+      uncommon:  6,   // 12枚
+      rare:      1,   //  2枚
+    },
+    // 台地はゴールドを一切出さない（アンコモン・レアは子牛用飼料に回るため）
+    coinRange: {
+      common:   [0, 0],
+      uncommon: [0, 0],
+      rare:     [0, 0],
+    },
+    // ゴールドのペア成立ボーナスはなし（子牛への加算はcalfFeedBonusで別処理する）
+    pairBonus: {
+      common:   0,
+      uncommon: 0,
+      rare:     0,
+    },
+    // アンコモン・レアは母牛の草ポイントには加算しない（子牛専用飼料のため。calcGrassPoints参照）
+    grassPoints: {
+      common:   1,
+      uncommon: 0,
+      rare:     0,
+    },
+    // ペア成立時に牛舎にいる全子牛のqualityPointへ按分加算する量（端数は配列先頭側優先。distributeCalfFeedPoints参照。口頭指示でuncommon3→1に変更）
+    calfFeedBonus: {
+      common:   0,
+      uncommon: 1,
+      rare:     3,
+    },
+    cardDisplay: {
+      uncommon: { label:'濃厚飼料',     emoji:'🌽' },
+      rare:     { label:'良い濃厚飼料', emoji:'🌟' },
+    },
+    specialRules: {
+      hideOnFlip: false,
+    },
+  },
 };
 
 let MAX_MANA = 10;
@@ -743,6 +788,10 @@ function onCardClick(el, idx) {
         const pairBonus = field.pairBonus[matchedDef.key] || 0;
         if (pairBonus > 0) claimCoin(pairBonus, 'ボーナス');
 
+        // 台地のペア成立で子牛のqualityPointに按分加算
+        const calfFeedPt = field.calfFeedBonus ? (field.calfFeedBonus[matchedDef.key] || 0) : 0;
+        if (calfFeedPt > 0) distributeCalfFeedPoints(calfFeedPt);
+
         todayItems.push(deck[idx].ri);
         updateLog();
         save();
@@ -773,14 +822,31 @@ function onCardClick(el, idx) {
 
 // ── 帰還 ──
 // 草ポイント：コモン1pt / アンコモン3pt / レアは品質側の扱いなので今回は0pt（体調には加算しない）
+// 台地等、field.grassPointsを持つフィールドはそちらを優先する（アンコモン・レアが子牛用飼料に回るため）
 function calcGrassPoints(items) {
-  const POINTS = { common: 1, uncommon: 3, rare: 0 };
+  const POINTS = field.grassPoints || { common: 1, uncommon: 3, rare: 0 };
   return items.reduce((sum, ri) => sum + (POINTS[DECK_DEF[ri].key] || 0), 0);
 }
 
 // 品質ポイント：薬草（レア）獲得枚数 × 5pt（体調とは別で品質のみに加算）
+// 台地等、レアが子牛用飼料になっているフィールド（field.calfFeedBonus持ち）では母牛には加算しない
 function calcQualityPoints(items) {
+  if (field.calfFeedBonus) return 0;
   return items.filter(ri => DECK_DEF[ri].key === 'rare').length * 5;
+}
+
+// 台地のペア成立で、牛舎にいる全子牛のqualityPointに按分加算する（指示書_探索エリア「台地」追加.md対応）
+// 端数は配列の先頭側（若い子牛）から優先して多く割り振る。子牛が0頭の場合は何も起こらず破棄する（口頭確認済み）
+function distributeCalfFeedPoints(totalPt) {
+  const loopState = loadLoopState();
+  const calves = loopState.cows.filter(cow => cow.type === 'calf');
+  if (calves.length === 0) return;
+  const base = Math.floor(totalPt / calves.length);
+  const remainder = totalPt % calves.length;
+  calves.forEach((calf, i) => {
+    calf.qualityPoint = (calf.qualityPoint || 0) + base + (i < remainder ? 1 : 0);
+  });
+  saveLoopState(loopState);
 }
 
 let grassBanked = false; // 1日1回だけgrassStockに加算するためのガード

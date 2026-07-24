@@ -83,6 +83,8 @@
   "calf_feed_btn": "🌾 育成飼料をあげる（{cost}G）",
   "calf_feed_done": "本日はあげ済み",
 
+  "map_mana_insufficient": "🔮 魔力が足りません",
+
   "tutorial_day5_00": "順調か？",
   "tutorial_day5_01": "街で買い物するにも、金がいるが……なかなか貯まらねぇよな",
   "tutorial_day5_02": "だから一つ、いい場所を教えてやる",

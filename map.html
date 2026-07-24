@@ -162,7 +162,10 @@ body {
 })();
 
 // 湿地帯（旧フィローネ草原）はDay5から解禁（指示書_5日目チュートリアル（湿地帯解放）.md対応）
-const wetlandUnlocked = loadLoopState().day >= 5;
+// 台地（旧アッカレ台地）はDay20から解禁（指示書_探索エリア「台地」追加.md対応、解禁日は口頭指示）
+const mapDayState = loadLoopState();
+const wetlandUnlocked = mapDayState.day >= 5;
+const plateauUnlocked = mapDayState.day >= 20;
 
 const ZONES = [
   {id:1, num:"①", name:"ゲルド平原", elev:"約160m", cattle:3, activity:"放牧中", color:"#7ecb5088", points:"0.0,90.3 12.5,95.8 41.7,108.3 41.7,113.9 27.8,125.0 8.3,122.2 0.0,108.3", lx:18.8, ly:109.1, icon:"assets/sprites_mons/nihon_nousagi.png", iw:10, ih:11.1, dialog:"ゲルド平原。子牛たちがのびのびしている。うさぎの足あとがある。", dest:"explore.html"},
@@ -171,7 +174,7 @@ const ZONES = [
   {id:4, num:"④", name:"オルディン牧草地", elev:"約250〜300m", cattle:5, activity:"放牧中", color:"#68c04088", points:"41.7,12.6 66.7,9.8 77.8,18.1 83.3,32.0 77.8,50.1 66.7,62.6 55.6,68.1 45.8,59.8 40.3,41.7 38.9,25.1", lx:59.4, ly:38.0, icon:"assets/sprites_mons/kususan_youchu.png", iw:11, ih:6.6, dialog:"オルディン牧草地。段々畑が広がる主力エリアだ。クスサンの幼虫がいる。……まだ移動できないようだ。", dest:null},
   {id:5, num:"⑤", name:"新森", elev:"約220m", cattle:2, activity:"自由行動", color:"#2a6a2888", points:"0.0,41.7 0.0,66.7 12.5,75.7 39.6,73.6 38.2,57.6 16.7,54.9", lx:17.8, ly:61.7, icon:"assets/sprites_mons/kususan_youchu.png", iw:10, ih:6.0, dialog:"新森。暑い日に牛たちが涼を求めて集まる。クスサンの幼虫がいる。……まだ移動できないようだ。", dest:null},
   {id:6, num:"⑥", name:"旧森", elev:"約250m", cattle:0, activity:"立入禁止", color:"#1e522088", points:"0.0,18.8 0.0,41.7 16.7,54.9 34.7,47.9 33.3,36.8 20.8,11.1", lx:17.6, ly:35.2, icon:"assets/sprites_mons/karasu.png", iw:10, ih:8.7, dialog:"旧森。カラスの鳴き声がする。……まだ移動できないようだ。", dest:null},
-  {id:7, num:"⑦", name:"アッカレ台地", elev:"約300m", cattle:3, activity:"放牧中", color:"#98c85888", points:"84.0,25.0 100.0,32.6 100.0,127.8 81.9,127.8 77.1,83.3 83.3,58.3 77.1,41.7", lx:86.2, ly:70.9, icon:"assets/sprites_mons/kususan_youchu.png", iw:10, ih:6.0, dialog:"アッカレ台地。見晴らしがいい。気持ちいい風が吹いている。クスサンの幼虫がいる。……まだ移動できないようだ。", dest:null},
+  {id:7, num:"⑦", name:"台地", elev:"約300m", cattle:0, activity: plateauUnlocked ? "探索エリア" : "立入禁止", color:"#98c85888", points:"84.0,25.0 100.0,32.6 100.0,127.8 81.9,127.8 77.1,83.3 83.3,58.3 77.1,41.7", lx:86.2, ly:70.9, icon:"assets/sprites_mons/kususan_youchu.png", iw:10, ih:6.0, dialog: plateauUnlocked ? "台地。見晴らしがいい。子牛用の濃厚飼料が採れるという。" : "台地。見晴らしがいい。気持ちいい風が吹いている。……Day20で解禁。", dest: plateauUnlocked ? "explore.html?field=plateau" : null, manaCost: 2},
   {id:8, num:"⑧", name:"エウンポ台地", elev:"約360m", cattle:2, activity:"放牧中", color:"#b0d07088", points:"50.0,0.0 85.4,0.0 85.4,24.3 58.3,32.6 51.4,20.8", lx:66.1, ly:15.6, icon:"assets/sprites_mons/yamakagashi.png", iw:10, ih:8.1, dialog:"エウンポ台地。ヤマカガシがとぐろを巻いている。……まだ移動できないようだ。", dest:null},
   {id:9, num:"⑨", name:"イタリアン峠", elev:"約400m", cattle:1, activity:"単独放牧", color:"#8aaa5888", points:"85.4,0.0 100.0,0.0 100.0,32.6 84.0,25.0", lx:92.4, ly:14.4, icon:"assets/sprites_mons/yamakagashi.png", iw:9, ih:7.3, dialog:"イタリアン峠。ヤマカガシがとぐろを巻いている。……まだ移動できないようだ。", dest:null},
   {id:10, num:"⑩", name:"タバンタ高原", elev:"約420m", cattle:2, activity:"夏季放牧中", color:"#b8c87888", points:"22.2,0.0 50.0,0.0 53.5,22.9 38.9,41.0 12.5,41.7 0.0,26.4 0.0,18.8", lx:25.3, ly:21.5, icon:"assets/sprites_mons/yamakagashi.png", iw:10, ih:8.1, dialog:"タバンタ高原。ヤマカガシがとぐろを巻いている。……まだ移動できないようだ。", dest:null},
@@ -239,6 +242,7 @@ let currentZone = null;
 const DEST_BTN_LABEL = {
   'explore.html': '🌿 探索に行く',
   'explore.html?field=wetland': '🌊 探索に行く',
+  'explore.html?field=plateau': '⛰️ 探索に行く（魔力2消費）',
   'home.html': '🏠 牧場へ戻る',
 };
 function openDialog(z) {
@@ -247,8 +251,14 @@ function openDialog(z) {
   document.getElementById('dialog-text').textContent = z.dialog;
   const goBtn = document.getElementById('dialog-go-btn');
   if (z.dest) {
+    // 台地など入場コストが設定されているゾーンは魔力不足だと入場できない（指示書_探索エリア「台地」追加.md対応）
+    const cost = z.manaCost || 0;
+    const canEnter = cost === 0 || manaRemaining(loadLoopState()) >= cost;
     goBtn.style.display = 'block';
-    goBtn.textContent = DEST_BTN_LABEL[z.dest] || '▶ 進む';
+    goBtn.disabled = !canEnter;
+    goBtn.style.opacity = canEnter ? '1' : '0.4';
+    goBtn.style.cursor = canEnter ? 'pointer' : 'not-allowed';
+    goBtn.textContent = canEnter ? (DEST_BTN_LABEL[z.dest] || '▶ 進む') : t('map_mana_insufficient');
   } else {
     goBtn.style.display = 'none';
   }
@@ -260,6 +270,11 @@ function closeDialog() {
 }
 function goExplore() {
   if (!currentZone || !currentZone.dest) return;
+  const cost = currentZone.manaCost || 0;
+  if (cost > 0) {
+    if (manaRemaining(loadLoopState()) < cost) return;
+    spendMana(cost);
+  }
   location.href = currentZone.dest;
 }
 
