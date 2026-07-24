@@ -33,7 +33,7 @@
 
   const state = loadLoopState();
 
-  // 品質ポイント→品質変動（指示書_品質システム実装.md対応。薬草獲得→品質ポイントの経路のみ実装。体調差分経路はスコープ外）
+  // 品質ポイント→品質変動（指示書_品質システム実装.md対応。体調ベースの日次加算はupkeep.htmlで別途処理）
   // 閾値判定はcommon.jsのqualityThresholdFor()を使用（barn.htmlと共有）
   // 品質ポイントは牛ごとの値（指示書_qualityPoint移行と母牛購入.md対応）なので、牛ごとに独立して判定する
   let qualityNote = '';

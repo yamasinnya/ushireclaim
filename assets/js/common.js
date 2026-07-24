@@ -132,7 +132,15 @@ function spendMana(amount) {
   return state;
 }
 
-// 品質ポイント→品質変動の閾値（薬草獲得→品質ポイントの経路のみ実装。体調差分経路はスコープ外）
+// 体調ベースの品質ポイント日次加算（指示書_母牛の品質ポイント（体調ベースの日々加算）実装.md対応）
+// 体調6(普通)を基準に、差分をそのままqualityPointへ加減算する。プレイして調整する前提の係数なのでここにまとめる
+const CONDITION_QUALITY_BASELINE = 6; // この体調を基準にする
+const CONDITION_QUALITY_RATE = 1;     // 差分に掛ける係数
+function getConditionQualityDelta(condition) {
+  return (condition - CONDITION_QUALITY_BASELINE) * CONDITION_QUALITY_RATE;
+}
+
+// 品質ポイント→品質変動の閾値（薬草獲得による直接加算＋体調ベースの日次加算の2経路）
 const QUALITY_THRESHOLD_TO_KA  = 30; // 劣→可
 const QUALITY_THRESHOLD_TO_RYO = 50; // 可→良
 const QUALITY_THRESHOLD_TO_YU  = 80; // 良→優
