@@ -29,7 +29,7 @@
   // 序盤チュートリアルはtruck_talk.htmlに移譲（指示書_軽トラ会話汎用ページ(truck_talk.html)の実装.md、指示書_3日目チュートリアル（街の説明）.md対応）
   const params = new URLSearchParams(location.search);
   const skipTutorial = params.get('skip_tutorial') === '1';
-  const TUTORIAL_SCENE_FOR_DAY = { 2: 'day2_tutorial', 3: 'day3_tutorial', 4: 'day4_tutorial', 5: 'day5_tutorial', 14: 'calf_tutorial' };
+  const TUTORIAL_SCENE_FOR_DAY = { 2: 'day2_tutorial', 3: 'day3_tutorial', 4: 'day4_tutorial', 5: 'day5_tutorial', 14: 'calf_tutorial', 16: 'breeding_tutorial' };
   const tutorialScene = TUTORIAL_SCENE_FOR_DAY[state.day];
   if (tutorialScene && !skipTutorial) {
     const nextUrl = encodeURIComponent('upkeep.html?skip_tutorial=1');
