@@ -145,7 +145,11 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 
   document.getElementById('confirmYes').addEventListener('click', () => {
     localStorage.removeItem(LOOP_SAVE_KEY);
-    localStorage.removeItem('yamayama_explore_v1'); // 探索セーブも削除（指示書_プロローグ更新版.md追記対応。牛データ増殖防止）
+    // 探索セーブも削除（指示書_プロローグ更新版.md追記対応。牛データ増殖防止）
+    // フィールド追加(湿地帯・台地)でセーブキーが増えたため、explore.htmlのFIELD_DEFと合わせて全て削除する
+    localStorage.removeItem('yamayama_explore_v1');
+    localStorage.removeItem('yamayama_explore_wetland_v1');
+    localStorage.removeItem('yamayama_explore_plateau_v1');
     location.href = 'prologue.html';
   });
   document.getElementById('confirmNo').addEventListener('click', () => {

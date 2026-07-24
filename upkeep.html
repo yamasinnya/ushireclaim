@@ -140,21 +140,11 @@
   const textEl = document.getElementById('upkeep-text');
   const btn = document.getElementById('btn-next');
 
-  // アップキープイベント判定（if文でベタ書き。JSON化はまだしない）
-  // 重み：特になし70% / 発情15% / 難産15%（仮置き。数値イベントは未実装、テキスト表示のみ）
+  // アップキープの通常表示（「発情している」「難産の様子」は本物の発情・妊娠システムと意味が
+  // 重複するため削除。口頭指示対応）
   function showUpkeepMain() {
-    const r = Math.random();
-    let eventKey;
-    if (r < 0.70) {
-      eventKey = 'upkeep_none';
-    } else if (r < 0.85) {
-      eventKey = 'upkeep_heat';
-    } else {
-      eventKey = 'upkeep_difficult_birth';
-    }
-
     titleEl.textContent = t('upkeep_title');
-    textEl.textContent = t(eventKey);
+    textEl.textContent = t('upkeep_none');
     btn.textContent = t('btn_go_home');
     btn.onclick = () => { location.href = 'home.html'; };
   }
