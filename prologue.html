@@ -329,8 +329,8 @@ function confirmNaming() {
     age: 120,              // 5歳（1年=24日換算）
     seed: Math.floor(Math.random() * 99999) + 1,
     condition: 7,
-    quality: 2,
-    qualityPoint: 0,
+    qualityPoint: 30,       // 品質は保存せずqualityPointの累計から都度算出する（口頭指示：レベル制→スコープ制へ変更）
+    lastKnownQualityTier: getQualityTier(30), // 品質ティア変化通知の前日比較用初期値（口頭指示対応）
     skill: 'roku',          // 第六感（cow.skill === 'roku' で判定する既存実装に合わせる）
     type: 'mother',
     pregnantDay: 5,

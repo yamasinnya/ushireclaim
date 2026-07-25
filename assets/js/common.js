@@ -12,10 +12,10 @@ const LOOP_DEFAULT_STATE = {
       age: 48,          // ゲーム内日数（2歳=48日、1年=24日換算）
       seed: 1234,       // ブチ模様の乱数シード（4桁）
       condition: 6,     // 体調（内部値 1-10）。初期値6＝普通
-      quality: 2,       // 品質（1-4）。初期値2＝可。今回は変動ロジックなし
       skill: 'zenno',
       type: 'mother',     // 'mother' | 'calf'（床替え等、母牛のみが対象の処理で使用）
-      qualityPoint: 0,   // 牛ごとの品質ポイント（薬草獲得から貯まる。閾値到達でfeeding.htmlにて品質を1段階上げ、0へリセット）
+      // 品質(優良可)はもう保存しない。qualityPointの累計からgetQualityTier()で都度算出する（口頭指示：レベル制→スコープ制へ変更）
+      qualityPoint: 30,  // 牛ごとの品質ポイント累計（薬草獲得・体調日次加算等で増減する。下がればティアも下がる）
       pregnantDay: 0,    // 妊娠経過日数。0=非妊娠。毎日アップキープで+1
       actualBirthDay: 0, // 実際の出産日（pregnantDayの値、16〜20のランダム）。0=未確定。pregnantDay===15でupkeep.htmlが確定させる
       // 繁殖状態（指示書_発情・種付け・妊娠システム実装.md対応）。表示優先度はbarn.js参照
@@ -140,14 +140,26 @@ function getConditionQualityDelta(condition) {
   return (condition - CONDITION_QUALITY_BASELINE) * CONDITION_QUALITY_RATE;
 }
 
-// 品質ポイント→品質変動の閾値（薬草獲得による直接加算＋体調ベースの日次加算の2経路）
-const QUALITY_THRESHOLD_TO_KA  = 30; // 劣→可
-const QUALITY_THRESHOLD_TO_RYO = 50; // 可→良
-const QUALITY_THRESHOLD_TO_YU  = 80; // 良→優
-function qualityThresholdFor(quality) {
-  if (quality === 1) return QUALITY_THRESHOLD_TO_KA;
-  if (quality === 2) return QUALITY_THRESHOLD_TO_RYO;
-  return QUALITY_THRESHOLD_TO_YU;
+// 品質(優良可)はレベル制ではなくスコープ制：qualityPointの累計から都度算出する（口頭指示対応）
+// 各ティアに到達するのに必要な累計ポイント（劣→可30/可→良+50=80/良→優+80=160。旧レベル制の閾値と同じ配分を維持）
+// qualityPointが下がればティアも下がる（一度上がったら固定、という挙動は廃止）
+const QUALITY_TIER_THRESHOLDS = [0, 30, 80, 160];
+function getQualityTier(qualityPoint) {
+  const p = qualityPoint || 0;
+  for (let tier = QUALITY_TIER_THRESHOLDS.length; tier >= 1; tier--) {
+    if (p >= QUALITY_TIER_THRESHOLDS[tier - 1]) return tier;
+  }
+  return 1;
+}
+
+// 現在のティア内での進捗（0〜1）。優(最高ティア)は上限がないため常に1として扱う
+function getQualityTierProgress(qualityPoint) {
+  const p = qualityPoint || 0;
+  const tier = getQualityTier(p);
+  const lower = QUALITY_TIER_THRESHOLDS[tier - 1];
+  const upper = QUALITY_TIER_THRESHOLDS[tier];
+  if (upper === undefined) return 1;
+  return (p - lower) / (upper - lower);
 }
 
 // 品質（1-4）→ 表示ラベルのt()キー（実際の文字列はja.json経由で取得する）
@@ -156,6 +168,11 @@ function qualityToLabelKey(quality) {
   if (quality === 3) return 'quality_label_ryo';
   if (quality === 2) return 'quality_label_ka';
   return 'quality_label_retsu';
+}
+
+// qualityPointの累計から直接ラベルキーを引く（呼び出し側の主な入口）
+function qualityPointToLabelKey(qualityPoint) {
+  return qualityToLabelKey(getQualityTier(qualityPoint));
 }
 
 // スキルキー→ 絵文字とt()キーの対応（cow.skillの値と一致させること）

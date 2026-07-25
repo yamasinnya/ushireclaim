@@ -213,7 +213,7 @@ document.getElementById('sceneWrap').addEventListener('click', nextLine);
 
   // {cowQuality}/{cowName}/{daysUntilBirth}プレースホルダー用（未使用のシーンでは無害）
   const state = loadLoopState();
-  placeholders.cowQuality = QUALITY_LABEL[state.cows[0].quality] || '可';
+  placeholders.cowQuality = QUALITY_LABEL[getQualityTier(state.cows[0].qualityPoint)] || '可';
   placeholders.cowName = state.cows[0].name;
   placeholders.daysUntilBirth = 18 - (state.cows[0].pregnantDay || 0);
 

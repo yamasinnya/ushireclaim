@@ -117,7 +117,8 @@
 
   "condition_up": "の体調が上がった！",
   "condition_down": "が少し元気がなさそうだ…",
-  "quality_up": "の品質が上がった！",
+  "quality_tier_up": "の品質が上がった！",
+  "quality_tier_down": "の品質が下がった…",
 
   "barn_title": "牛　舎",
   "barn_close_btn": "閉じる",

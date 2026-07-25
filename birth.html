@@ -188,6 +188,8 @@ function checkNamingInput() {
 // qualityPointのスタート値は母牛の種付けグレードに応じてロールする（指示書_発情・種付け・妊娠システム実装.md対応）
 function createCalf(calfName, gender, breedingGrade) {
   const skills = ['herdboys_eye', 'trace', 'roku'];
+  // 品質は保存せずqualityPointの累計から都度算出する（口頭指示：レベル制→スコープ制へ変更）。0〜20の範囲は劣ティアなので実質「劣スタート」のまま
+  const startQualityPoint = rollCalfStartQualityPoint(breedingGrade);
   return {
     id: 'cow_' + Date.now(),
     name: calfName,
@@ -195,8 +197,8 @@ function createCalf(calfName, gender, breedingGrade) {
     age: 0,
     seed: Math.floor(Math.random() * 99999) + 1,
     condition: 7,
-    quality: 1,           // 子牛は劣スタート（育成で上げる）
-    qualityPoint: rollCalfStartQualityPoint(breedingGrade),
+    qualityPoint: startQualityPoint,
+    lastKnownQualityTier: getQualityTier(startQualityPoint), // 品質ティア変化通知の前日比較用初期値（口頭指示対応）
     lastFedDay: 0,        // 育成飼料を最後にあげた日（指示書_子牛の育成飼料による品質ポイント加算実装.md対応）
     skill: skills[Math.floor(Math.random() * skills.length)],
     type: 'calf',

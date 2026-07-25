@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="assets/css/common.css">
 <style>
 .upkeep-text { color:#d8e8c0; font-size:15px; line-height:1.8; margin:8px 0 4px; }
+.upkeep-quality-note { color:#f0c060; font-size:15px; line-height:1.8; margin:4px 0 0; white-space:pre-line; }
 </style>
 </head>
 <body>
@@ -15,6 +16,7 @@
 <div class="screen-wrap">
   <div class="screen-title" id="title"></div>
   <div class="upkeep-text" id="upkeep-text"></div>
+  <div class="upkeep-quality-note" id="upkeep-quality-note"></div>
   <button class="btn-main" id="btn-next"></button>
 </div>
 
@@ -71,7 +73,7 @@
       triggerMiscarriage(cow, 'missed');
       return;
     }
-    if (cow.pregnantDay > 0 && cow.quality === 1 && Math.random() < 0.10) {
+    if (cow.pregnantDay > 0 && getQualityTier(cow.qualityPoint) === 1 && Math.random() < 0.10) {
       triggerMiscarriage(cow, 'quality');
       return;
     }
@@ -100,6 +102,21 @@
     cow.qualityPoint = Math.max(0, (cow.qualityPoint || 0) + getConditionQualityDelta(cow.condition));
   });
 
+  // 品質ティアの変化通知：前日チェック時からティアが変わっていたら知らせる（上がっても下がっても。口頭指示対応）
+  // ここまでで探索・給餌・💩・体調ベースの加減算が全て反映済みなので、この時点のティアを「今日のティア」とする
+  const tierUpNames = [];
+  const tierDownNames = [];
+  state.cows.forEach(cow => {
+    const newTier = getQualityTier(cow.qualityPoint);
+    const prevTier = (typeof cow.lastKnownQualityTier === 'number') ? cow.lastKnownQualityTier : newTier;
+    if (newTier > prevTier) tierUpNames.push(cow.name);
+    else if (newTier < prevTier) tierDownNames.push(cow.name);
+    cow.lastKnownQualityTier = newTier;
+  });
+  let qualityTierNote = '';
+  if (tierUpNames.length) qualityTierNote += tierUpNames.join('、') + t('quality_tier_up');
+  if (tierDownNames.length) qualityTierNote += (qualityTierNote ? '\n' : '') + tierDownNames.join('、') + t('quality_tier_down');
+
   // 妊娠経過日数を+1（指示書_プロローグ更新版.md追記対応。出産予定日確定・流産判定は上記の出産システム実装対応）
   state.cows.forEach(cow => {
     if (cow.pregnantDay > 0) {
@@ -125,7 +142,7 @@
     if (cow.type !== 'mother') return;
     if (cow.pregnantDay > 0) return;
     if (cow.breedingState === 'inseminated') return;
-    const prob = ESTRUS_PROBABILITY[cow.quality] || 0;
+    const prob = ESTRUS_PROBABILITY[getQualityTier(cow.qualityPoint)] || 0;
     if (Math.random() < prob) {
       cow.breedingState = 'estrus';
     } else if (cow.breedingState !== 'failed') {
@@ -152,6 +169,7 @@
   function showUpkeepMain() {
     titleEl.textContent = t('upkeep_title');
     textEl.textContent = t('upkeep_none');
+    document.getElementById('upkeep-quality-note').textContent = qualityTierNote;
     btn.textContent = t('btn_go_home');
     btn.onclick = () => { location.href = 'home.html'; };
   }

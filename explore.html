@@ -918,9 +918,9 @@ function start() {
   hasSixthSense = loopState.cows.some(c => c.type === 'mother' && c.skill === 'roku');
   hasHarvestMemory = loopState.cows.some(c => c.type === 'mother' && c.skill === 'trace');
   hasZennoshin = loopState.cows.some(c => c.type === 'mother' && c.skill === 'zenno');
-  // 回転斬りも子牛は対象外（母牛の品質のみで判定。口頭指示対応）
+  // 回転斬りも子牛は対象外（母牛の品質のみで判定。品質はqualityPointの累計から都度算出する。口頭指示対応）
   const primaryMother = loopState.cows.find(cow => cow.type === 'mother');
-  skillMaxUsesToday = rotationSlashMaxUses(primaryMother ? primaryMother.quality : 0);
+  skillMaxUsesToday = rotationSlashMaxUses(primaryMother ? getQualityTier(primaryMother.qualityPoint) : 0);
   updatePassiveIcons();
 
   let autoHarvested = [];

@@ -453,8 +453,9 @@ function openSheet(stall) {
     document.getElementById('sCondFill').style.width = (c.condition * 10) + '%';
     document.getElementById('sCondNum').textContent = c.condition;
     document.getElementById('sQualLbl').textContent = t('barn_quality_label');
+    // 品質はqualityPointの累計から都度算出する（口頭指示：レベル制→スコープ制へ変更）
     // 魔法の水飲み場が建設済みならqualityPointの実数値をティア表示に添える
-    document.getElementById('sQual').textContent = t(qualityToLabelKey(c.quality)) +
+    document.getElementById('sQual').textContent = t(qualityPointToLabelKey(c.qualityPoint)) +
       (magicWaterTroughBuilt ? ` (${c.qualityPoint || 0})` : '');
     const skill = SKILL_DISPLAY[c.skill];
     document.getElementById('sSkill').textContent = skill ? (skill.emoji + ' ' + t(skill.nameKey)) : '';
@@ -475,8 +476,7 @@ function openSheet(stall) {
       document.getElementById('sPregnant').textContent = '';
     }
 
-    const threshold = qualityThresholdFor(c.quality);
-    const pct = threshold ? ((c.qualityPoint || 0) / threshold) : 0;
+    const pct = getQualityTierProgress(c.qualityPoint);
     document.getElementById('sComment').textContent =
       pct <= 0.25 ? t('barn_coat_comment_1') :
       pct <= 0.50 ? t('barn_coat_comment_2').replace('{name}', c.name) :

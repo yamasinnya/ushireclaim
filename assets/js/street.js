@@ -67,7 +67,7 @@ const MARKET_COW = {
   skill: 'herdboys_eye',   // 牧童の目
   age: 72,                 // 3歳（1年=24日換算）
   condition: 6,
-  quality: 2,              // 可
+  qualityPoint: 30,        // 品質は保存せずqualityPointの累計から都度算出する（口頭指示：レベル制→スコープ制へ変更）
   price: 100,
 };
 const MARKET_MOTHER_LIMIT = 3;
@@ -279,7 +279,7 @@ function buildMarketCowRow(state) {
   const skill = SKILL_DISPLAY[MARKET_COW.skill];
   const summary = document.createElement('div');
   summary.className = 'market-cow-summary';
-  summary.textContent = `🐄 ${t('market_gender_female')}・${Math.floor(MARKET_COW.age / 24)}${t('market_age_unit')}・${t('barn_condition_label')}${MARKET_COW.condition}・${t(qualityToLabelKey(MARKET_COW.quality))}`;
+  summary.textContent = `🐄 ${t('market_gender_female')}・${Math.floor(MARKET_COW.age / 24)}${t('market_age_unit')}・${t('barn_condition_label')}${MARKET_COW.condition}・${t(qualityPointToLabelKey(MARKET_COW.qualityPoint))}`;
   const skillLine = document.createElement('div');
   skillLine.className = 'market-cow-skill';
   skillLine.textContent = `${t('market_skill_label')}${skill ? skill.emoji + ' ' + t(skill.nameKey) : ''}`;
@@ -355,8 +355,8 @@ function confirmMarketNaming() {
     age: MARKET_COW.age,
     seed: Math.floor(Math.random() * 99999) + 1,
     condition: MARKET_COW.condition,
-    quality: MARKET_COW.quality,
-    qualityPoint: 0,
+    qualityPoint: MARKET_COW.qualityPoint,
+    lastKnownQualityTier: getQualityTier(MARKET_COW.qualityPoint), // 品質ティア変化通知の前日比較用初期値（口頭指示対応）
     skill: MARKET_COW.skill,
     type: 'mother',
     pregnantDay: 0,
