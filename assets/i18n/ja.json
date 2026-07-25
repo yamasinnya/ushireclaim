@@ -213,6 +213,7 @@
   "calf_sale_notice_00": "売買の対象になっている子牛がいるようだ",
   "calf_sale_notice_01": "牛舎で確認してみよう",
   "calf_sale_no_target": "対象の子牛がいません",
+  "calf_sale_eligible_label": "市場申込み可（期限残り{days}日）",
   "calf_sale_age_label": "生後{age}日",
   "calf_sale_apply_btn": "申込む",
   "calf_sale_applied_msg": "{name}の申込みを受け付けた",

@@ -413,9 +413,12 @@ function openSheet(stall) {
       document.getElementById('sQualLbl').textContent = '';
       document.getElementById('sQual').textContent = '';
     }
-    const calfSkill = SKILL_DISPLAY[c.skill];
-    document.getElementById('sSkill').textContent = calfSkill ? (calfSkill.emoji + ' ' + t(calfSkill.nameKey)) : '';
-    document.getElementById('sPregnant').textContent = '';
+    // 子牛はスキルを持たない（母牛になった時点でガチャで獲得するため。口頭指示対応）
+    document.getElementById('sSkill').textContent = '';
+    // 市場申込み対象（生後17〜20日・未申込み）なら期限残り日数を表示（口頭指示対応）
+    const saleEligible = !c.saleApplied && c.age >= 17 && c.age <= 20;
+    document.getElementById('sPregnant').textContent =
+      saleEligible ? t('calf_sale_eligible_label').replace('{days}', 20 - c.age) : '';
     // 成牛(21日目)までの日数はメスのみ表示。オスは競りに出すだけなので表示しない
     document.getElementById('sComment').textContent =
       c.gender === 'female' ? t('calf_days_to_adult').replace('{days}', 21 - c.age) : '';
