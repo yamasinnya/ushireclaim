@@ -48,8 +48,8 @@ const SHOPS = {
       { nameKey: 'product_gyusha_kakuchou' },
       { nameKey: 'product_it_catalog', noteKey: 'product_it_catalog_note' },
       // 魔法の水飲み場（指示書_建設屋「魔法の水飲み場」実装.md対応）
-      // 本来10万G想定だが、デバッグ目的も兼ねて今回は100Gに設定
-      { nameKey: 'product_magic_water_trough', type: 'building', buildingKey: 'magicWaterTrough', cost: 100 },
+      // デバッグ用の100Gから本来の10万Gに戻した（口頭指示対応）
+      { nameKey: 'product_magic_water_trough', type: 'building', buildingKey: 'magicWaterTrough', cost: 100000 },
     ],
   },
   shop_seri: {
@@ -69,7 +69,7 @@ const MARKET_COW = {
   age: 72,                 // 3歳（1年=24日換算）
   condition: 6,
   qualityPoint: 30,        // 品質は保存せずqualityPointの累計から都度算出する（口頭指示：レベル制→スコープ制へ変更）
-  price: 100,
+  price: 400000,           // デバッグ用の100Gから本来の40万Gに戻した（口頭指示対応）
 };
 const MARKET_MOTHER_LIMIT = 3;
 
