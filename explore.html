@@ -247,6 +247,7 @@ body {
     <div class="passive-icon" id="passive-icon-boy" onclick="showSkillInfo('boy')">👦</div>
     <div class="passive-icon" id="passive-icon-trace" onclick="showSkillInfo('trace')">🐾</div>
     <div class="passive-icon" id="passive-icon-roku" onclick="showSkillInfo('roku')">🔮</div>
+    <div class="passive-icon" id="passive-icon-takeuchi" onclick="showSkillInfo('takeuchi')">🎯</div>
     <div class="passive-icon" id="passive-icon-zenno" onclick="showSkillInfo('zenno')">⛩️</div>
   </div>
 </div>
@@ -432,6 +433,7 @@ let skillUsesLeft = 0;
 let cardElsRef = []; // DOM参照を保持（スキルでのぞき見用）
 let hasHerdboyseye = false;   // ふうかのskillが"herdboys_eye"の場合のみミスマッチ表示を延長
 let hasSixthSense = false;    // 所持牛のskillが"roku"の場合のみ第六感（アンコモン透視）が発動
+let hasTakeuchi = false;      // 所持牛のskillが"takeuchi"の場合のみ狙い撃ち（レア1か所透視）が発動
 let hasHarvestMemory = false; // 所持牛のskillが"trace"の場合のみ刈り跡の記憶（翌日ヒント表示）が発動
 let hasZennoshin = false;     // 所持牛のskillが"zenno"の場合のみ全農神（その日は全マス見えたまま）が発動
 
@@ -446,6 +448,7 @@ const SKILL_INFO = {
   boy:   { name:'牧童の目',     desc:'ミスマッチした時、通常より長く（1.5秒）表面が見える。焦らず覚え直せる。' },
   trace: { name:'刈り跡の記憶', desc:'前回良い素材を見つけた場所に、刈り跡を残す。同じ場所にまた現れやすくなり、うっすら光って教えてくれる。' },
   roku:  { name:'第六感',       desc:'毎朝、アンコモンのカードがある場所を3箇所、直感的に感じ取れる（うっすら光る）。' },
+  takeuchi: { name:'狙い撃ち',  desc:'毎朝、レア(✨幻の薬草)の位置が1か所、うっすら光って分かるようになる。' },
   zenno: { name:'全農神',       desc:'農耕の神に愛された牛。探索エリアの全マスが、その日はずっと最初から見えている。' },
 };
 
@@ -617,13 +620,22 @@ let traceHintPositions = new Set(); // 刈り跡の記憶の確定枠（ヒン�
 let hintPositions = new Set(); // 現在光っている位置（表示用）
 
 function pickSixthSenseHints() {
-  hintPositions = new Set();
   const candidates = deck
     .map((c, idx) => ({ idx, c }))
     .filter(({c}) => !c.matched && DECK_DEF[c.ri].key === 'uncommon')
     .map(({idx}) => idx);
   shuffle(candidates);
   candidates.slice(0, 3).forEach(idx => hintPositions.add(idx));
+}
+
+// ── 狙い撃ち：毎朝レア(✨幻の薬草)の位置を1か所だけ光らせる（第六感のレア版・その日限り） ──
+function pickTakeuchiHints() {
+  const candidates = deck
+    .map((c, idx) => ({ idx, c }))
+    .filter(({c}) => !c.matched && DECK_DEF[c.ri].key === 'rare')
+    .map(({idx}) => idx);
+  shuffle(candidates);
+  candidates.slice(0, 1).forEach(idx => hintPositions.add(idx));
 }
 
 function applyHints() {
@@ -678,10 +690,12 @@ function updatePassiveIcons() {
   const boyEl = document.getElementById('passive-icon-boy');
   const traceEl = document.getElementById('passive-icon-trace');
   const rokuEl = document.getElementById('passive-icon-roku');
+  const takeuchiEl = document.getElementById('passive-icon-takeuchi');
   const zennoEl = document.getElementById('passive-icon-zenno');
   if (boyEl) boyEl.style.display = hasHerdboyseye ? '' : 'none';
   if (traceEl) traceEl.style.display = hasHarvestMemory ? '' : 'none';
   if (rokuEl) rokuEl.style.display = hasSixthSense ? '' : 'none';
+  if (takeuchiEl) takeuchiEl.style.display = hasTakeuchi ? '' : 'none';
   if (zennoEl) zennoEl.style.display = hasZennoshin ? '' : 'none';
 }
 
@@ -925,6 +939,7 @@ function start() {
   // 子牛のスキルは母牛になるまで無効（指示書_子牛の成長ステージと特殊ルール実装.md対応）
   hasHerdboyseye = loopState.cows.some(c => c.type === 'mother' && c.skill === 'herdboys_eye');
   hasSixthSense = loopState.cows.some(c => c.type === 'mother' && c.skill === 'roku');
+  hasTakeuchi = loopState.cows.some(c => c.type === 'mother' && c.skill === 'takeuchi');
   hasHarvestMemory = loopState.cows.some(c => c.type === 'mother' && c.skill === 'trace');
   hasZennoshin = loopState.cows.some(c => c.type === 'mother' && c.skill === 'zenno');
   // 回転斬りも子牛は対象外（母牛の品質のみで判定。品質はqualityPointの累計から都度算出する。口頭指示対応）
@@ -969,9 +984,11 @@ function start() {
   firstSel = null;
   locked = false;
   skillUsesLeft = skillMaxUsesToday;
+  // ヒント表示は複数スキルの合算（第六感＝アンコモン3か所／狙い撃ち＝レア1か所／刈り跡の記憶＝確定枠）
+  hintPositions = new Set();
   if (hasSixthSense) pickSixthSenseHints();
-  else hintPositions = new Set();
-  traceHintPositions.forEach(idx => hintPositions.add(idx)); // 刈り跡の記憶のヒントも合わせて表示する
+  if (hasTakeuchi) pickTakeuchiHints();
+  traceHintPositions.forEach(idx => hintPositions.add(idx));
   save();
   renderBoard();
   updateManaUI();

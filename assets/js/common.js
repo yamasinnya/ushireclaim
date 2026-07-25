@@ -183,6 +183,7 @@ const SKILL_DISPLAY = {
   herdboys_eye: { emoji: '👦', nameKey: 'skill_name_herdboys_eye' },
   trace:        { emoji: '🐾', nameKey: 'skill_name_trace' },
   roku:         { emoji: '🔮', nameKey: 'skill_name_roku' },
+  takeuchi:     { emoji: '🎯', nameKey: 'skill_name_takeuchi' },
   zenno:        { emoji: '⛩️', nameKey: 'skill_name_zenno' },
 };
 
