@@ -1,0 +1,457 @@
+[
+  {
+    "index": 0,
+    "label": "搾乳小屋",
+    "file": "milking_shed.png",
+    "w": 147,
+    "h": 121
+  },
+  {
+    "index": 1,
+    "label": "倉庫",
+    "file": "warehouse.png",
+    "w": 130,
+    "h": 121
+  },
+  {
+    "index": 2,
+    "label": "工房",
+    "file": "workshop.png",
+    "w": 158,
+    "h": 135
+  },
+  {
+    "index": 3,
+    "label": "ビニールハウス",
+    "file": "greenhouse.png",
+    "w": 122,
+    "h": 125
+  },
+  {
+    "index": 4,
+    "label": "飼料タンク",
+    "file": "feed_tank.png",
+    "w": 72,
+    "h": 137
+  },
+  {
+    "index": 5,
+    "label": "堆肥小屋",
+    "file": "compost_shed.png",
+    "w": 111,
+    "h": 112
+  },
+  {
+    "index": 6,
+    "label": "牧場ゲート",
+    "file": "farm_gate.png",
+    "w": 139,
+    "h": 97
+  },
+  {
+    "index": 7,
+    "label": "コンバイン",
+    "file": "combine_harvester.png",
+    "w": 94,
+    "h": 93
+  },
+  {
+    "index": 8,
+    "label": "ブロードキャスター",
+    "file": "fertilizer_spreader.png",
+    "w": 91,
+    "h": 86
+  },
+  {
+    "index": 9,
+    "label": "草刈り機",
+    "file": "mower.png",
+    "w": 98,
+    "h": 93
+  },
+  {
+    "index": 10,
+    "label": "乾燥機",
+    "file": "dryer.png",
+    "w": 68,
+    "h": 108
+  },
+  {
+    "index": 11,
+    "label": "家畜運搬車（後ろ）",
+    "file": "livestock_truck_rear.png",
+    "w": 132,
+    "h": 104
+  },
+  {
+    "index": 12,
+    "label": "出荷トラック（遠ざかる1）",
+    "file": "shipping_truck_away_1.png",
+    "w": 120,
+    "h": 104
+  },
+  {
+    "index": 13,
+    "label": "出荷トラック（遠ざかる2）",
+    "file": "shipping_truck_away_2.png",
+    "w": 96,
+    "h": 104
+  },
+  {
+    "index": 14,
+    "label": "田植え機",
+    "file": "rice_planter.png",
+    "w": 106,
+    "h": 83
+  },
+  {
+    "index": 15,
+    "label": "ロールベーラー",
+    "file": "round_baler.png",
+    "w": 90,
+    "h": 80
+  },
+  {
+    "index": 16,
+    "label": "鶏小屋",
+    "file": "chicken_coop.png",
+    "w": 69,
+    "h": 80
+  },
+  {
+    "index": 17,
+    "label": "ヤギ小屋",
+    "file": "goat_shed.png",
+    "w": 90,
+    "h": 84
+  },
+  {
+    "index": 18,
+    "label": "貯水タンク",
+    "file": "water_tank.png",
+    "w": 59,
+    "h": 89
+  },
+  {
+    "index": 19,
+    "label": "ポンプ小屋",
+    "file": "pump_house.png",
+    "w": 76,
+    "h": 80
+  },
+  {
+    "index": 20,
+    "label": "種子貯蔵庫",
+    "file": "seed_storage.png",
+    "w": 87,
+    "h": 84
+  },
+  {
+    "index": 21,
+    "label": "うさぎ小屋",
+    "file": "rabbit_hutch.png",
+    "w": 64,
+    "h": 78
+  },
+  {
+    "index": 22,
+    "label": "養蜂箱",
+    "file": "beehive.png",
+    "w": 56,
+    "h": 60
+  },
+  {
+    "index": 23,
+    "label": "フォーク",
+    "file": "pitchfork.png",
+    "w": 50,
+    "h": 72
+  },
+  {
+    "index": 24,
+    "label": "シャベル",
+    "file": "shovel.png",
+    "w": 50,
+    "h": 72
+  },
+  {
+    "index": 25,
+    "label": "くわ",
+    "file": "hoe.png",
+    "w": 61,
+    "h": 75
+  },
+  {
+    "index": 26,
+    "label": "鎌",
+    "file": "sickle.png",
+    "w": 59,
+    "h": 67
+  },
+  {
+    "index": 27,
+    "label": "一輪車",
+    "file": "wheelbarrow.png",
+    "w": 77,
+    "h": 61
+  },
+  {
+    "index": 28,
+    "label": "飼料運搬車",
+    "file": "feed_cart.png",
+    "w": 81,
+    "h": 73
+  },
+  {
+    "index": 29,
+    "label": "小型風車",
+    "file": "small_windmill.png",
+    "w": 60,
+    "h": 100
+  },
+  {
+    "index": 30,
+    "label": "ウォーターカップ",
+    "file": "water_cup.png",
+    "w": 42,
+    "h": 73
+  },
+  {
+    "index": 31,
+    "label": "自動給水器",
+    "file": "auto_waterer.png",
+    "w": 52,
+    "h": 58
+  },
+  {
+    "index": 32,
+    "label": "自動給餌機",
+    "file": "auto_feeder.png",
+    "w": 53,
+    "h": 72
+  },
+  {
+    "index": 33,
+    "label": "ブラシ",
+    "file": "brush.png",
+    "w": 42,
+    "h": 77
+  },
+  {
+    "index": 34,
+    "label": "体重計",
+    "file": "scale.png",
+    "w": 64,
+    "h": 75
+  },
+  {
+    "index": 35,
+    "label": "発電機",
+    "file": "generator.png",
+    "w": 69,
+    "h": 75
+  },
+  {
+    "index": 36,
+    "label": "ソーラーパネル",
+    "file": "solar_panel.png",
+    "w": 80,
+    "h": 58
+  },
+  {
+    "index": 37,
+    "label": "切り株",
+    "file": "tree_stump.png",
+    "w": 73,
+    "h": 66
+  },
+  {
+    "index": 38,
+    "label": "花だん",
+    "file": "flower_bed.png",
+    "w": 72,
+    "h": 63
+  },
+  {
+    "index": 39,
+    "label": "野草",
+    "file": "wildflowers.png",
+    "w": 70,
+    "h": 67
+  },
+  {
+    "index": 40,
+    "label": "かかし",
+    "file": "scarecrow.png",
+    "w": 64,
+    "h": 79
+  },
+  {
+    "index": 41,
+    "label": "丸太の山",
+    "file": "log_pile.png",
+    "w": 63,
+    "h": 51
+  },
+  {
+    "index": 42,
+    "label": "大きな岩",
+    "file": "big_rock.png",
+    "w": 61,
+    "h": 53
+  },
+  {
+    "index": 43,
+    "label": "獣医さん",
+    "file": "npc_vet.png",
+    "w": 49,
+    "h": 73
+  },
+  {
+    "index": 44,
+    "label": "飼料屋さん",
+    "file": "npc_feed_dealer.png",
+    "w": 48,
+    "h": 73
+  },
+  {
+    "index": 45,
+    "label": "市場の人",
+    "file": "npc_market_staff.png",
+    "w": 48,
+    "h": 69
+  },
+  {
+    "index": 46,
+    "label": "おじいさん",
+    "file": "npc_grandpa.png",
+    "w": 49,
+    "h": 69
+  },
+  {
+    "index": 47,
+    "label": "おばあさん",
+    "file": "npc_grandma.png",
+    "w": 48,
+    "h": 69
+  },
+  {
+    "index": 48,
+    "label": "農作業の人",
+    "file": "npc_farm_worker.png",
+    "w": 49,
+    "h": 73
+  },
+  {
+    "index": 49,
+    "label": "女の子",
+    "file": "npc_girl.png",
+    "w": 58,
+    "h": 74
+  },
+  {
+    "index": 50,
+    "label": "男の子",
+    "file": "npc_boy.png",
+    "w": 50,
+    "h": 74
+  },
+  {
+    "index": 51,
+    "label": "立て看板",
+    "file": "sign_standing.png",
+    "w": 62,
+    "h": 62
+  },
+  {
+    "index": 52,
+    "label": "案内板",
+    "file": "sign_guide.png",
+    "w": 57,
+    "h": 61
+  },
+  {
+    "index": 53,
+    "label": "注意看板",
+    "file": "sign_warning.png",
+    "w": 68,
+    "h": 63
+  },
+  {
+    "index": 54,
+    "label": "ポスター掲示板",
+    "file": "poster_board.png",
+    "w": 85,
+    "h": 68
+  },
+  {
+    "index": 55,
+    "label": "農板メニュー",
+    "file": "menu_board.png",
+    "w": 51,
+    "h": 70
+  },
+  {
+    "index": 56,
+    "label": "牛乳販売箱",
+    "file": "milk_stand.png",
+    "w": 62,
+    "h": 59
+  },
+  {
+    "index": 57,
+    "label": "飼料袋",
+    "file": "feed_bag.png",
+    "w": 55,
+    "h": 60
+  },
+  {
+    "index": 58,
+    "label": "牧草ロール",
+    "file": "hay_roll.png",
+    "w": 62,
+    "h": 56
+  },
+  {
+    "index": 59,
+    "label": "肥料袋",
+    "file": "fertilizer_bag.png",
+    "w": 53,
+    "h": 55
+  },
+  {
+    "index": 60,
+    "label": "ロープ",
+    "file": "rope.png",
+    "w": 57,
+    "h": 57
+  },
+  {
+    "index": 61,
+    "label": "木材の束",
+    "file": "lumber_bundle.png",
+    "w": 95,
+    "h": 51
+  },
+  {
+    "index": 62,
+    "label": "鉄板",
+    "file": "steel_plate.png",
+    "w": 60,
+    "h": 48
+  },
+  {
+    "index": 63,
+    "label": "レンガの山",
+    "file": "brick_pile.png",
+    "w": 64,
+    "h": 48
+  },
+  {
+    "index": 64,
+    "label": "釘・ボルト",
+    "file": "nails_bolts.png",
+    "w": 45,
+    "h": 40
+  }
+]
