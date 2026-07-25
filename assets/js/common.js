@@ -89,6 +89,19 @@ function conditionToLabel(condition) {
   return '危険';
 }
 
+// 子牛売買（ドナドナ）の売値計算（指示書_子牛売買申込み（オスメス両対応・ドナドナ演出）実装.md対応）
+// 下振れなし。計算式通りの金額が最低保証で、そこから0〜8%上乗せされる。数値調整用に1箇所にまとめる
+const CALF_SALE_BASE_MALE = 400000;    // オス基本額
+const CALF_SALE_BASE_FEMALE = 300000;  // メス基本額（オスより10万円安い）
+const CALF_SALE_RATE = 4000;           // qualityPoint 1ptあたりの上乗せ額
+const CALF_SALE_BONUS_MAX = 0.08;      // 上振れの最大率（0〜8%、下振れなし）
+function calcCalfSalePrice(qualityPoint, gender) {
+  const base = (gender === 'male' ? CALF_SALE_BASE_MALE : CALF_SALE_BASE_FEMALE)
+    + (qualityPoint || 0) * CALF_SALE_RATE;
+  const bonusRate = Math.random() * CALF_SALE_BONUS_MAX;
+  return Math.round(base * (1 + bonusRate));
+}
+
 // 育成飼料1回あたりの品質ポイント増加量（指示書_子牛の育成飼料による品質ポイント加算実装.md対応）
 // サイロ建設前は+1、建設後(buildings.silo === true)は+2（サイロ建設処理自体は別フェーズ）
 function getCalfFeedGain(buildings) {

@@ -8,6 +8,7 @@
 <style>
 .upkeep-text { color:#d8e8c0; font-size:15px; line-height:1.8; margin:8px 0 4px; }
 .upkeep-quality-note { color:#f0c060; font-size:15px; line-height:1.8; margin:4px 0 0; white-space:pre-line; }
+.upkeep-calf-sale-note { color:#e8a860; font-size:15px; line-height:1.8; margin:4px 0 0; white-space:pre-line; }
 </style>
 </head>
 <body>
@@ -17,6 +18,7 @@
   <div class="screen-title" id="title"></div>
   <div class="upkeep-text" id="upkeep-text"></div>
   <div class="upkeep-quality-note" id="upkeep-quality-note"></div>
+  <div class="upkeep-calf-sale-note" id="upkeep-calf-sale-note"></div>
   <button class="btn-main" id="btn-next"></button>
 </div>
 
@@ -48,6 +50,17 @@
     saveLoopState(state);
     const nextUrl = encodeURIComponent('upkeep.html?skip_tutorial=1');
     location.href = `truck_talk.html?scene=${success ? 'pregnancy_confirmed' : 'pregnancy_failed'}&next=${nextUrl}`;
+    return;
+  }
+
+  // 子牛売買（ドナドナ演出）：申込み翌日の「1日の始まり」で専用ページへ遷移する
+  // （指示書_子牛売買申込み（オスメス両対応・ドナドナ演出）実装.md対応）
+  const skipCalfSale = params.get('skip_calf_sale') === '1';
+  const departingCalves = state.cows.filter(cow => cow.type === 'calf' && cow.saleApplied && state.day === (cow.saleAppliedDay || 0) + 1);
+  if (departingCalves.length > 0 && !skipCalfSale) {
+    const calfIds = departingCalves.map(cow => cow.id).join(',');
+    const nextUrl = encodeURIComponent('upkeep.html?skip_calf_sale=1');
+    location.href = `calf_sale.html?calfIds=${encodeURIComponent(calfIds)}&next=${nextUrl}`;
     return;
   }
 
@@ -157,6 +170,13 @@
     }
   });
 
+  // 子牛売買申込みの対象通知：生後17〜20日の未申込み子牛が1頭でもいれば2行の通知を出す（頭数分は出さない）
+  const saleEligibleCalves = state.cows.filter(cow => cow.type === 'calf' && !cow.saleApplied && cow.age >= 17 && cow.age <= 20);
+  let calfSaleNote = '';
+  if (saleEligibleCalves.length > 0) {
+    calfSaleNote = t('calf_sale_notice_00') + '\n' + t('calf_sale_notice_01');
+  }
+
   saveLoopState(state);
   renderHeader('gameHeader');
 
@@ -170,6 +190,7 @@
     titleEl.textContent = t('upkeep_title');
     textEl.textContent = t('upkeep_none');
     document.getElementById('upkeep-quality-note').textContent = qualityTierNote;
+    document.getElementById('upkeep-calf-sale-note').textContent = calfSaleNote;
     btn.textContent = t('btn_go_home');
     btn.onclick = () => { location.href = 'home.html'; };
   }

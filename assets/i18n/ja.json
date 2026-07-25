@@ -210,6 +210,15 @@
   "market_full": "牛房がいっぱいです",
   "market_purchased_msg": "{name}を迎え入れました",
 
+  "calf_sale_notice_00": "売買の対象になっている子牛がいるようだ",
+  "calf_sale_notice_01": "牛舎で確認してみよう",
+  "calf_sale_no_target": "対象の子牛がいません",
+  "calf_sale_age_label": "生後{age}日",
+  "calf_sale_apply_btn": "申込む",
+  "calf_sale_applied_msg": "{name}の申込みを受け付けた",
+  "calf_sale_departed": "{name}が、旅立っていった",
+  "calf_sale_price": "売値：{price}円",
+
   "btn_buy": "購入する",
   "btn_cant_buy": "購入できません",
   "btn_cancel": "キャンセル",

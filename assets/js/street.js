@@ -56,7 +56,8 @@ const SHOPS = {
     nameKey: 'shop_seri_name',
     descKey: 'shop_seri_desc',
     products: [
-      { nameKey: 'product_seri_shuppin' },
+      // 子牛売買申込み（指示書_子牛売買申込み（オスメス両対応・ドナドナ演出）実装.md対応）
+      { nameKey: 'product_seri_shuppin', type: 'calf_sale' },
       { nameKey: 'product_bogyuu_kounyuu', type: 'market_cow' },
     ],
   },
@@ -97,6 +98,10 @@ function openShopSheet(shopId) {
       list.appendChild(buildBuildingRow(state, p));
       return;
     }
+    if (p.type === 'calf_sale') {
+      list.appendChild(buildCalfSaleRow(state, p));
+      return;
+    }
 
     const row = document.createElement('div');
     row.className = 'product-row';
@@ -135,6 +140,60 @@ function openShopSheet(shopId) {
 
 function closeShopSheet() {
   document.getElementById('shopSheetOverlay').classList.remove('open');
+}
+
+// ── 競り市場：子牛売買申込み（指示書_子牛売買申込み（オスメス両対応・ドナドナ演出）実装.md対応） ──
+// 生後17〜20日の未申込み子牛（オスメス問わず）が対象
+function buildCalfSaleRow(state, product) {
+  const wrap = document.createElement('div');
+  wrap.className = 'market-cow-row';
+
+  const title = document.createElement('div');
+  title.className = 'market-cow-summary';
+  title.textContent = t(product.nameKey);
+  wrap.appendChild(title);
+
+  const eligible = state.cows.filter(cow => cow.type === 'calf' && !cow.saleApplied && cow.age >= 17 && cow.age <= 20);
+  if (eligible.length === 0) {
+    const note = document.createElement('div');
+    note.className = 'product-note';
+    note.textContent = t('calf_sale_no_target');
+    wrap.appendChild(note);
+    return wrap;
+  }
+
+  eligible.forEach(cow => {
+    const row = document.createElement('div');
+    row.className = 'product-row';
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'product-name';
+    const genderIcon = cow.gender === 'female' ? t('calf_gender_female') : t('calf_gender_male');
+    nameSpan.textContent = `${genderIcon} ${cow.name}（${t('calf_sale_age_label').replace('{age}', cow.age)}）`;
+    row.appendChild(nameSpan);
+
+    const btn = document.createElement('button');
+    btn.className = 'btn-buy';
+    btn.textContent = t('calf_sale_apply_btn');
+    btn.addEventListener('click', () => applyCalfSale(cow.id));
+    row.appendChild(btn);
+
+    wrap.appendChild(row);
+  });
+
+  return wrap;
+}
+
+function applyCalfSale(calfId) {
+  const state = loadLoopState();
+  const cow = state.cows.find(c => c.id === calfId);
+  if (!cow || cow.saleApplied) return;
+  cow.saleApplied = true; // メスの場合、この時点で母牛への昇格対象から外れる（将来の昇格ロジックがこのフラグを見る想定）
+  cow.saleAppliedDay = state.day;
+  saveLoopState(state);
+
+  renderHeader('gameHeader');
+  if (currentShopId) openShopSheet(currentShopId); // 対象リストを再描画
+  showShopMessage(t('calf_sale_applied_msg').replace('{name}', cow.name));
 }
 
 function handleBuyWara(product) {

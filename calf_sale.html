@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>やまやま牧場 - 出荷</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#0a1506; min-height:100vh;
+  font-family:'Hiragino Kaku Gothic ProN','MS Gothic',sans-serif;
+  display:flex; flex-direction:column; align-items:center;
+}
+.scene-wrap {
+  width:100%; max-width:440px;
+  min-height:100vh;
+  position:relative;
+  overflow:hidden;
+  aspect-ratio: 941 / 1672;
+  cursor:pointer;
+  user-select:none; -webkit-user-select:none;
+}
+.bg-img {
+  position:absolute; top:0; left:0;
+  width:100%; display:block;
+}
+
+/* トラック：道の手前(大きい)→奥(小さい)へ遠ざかる。2枚をクロスフェードして遠近感を出す */
+.truck-sprite {
+  position:absolute; left:50%; transform:translateX(-50%);
+  image-rendering:pixelated;
+  top:64%; width:24%; opacity:1;
+  transition: top 2.6s ease-in, width 2.6s ease-in, opacity 2.6s ease-in;
+}
+.truck-sprite.no-transition { transition:none; }
+#truckSprite2 { opacity:0; }
+.scene-wrap.away #truckSprite1 { top:19%; width:4.5%; opacity:0; }
+.scene-wrap.away #truckSprite2 { top:19%; width:4%; opacity:1; }
+
+/* 会話ボックス（プロローグ・truck_talkと共通の演出） */
+.dialogue-box {
+  position:absolute; left:0; right:0; bottom:0;
+  background:linear-gradient(180deg, rgba(10,8,4,0) 0%, rgba(10,8,4,0.94) 30%);
+  padding:22px 24px 26px;
+  min-height:110px;
+  z-index:20;
+  display:none;
+}
+.dialogue-box.show { display:block; }
+.dialogue-text {
+  color:#e8d8c0; font-size:15px; line-height:1.9; letter-spacing:1px;
+  white-space:pre-line;
+}
+.tap-hint {
+  text-align:right; color:#786040; font-size:11px; margin-top:10px; letter-spacing:1px;
+}
+</style>
+</head>
+<body>
+
+<div class="scene-wrap" id="sceneWrap">
+  <img class="bg-img" src="assets/images/shukka_bg.png" alt="出荷">
+  <img class="truck-sprite" id="truckSprite1" src="assets/sprites/shipping_truck_away_1.png" alt="トラック">
+  <img class="truck-sprite" id="truckSprite2" src="assets/sprites/shipping_truck_away_2.png" alt="トラック（遠景）">
+
+  <div class="dialogue-box" id="dialogueBox">
+    <div class="dialogue-text" id="dialogueText"></div>
+    <div class="tap-hint" id="tapHint"></div>
+  </div>
+</div>
+
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+// 子牛売買（ドナドナ演出）ページ（指示書_子牛売買申込み（オスメス両対応・ドナドナ演出）実装.md対応）
+// 売値の確定・所持金加算・子牛の削除は、演出を見せる前にまとめて行っておく（表示は結果を後追いで見せるだけ）
+let results = [];
+let nextUrl = 'home.html';
+let resultIndex = 0;
+let awaitingTap = false;
+
+function playDeparture(onDone) {
+  const wrap = document.getElementById('sceneWrap');
+  const t1 = document.getElementById('truckSprite1');
+  const t2 = document.getElementById('truckSprite2');
+  document.getElementById('dialogueBox').classList.remove('show');
+
+  // 前回分の位置をリセット（トランジション無しで瞬時に戻す）
+  wrap.classList.remove('away');
+  t1.classList.add('no-transition');
+  t2.classList.add('no-transition');
+  void wrap.offsetWidth; // 強制リフロー
+  t1.classList.remove('no-transition');
+  t2.classList.remove('no-transition');
+
+  requestAnimationFrame(() => {
+    wrap.classList.add('away');
+  });
+  setTimeout(onDone, 2700);
+}
+
+function showNext() {
+  if (resultIndex >= results.length) {
+    location.href = nextUrl;
+    return;
+  }
+  awaitingTap = false;
+  playDeparture(() => {
+    const r = results[resultIndex];
+    const text = t('calf_sale_departed').replace('{name}', r.name) + '\n' +
+      t('calf_sale_price').replace('{price}', r.price.toLocaleString());
+    document.getElementById('dialogueText').textContent = text;
+    document.getElementById('dialogueBox').classList.add('show');
+    awaitingTap = true;
+  });
+}
+
+document.getElementById('sceneWrap').addEventListener('click', () => {
+  if (!awaitingTap) return;
+  resultIndex++;
+  showNext();
+});
+
+(async function () {
+  await loadDict();
+
+  const params = new URLSearchParams(location.search);
+  const calfIds = (params.get('calfIds') || '').split(',').filter(Boolean);
+  nextUrl = params.get('next') || 'home.html';
+
+  const state = loadLoopState();
+  calfIds.forEach(id => {
+    const idx = state.cows.findIndex(c => c.id === id);
+    if (idx === -1) return;
+    const cow = state.cows[idx];
+    const price = calcCalfSalePrice(cow.qualityPoint, cow.gender);
+    state.money += price;
+    results.push({ name: cow.name, price });
+    state.cows.splice(idx, 1);
+  });
+  saveLoopState(state);
+
+  if (results.length === 0) {
+    location.href = nextUrl;
+    return;
+  }
+
+  document.getElementById('tapHint').textContent = t('prologue_tap_hint');
+  showNext();
+})();
+</script>
+
+</body>
+</html>
