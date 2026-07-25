@@ -248,6 +248,7 @@ body {
     <div class="passive-icon" id="passive-icon-trace" onclick="showSkillInfo('trace')">🐾</div>
     <div class="passive-icon" id="passive-icon-roku" onclick="showSkillInfo('roku')">🔮</div>
     <div class="passive-icon" id="passive-icon-takeuchi" onclick="showSkillInfo('takeuchi')">🎯</div>
+    <div class="passive-icon" id="passive-icon-hatarakimono" onclick="showSkillInfo('hatarakimono')">💪</div>
     <div class="passive-icon" id="passive-icon-zenno" onclick="showSkillInfo('zenno')">⛩️</div>
   </div>
 </div>
@@ -434,6 +435,7 @@ let cardElsRef = []; // DOM参照を保持（スキルでのぞき見用）
 let hasHerdboyseye = false;   // ふうかのskillが"herdboys_eye"の場合のみミスマッチ表示を延長
 let hasSixthSense = false;    // 所持牛のskillが"roku"の場合のみ第六感（アンコモン透視）が発動
 let hasTakeuchi = false;      // 所持牛のskillが"takeuchi"の場合のみ狙い撃ち（レア1か所透視）が発動
+let hasHatarakimono = false;  // 所持牛のskillが"hatarakimono"の場合のみ働き者（コモンの草ポイント+1）が発動
 let hasHarvestMemory = false; // 所持牛のskillが"trace"の場合のみ刈り跡の記憶（翌日ヒント表示）が発動
 let hasZennoshin = false;     // 所持牛のskillが"zenno"の場合のみ全農神（その日は全マス見えたまま）が発動
 
@@ -449,6 +451,7 @@ const SKILL_INFO = {
   trace: { name:'刈り跡の記憶', desc:'前回良い素材を見つけた場所に、刈り跡を残す。同じ場所にまた現れやすくなり、うっすら光って教えてくれる。' },
   roku:  { name:'第六感',       desc:'毎朝、アンコモンのカードがある場所を3箇所、直感的に感じ取れる（うっすら光る）。' },
   takeuchi: { name:'狙い撃ち',  desc:'毎朝、レア(✨幻の薬草)の位置が1か所、うっすら光って分かるようになる。' },
+  hatarakimono: { name:'働き者', desc:'コモン(通常牧草)を見つけると、草ポイントが1多くもらえる。' },
   zenno: { name:'全農神',       desc:'農耕の神に愛された牛。探索エリアの全マスが、その日はずっと最初から見えている。' },
 };
 
@@ -691,11 +694,13 @@ function updatePassiveIcons() {
   const traceEl = document.getElementById('passive-icon-trace');
   const rokuEl = document.getElementById('passive-icon-roku');
   const takeuchiEl = document.getElementById('passive-icon-takeuchi');
+  const hatarakimonoEl = document.getElementById('passive-icon-hatarakimono');
   const zennoEl = document.getElementById('passive-icon-zenno');
   if (boyEl) boyEl.style.display = hasHerdboyseye ? '' : 'none';
   if (traceEl) traceEl.style.display = hasHarvestMemory ? '' : 'none';
   if (rokuEl) rokuEl.style.display = hasSixthSense ? '' : 'none';
   if (takeuchiEl) takeuchiEl.style.display = hasTakeuchi ? '' : 'none';
+  if (hatarakimonoEl) hatarakimonoEl.style.display = hasHatarakimono ? '' : 'none';
   if (zennoEl) zennoEl.style.display = hasZennoshin ? '' : 'none';
 }
 
@@ -846,9 +851,15 @@ function onCardClick(el, idx) {
 // ── 帰還 ──
 // 草ポイント：コモン1pt / アンコモン3pt / レアは品質側の扱いなので今回は0pt（体調には加算しない）
 // 台地等、field.grassPointsを持つフィールドはそちらを優先する（アンコモン・レアが子牛用飼料に回るため）
+// 「働き者」持ちの母牛がいる場合、コモン成立ぶんだけ+1ptされる（子牛のスキルは無効なのでhasHatarakimono側で担保）
+const HATARAKIMONO_COMMON_BONUS = 1;
 function calcGrassPoints(items) {
   const POINTS = field.grassPoints || { common: 1, uncommon: 3, rare: 0 };
-  return items.reduce((sum, ri) => sum + (POINTS[DECK_DEF[ri].key] || 0), 0);
+  return items.reduce((sum, ri) => {
+    const key = DECK_DEF[ri].key;
+    const bonus = (hasHatarakimono && key === 'common') ? HATARAKIMONO_COMMON_BONUS : 0;
+    return sum + (POINTS[key] || 0) + bonus;
+  }, 0);
 }
 
 // 品質ポイント：薬草（レア）獲得枚数 × 5pt（体調とは別で品質のみに加算）
@@ -940,6 +951,7 @@ function start() {
   hasHerdboyseye = loopState.cows.some(c => c.type === 'mother' && c.skill === 'herdboys_eye');
   hasSixthSense = loopState.cows.some(c => c.type === 'mother' && c.skill === 'roku');
   hasTakeuchi = loopState.cows.some(c => c.type === 'mother' && c.skill === 'takeuchi');
+  hasHatarakimono = loopState.cows.some(c => c.type === 'mother' && c.skill === 'hatarakimono');
   hasHarvestMemory = loopState.cows.some(c => c.type === 'mother' && c.skill === 'trace');
   hasZennoshin = loopState.cows.some(c => c.type === 'mother' && c.skill === 'zenno');
   // 回転斬りも子牛は対象外（母牛の品質のみで判定。品質はqualityPointの累計から都度算出する。口頭指示対応）
