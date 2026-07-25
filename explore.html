@@ -432,7 +432,7 @@ let skillUsesLeft = 0;
 let cardElsRef = []; // DOM参照を保持（スキルでのぞき見用）
 let hasHerdboyseye = false;   // ふうかのskillが"herdboys_eye"の場合のみミスマッチ表示を延長
 let hasSixthSense = false;    // 所持牛のskillが"roku"の場合のみ第六感（アンコモン透視）が発動
-let hasHarvestMemory = false; // 所持牛のskillが"trace"の場合のみ刈り跡の記憶（翌日自動収穫）が発動
+let hasHarvestMemory = false; // 所持牛のskillが"trace"の場合のみ刈り跡の記憶（翌日ヒント表示）が発動
 let hasZennoshin = false;     // 所持牛のskillが"zenno"の場合のみ全農神（その日は全マス見えたまま）が発動
 
 // 品質→回転斬りの1日の使用可能回数（設計まとめ.md: 優=2回/日, 良=1回/日, 可以下=使えない）
@@ -444,7 +444,7 @@ function rotationSlashMaxUses(quality) {
 
 const SKILL_INFO = {
   boy:   { name:'牧童の目',     desc:'ミスマッチした時、通常より長く（1.5秒）表面が見える。焦らず覚え直せる。' },
-  trace: { name:'刈り跡の記憶', desc:'前日に良い素材（アンコモン以上）を見つけた場所は、翌朝すでに刈り取られた状態で始まる（コストなしで自動収穫）。' },
+  trace: { name:'刈り跡の記憶', desc:'前日に良い素材（アンコモン以上）を見つけた場所は、翌朝うっすら光って分かるようになる（自動収穫ではなく、自分でタップして揃える必要がある）。' },
   roku:  { name:'第六感',       desc:'毎朝、アンコモンのカードがある場所を3箇所、直感的に感じ取れる（うっすら光る）。' },
   zenno: { name:'全農神',       desc:'農耕の神に愛された牛。探索エリアの全マスが、その日はずっと最初から見えている。' },
 };
@@ -522,11 +522,13 @@ function reshuffleHalf(excludeSet) {
 
 // ── 保存 / 読込 ──
 // day: このデッキが最後に整備された通算日（yamayama_loop_v1のdayと比較して日付判定に使う）
-// goodPositions: 「刈り跡の記憶」で自動収穫予約中の位置（ページ遷移をまたいで維持するため保存）
+// goodPositions: 「刈り跡の記憶」で翌日ヒント対象にする位置の元データ（ページ遷移をまたいで維持するため保存）
+// traceHints: 「刈り跡の記憶」で今日ヒント表示中の位置（同日内のページ再読込でも消えないよう保存。口頭指示でナーフ対応）
 function save() {
   localStorage.setItem(SAVE_KEY, JSON.stringify({
     deck, day,
     goodPositions: Array.from(todayMatchedGoodPositions),
+    traceHints: Array.from(traceHintPositions),
   }));
 }
 function load() {
@@ -536,6 +538,7 @@ function load() {
     deck = d.deck;
     day  = d.day || 1;
     todayMatchedGoodPositions = new Set(d.goodPositions || []);
+    traceHintPositions = new Set(d.traceHints || []);
     return true;
   } catch(e) { return false; }
 }
@@ -601,8 +604,10 @@ function renderFaceDown(el, hinted) {
   el.innerHTML = '';
 }
 
-// ── 刈り跡の記憶：前日「自分がマッチさせた」アンコモン以上の位置を、翌朝は自動収穫済みにする ──
+// ── 刈り跡の記憶：前日「自分がマッチさせた」アンコモン以上の位置を、翌朝はヒント表示するだけにする
+// （自動収穫ではない。プレイヤー自身がタップして揃える必要がある。口頭指示でナーフ対応） ──
 let todayMatchedGoodPositions = new Set(); // 今日マッチさせたアンコモン以上の位置（idx）
+let traceHintPositions = new Set(); // 刈り跡の記憶で今日ヒント表示中の位置（その日限り）
 
 // ── 第六感：毎朝ランダムにアンコモン3箇所を光らせる（透視、その日限り） ──
 let hintPositions = new Set(); // 現在光っている位置（表示用）
@@ -923,37 +928,36 @@ function start() {
   skillMaxUsesToday = rotationSlashMaxUses(primaryMother ? getQualityTier(primaryMother.qualityPoint) : 0);
   updatePassiveIcons();
 
-  let autoHarvested = [];
   if (!load()) {
     deck = generateDeck();
     day  = loopState.day;
     todayMatchedGoodPositions = new Set();
+    traceHintPositions = new Set();
     assignCoins();
   } else if (day < loopState.day) {
-    // 「刈り跡の記憶」：前回マッチさせた良い位置の中身を確定させ、シャッフル対象から除外
-    const carried = Array.from(todayMatchedGoodPositions).map(idx => ({ idx, ri: deck[idx].ri }));
+    // 「刈り跡の記憶」：前回マッチさせた良い位置は、位置と中身を維持したまま未マッチに戻し、
+    // ヒント表示の対象にするだけ（自動収穫はしない。自分でタップして揃える必要がある。口頭指示でナーフ対応）
+    const carried = Array.from(todayMatchedGoodPositions);
     todayMatchedGoodPositions = new Set();
 
-    const excludeSet = new Set(carried.map(c => c.idx));
-    reshuffleHalf(excludeSet);
+    const excludeSet = new Set(carried);
+    reshuffleHalf(excludeSet); // ヒント位置がずれないよう、持ち越し位置はシャッフル対象から除外する
 
-    carried.forEach(({idx, ri}) => {
-      deck[idx].ri = ri;
-      deck[idx].matched = true;
-      deck[idx].coin = 0; // 自動収穫マスにコインが残って取得不能にならないようにする
-      deck[idx].coinClaimed = false;
-      autoHarvested.push(ri);
+    traceHintPositions = new Set();
+    carried.forEach(idx => {
+      deck[idx].matched = false;
+      traceHintPositions.add(idx);
     });
 
-    // 新しい1日のコインを再抽選（持ち越しマスは除外）
-    assignCoins(excludeSet);
+    // 新しい1日のコインを再抽選（持ち越し位置も通常のカードとして対象に含める。自動収穫ではなくなったため）
+    assignCoins();
 
     day = loopState.day;
   }
   // 同じ日に戻ってきた場合はdeckの状態（matched・コイン含む）をそのまま維持する
 
   mana = manaRemaining(loopState); // 牛舎の床替え等ですでに魔力を使っていれば、その分を差し引く
-  todayItems = [...autoHarvested];
+  todayItems = [];
   todayCoins = 0;
   grassBanked = false;
   firstSel = null;
@@ -961,6 +965,7 @@ function start() {
   skillUsesLeft = skillMaxUsesToday;
   if (hasSixthSense) pickSixthSenseHints();
   else hintPositions = new Set();
+  traceHintPositions.forEach(idx => hintPositions.add(idx)); // 刈り跡の記憶のヒントも合わせて表示する
   save();
   renderBoard();
   updateManaUI();
