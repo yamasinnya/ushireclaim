@@ -152,16 +152,6 @@ function getQualityTier(qualityPoint) {
   return 1;
 }
 
-// 現在のティア内での進捗（0〜1）。優(最高ティア)は上限がないため常に1として扱う
-function getQualityTierProgress(qualityPoint) {
-  const p = qualityPoint || 0;
-  const tier = getQualityTier(p);
-  const lower = QUALITY_TIER_THRESHOLDS[tier - 1];
-  const upper = QUALITY_TIER_THRESHOLDS[tier];
-  if (upper === undefined) return 1;
-  return (p - lower) / (upper - lower);
-}
-
 // 品質（1-4）→ 表示ラベルのt()キー（実際の文字列はja.json経由で取得する）
 function qualityToLabelKey(quality) {
   if (quality >= 4) return 'quality_label_yu';

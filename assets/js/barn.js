@@ -476,12 +476,10 @@ function openSheet(stall) {
       document.getElementById('sPregnant').textContent = '';
     }
 
-    const pct = getQualityTierProgress(c.qualityPoint);
-    document.getElementById('sComment').textContent =
-      pct <= 0.25 ? t('barn_coat_comment_1') :
-      pct <= 0.50 ? t('barn_coat_comment_2').replace('{name}', c.name) :
-      pct <= 0.75 ? t('barn_coat_comment_3') :
-                    t('barn_coat_comment_4');
+    // 完全なフレーバーテキスト（品質・体調のどちらの値からも独立）。品質関連ロジックと結びつけて改修しないこと
+    // 指示書_牛舎コメント欄の仕様変更（品質ヒント→愛着フレーバー）.md対応
+    const flavorDigit = Math.floor(c.qualityPoint || 0) % 10;
+    document.getElementById('sComment').textContent = t(`barn_flavor_comment_${flavorDigit}`);
 
     const sc = document.getElementById('sheetCanvas');
     const oc = cowOCMap[c.id];
