@@ -609,7 +609,7 @@ function renderFaceDown(el, hinted) {
 // 確定枠は蓄積プール型。放置すると全アンコモン以上が恒久的に確定枠になってしまうため、
 // 日付切り替え時に「既存枠＋当日マッチ分」をマージした後、TRACE_RELEASE_RATEの確率で1件ずつ解放する
 // （マージ前に解放すると、当日拾った分がそのまま再追加されて減衰が効かないので順番が重要）
-const TRACE_RELEASE_RATE = 0.5; // 1日ごとに確定枠を手放す確率（調整用）
+const TRACE_RELEASE_RATE = 0.2; // 1日ごとに確定枠を手放す確率（＝8割は維持される。調整用）
 let todayMatchedGoodPositions = new Set(); // 今日マッチさせたアンコモン以上の位置（idx）
 let traceHintPositions = new Set(); // 刈り跡の記憶の確定枠（ヒント表示＋シャッフル除外の対象）
 
