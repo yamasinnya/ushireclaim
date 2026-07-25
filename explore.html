@@ -604,10 +604,14 @@ function renderFaceDown(el, hinted) {
   el.innerHTML = '';
 }
 
-// ── 刈り跡の記憶：前日「自分がマッチさせた」アンコモン以上の位置を、翌朝はヒント表示するだけにする
+// ── 刈り跡の記憶：「自分がマッチさせた」アンコモン以上の位置を、翌朝はヒント表示するだけにする
 // （自動収穫ではない。プレイヤー自身がタップして揃える必要がある。口頭指示でナーフ対応） ──
+// 確定枠は蓄積プール型。放置すると全アンコモン以上が恒久的に確定枠になってしまうため、
+// 日付切り替え時に「既存枠＋当日マッチ分」をマージした後、TRACE_RELEASE_RATEの確率で1件ずつ解放する
+// （マージ前に解放すると、当日拾った分がそのまま再追加されて減衰が効かないので順番が重要）
+const TRACE_RELEASE_RATE = 0.5; // 1日ごとに確定枠を手放す確率（調整用）
 let todayMatchedGoodPositions = new Set(); // 今日マッチさせたアンコモン以上の位置（idx）
-let traceHintPositions = new Set(); // 刈り跡の記憶で今日ヒント表示中の位置（その日限り）
+let traceHintPositions = new Set(); // 刈り跡の記憶の確定枠（ヒント表示＋シャッフル除外の対象）
 
 // ── 第六感：毎朝ランダムにアンコモン3箇所を光らせる（透視、その日限り） ──
 let hintPositions = new Set(); // 現在光っている位置（表示用）
@@ -935,21 +939,23 @@ function start() {
     traceHintPositions = new Set();
     assignCoins();
   } else if (day < loopState.day) {
-    // 「刈り跡の記憶」：前回マッチさせた良い位置は、位置と中身を維持したまま未マッチに戻し、
-    // ヒント表示の対象にするだけ（自動収穫はしない。自分でタップして揃える必要がある。口頭指示でナーフ対応）
-    const carried = Array.from(todayMatchedGoodPositions);
+    // 「刈り跡の記憶」：確定枠は位置と中身を維持したまま未マッチに戻し、ヒント表示の対象にする
+    // （自動収穫はしない。自分でタップして揃える必要がある。口頭指示でナーフ対応）
+    // ①既存の確定枠と当日マッチ分をマージ → ②マージ後にまとめて解放判定、の順で行う
+    const merged = new Set(traceHintPositions);
+    todayMatchedGoodPositions.forEach(idx => merged.add(idx));
     todayMatchedGoodPositions = new Set();
 
-    const excludeSet = new Set(carried);
-    reshuffleHalf(excludeSet); // ヒント位置がずれないよう、持ち越し位置はシャッフル対象から除外する
-
     traceHintPositions = new Set();
-    carried.forEach(idx => {
-      deck[idx].matched = false;
-      traceHintPositions.add(idx);
+    merged.forEach(idx => {
+      if (Math.random() >= TRACE_RELEASE_RATE) traceHintPositions.add(idx);
     });
 
-    // 新しい1日のコインを再抽選（持ち越し位置も通常のカードとして対象に含める。自動収穫ではなくなったため）
+    // 確定枠だけをシャッフル対象から除外する（解放された位置は通常通りシャッフル・未マッチ化される）
+    reshuffleHalf(traceHintPositions);
+    traceHintPositions.forEach(idx => { deck[idx].matched = false; });
+
+    // 新しい1日のコインを再抽選（確定枠も通常のカードとして対象に含める。自動収穫ではなくなったため）
     assignCoins();
 
     day = loopState.day;
