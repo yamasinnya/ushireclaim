@@ -141,9 +141,9 @@ function getConditionQualityDelta(condition) {
 }
 
 // 品質(優良可)はレベル制ではなくスコープ制：qualityPointの累計から都度算出する（口頭指示対応）
-// 各ティアに到達するのに必要な累計ポイント（劣→可30/可→良+50=80/良→優+80=160。旧レベル制の閾値と同じ配分を維持）
+// 各ティアの累計到達点（劣→可30/可→良50/良→優80。表の数値をそのまま累計の区切りとして使う）
 // qualityPointが下がればティアも下がる（一度上がったら固定、という挙動は廃止）
-const QUALITY_TIER_THRESHOLDS = [0, 30, 80, 160];
+const QUALITY_TIER_THRESHOLDS = [0, 30, 50, 80];
 function getQualityTier(qualityPoint) {
   const p = qualityPoint || 0;
   for (let tier = QUALITY_TIER_THRESHOLDS.length; tier >= 1; tier--) {
