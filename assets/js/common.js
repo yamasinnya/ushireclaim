@@ -185,6 +185,7 @@ const SKILL_DISPLAY = {
   roku:         { emoji: '🔮', nameKey: 'skill_name_roku' },
   takeuchi:     { emoji: '🎯', nameKey: 'skill_name_takeuchi' },
   hatarakimono: { emoji: '💪', nameKey: 'skill_name_hatarakimono' },
+  okanemochi:   { emoji: '💰', nameKey: 'skill_name_okanemochi' },
   zenno:        { emoji: '⛩️', nameKey: 'skill_name_zenno' },
 };
 

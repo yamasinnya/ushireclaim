@@ -249,6 +249,7 @@ body {
     <div class="passive-icon" id="passive-icon-roku" onclick="showSkillInfo('roku')">🔮</div>
     <div class="passive-icon" id="passive-icon-takeuchi" onclick="showSkillInfo('takeuchi')">🎯</div>
     <div class="passive-icon" id="passive-icon-hatarakimono" onclick="showSkillInfo('hatarakimono')">💪</div>
+    <div class="passive-icon" id="passive-icon-okanemochi" onclick="showSkillInfo('okanemochi')">💰</div>
     <div class="passive-icon" id="passive-icon-zenno" onclick="showSkillInfo('zenno')">⛩️</div>
   </div>
 </div>
@@ -436,6 +437,8 @@ let hasHerdboyseye = false;   // ふうかのskillが"herdboys_eye"の場合の�
 let hasSixthSense = false;    // 所持牛のskillが"roku"の場合のみ第六感（アンコモン透視）が発動
 let hasTakeuchi = false;      // 所持牛のskillが"takeuchi"の場合のみ狙い撃ち（レア1か所透視）が発動
 let hasHatarakimono = false;  // 所持牛のskillが"hatarakimono"の場合のみ働き者（コモンの草ポイント+1）が発動
+let hasOkanemochi = false;    // 所持牛のskillが"okanemochi"の場合のみお金持ち（コインドロップ1.5倍）が発動
+const OKANEMOCHI_COIN_MULTIPLIER = 1.5; // お金持ちのコインドロップ倍率（調整用）
 let hasHarvestMemory = false; // 所持牛のskillが"trace"の場合のみ刈り跡の記憶（翌日ヒント表示）が発動
 let hasZennoshin = false;     // 所持牛のskillが"zenno"の場合のみ全農神（その日は全マス見えたまま）が発動
 
@@ -452,6 +455,7 @@ const SKILL_INFO = {
   roku:  { name:'第六感',       desc:'毎朝、アンコモンのカードがある場所を3箇所、直感的に感じ取れる（うっすら光る）。' },
   takeuchi: { name:'狙い撃ち',  desc:'毎朝、レア(✨幻の薬草)の位置が1か所、うっすら光って分かるようになる。' },
   hatarakimono: { name:'働き者', desc:'コモン(通常牧草)を見つけると、草ポイントが1多くもらえる。' },
+  okanemochi: { name:'お金持ち', desc:'探索で見つかるお金が、1.5倍になる。' },
   zenno: { name:'全農神',       desc:'農耕の神に愛された牛。探索エリアの全マスが、その日はずっと最初から見えている。' },
 };
 
@@ -695,12 +699,14 @@ function updatePassiveIcons() {
   const rokuEl = document.getElementById('passive-icon-roku');
   const takeuchiEl = document.getElementById('passive-icon-takeuchi');
   const hatarakimonoEl = document.getElementById('passive-icon-hatarakimono');
+  const okanemochiEl = document.getElementById('passive-icon-okanemochi');
   const zennoEl = document.getElementById('passive-icon-zenno');
   if (boyEl) boyEl.style.display = hasHerdboyseye ? '' : 'none';
   if (traceEl) traceEl.style.display = hasHarvestMemory ? '' : 'none';
   if (rokuEl) rokuEl.style.display = hasSixthSense ? '' : 'none';
   if (takeuchiEl) takeuchiEl.style.display = hasTakeuchi ? '' : 'none';
   if (hatarakimonoEl) hatarakimonoEl.style.display = hasHatarakimono ? '' : 'none';
+  if (okanemochiEl) okanemochiEl.style.display = hasOkanemochi ? '' : 'none';
   if (zennoEl) zennoEl.style.display = hasZennoshin ? '' : 'none';
 }
 
@@ -781,9 +787,14 @@ function onCardClick(el, idx) {
   if (hasZennoshin) el.classList.add('peek'); // 全農神：常に見えているので選択中カードを枠線で示す
 
   // コイン即獲得（ペア成立とは無関係。表向きにした瞬間に入手する）
+  // 「お金持ち」持ちの母牛がいる場合、そのマスで決定済みのドロップ額に倍率を掛ける
+  // （エリアごとに基準額が変わっても効くよう、固定額ではなく実際のdeck[idx].coinに掛ける）
   if (deck[idx].coin > 0 && !deck[idx].coinClaimed) {
     deck[idx].coinClaimed = true;
-    claimCoin(deck[idx].coin);
+    const gained = hasOkanemochi
+      ? Math.round(deck[idx].coin * OKANEMOCHI_COIN_MULTIPLIER)
+      : deck[idx].coin;
+    claimCoin(gained);
     save();
   }
 
@@ -952,6 +963,7 @@ function start() {
   hasSixthSense = loopState.cows.some(c => c.type === 'mother' && c.skill === 'roku');
   hasTakeuchi = loopState.cows.some(c => c.type === 'mother' && c.skill === 'takeuchi');
   hasHatarakimono = loopState.cows.some(c => c.type === 'mother' && c.skill === 'hatarakimono');
+  hasOkanemochi = loopState.cows.some(c => c.type === 'mother' && c.skill === 'okanemochi');
   hasHarvestMemory = loopState.cows.some(c => c.type === 'mother' && c.skill === 'trace');
   hasZennoshin = loopState.cows.some(c => c.type === 'mother' && c.skill === 'zenno');
   // 回転斬りも子牛は対象外（母牛の品質のみで判定。品質はqualityPointの累計から都度算出する。口頭指示対応）
