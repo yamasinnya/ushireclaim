@@ -72,14 +72,19 @@
   // 4〜8ptはconditionDelta=0（維持）
 
   // 体調変動は母牛・育成期の子牛のみに適用（哺乳期・離乳移行期は母乳で補われるため変動なし）
+  // 通知には実際に変動した牛の名前だけを並べる（先頭固定だと、変動していない牛の名前が出てしまう）
   let conditionNote = '';
   if (conditionDelta !== 0) {
+    const changedNames = [];
     state.cows.forEach(cow => {
       const affected = cow.type === 'mother' || getCalfStage(cow.age || 0) === 'growing';
       if (!affected) return;
       cow.condition = Math.max(1, Math.min(10, cow.condition + conditionDelta));
+      changedNames.push(cow.name);
     });
-    conditionNote = state.cows[0].name + (conditionDelta > 0 ? t('condition_up') : t('condition_down'));
+    if (changedNames.length) {
+      conditionNote = changedNames.join('、') + (conditionDelta > 0 ? t('condition_up') : t('condition_down'));
+    }
   }
   state.grassStock = 0;
   saveLoopState(state);

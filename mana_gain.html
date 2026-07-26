@@ -31,9 +31,17 @@
   const magic = calcTotalMagic(state.cows);
   renderHeader('gameHeader');
 
+  // 魔力は母牛全頭の合計なので、体調ラベルも魔力に寄与している母牛の平均から出す
+  // （先頭固定だと、魔力を持たない子牛やオス成牛の体調が表示されることがある）
+  const magicCows = state.cows.filter(cow => cow.type === 'mother');
+  const avgCondition = magicCows.length
+    ? Math.round(magicCows.reduce((sum, cow) => sum + cow.condition, 0) / magicCows.length)
+    : 0;
+  const conditionSuffix = magicCows.length ? `（${conditionToLabel(avgCondition)}）` : '';
+
   document.getElementById('title').textContent = t('mana_gain_title');
   document.getElementById('mana-amount').textContent =
-    `${t('mana_gain_amount_prefix')}：🔮 ${magic}（${conditionToLabel(state.cows[0].condition)}）`;
+    `${t('mana_gain_amount_prefix')}：🔮 ${magic}${conditionSuffix}`;
   document.getElementById('note').textContent = t('mana_gain_note');
 
   const btn = document.getElementById('btn-next');
