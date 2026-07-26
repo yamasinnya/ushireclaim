@@ -30,26 +30,38 @@
 
   const state = loadLoopState();
 
-  // 序盤チュートリアルはtruck_talk.htmlに移譲（指示書_軽トラ会話汎用ページ(truck_talk.html)の実装.md、指示書_3日目チュートリアル（街の説明）.md対応）
   const params = new URLSearchParams(location.search);
+
+  // 1日の始まりには複数のイベント（チュートリアル・妊娠鑑定・出荷・昇格・流産）が同じ日に重なりうる。
+  // 各イベントは専用ページへ遷移して戻ってくるが、その際に既存のskipフラグを引き継がないと
+  // 「先に表示し終えたイベントがもう一度発火する」「別イベントのフラグに巻き込まれて表示されないまま終わる」
+  // という不具合が起きるため、戻り先URLは現在のクエリを保持したままフラグを1つ足す形で組み立てる
+  function upkeepReturnUrl(flag) {
+    const next = new URLSearchParams(params);
+    next.set(flag, '1');
+    return encodeURIComponent('upkeep.html?' + next.toString());
+  }
+
+  // 序盤チュートリアルはtruck_talk.htmlに移譲（指示書_軽トラ会話汎用ページ(truck_talk.html)の実装.md、指示書_3日目チュートリアル（街の説明）.md対応）
   const skipTutorial = params.get('skip_tutorial') === '1';
   const TUTORIAL_SCENE_FOR_DAY = { 2: 'day2_tutorial', 3: 'day3_tutorial', 4: 'day4_tutorial', 5: 'day5_tutorial', 10: 'day10_tutorial', 14: 'calf_tutorial', 16: 'breeding_tutorial', 20: 'daichi_tutorial', 22: 'grass_shortage_tutorial', 30: 'calf_sale_tutorial' };
   const tutorialScene = TUTORIAL_SCENE_FOR_DAY[state.day];
   if (tutorialScene && !skipTutorial) {
-    const nextUrl = encodeURIComponent('upkeep.html?skip_tutorial=1');
-    location.href = `truck_talk.html?scene=${tutorialScene}&next=${nextUrl}`;
+    location.href = `truck_talk.html?scene=${tutorialScene}&next=${upkeepReturnUrl('skip_tutorial')}`;
     return;
   }
 
   // 妊娠確定／着床失敗の通知：種付けから2日後（＝着床判定の翌日）の「1日の始まり」で発火する
   // プレイヤーはこのイベントで初めて結果を知る（着床失敗でも同様。指示書_発情・種付け・妊娠システム実装.md対応）
-  const revealingCow = state.cows.find(cow => cow.breedingState === 'inseminated' && cow.inseminatedDay > 0 && state.day === cow.inseminatedDay + 2);
-  if (revealingCow && !skipTutorial) {
+  // 判定を「>=」にしているのは、何らかの理由でその日に表示できなかった場合でも翌日以降に必ず解消させるため。
+  // 未鑑定のまま放置されるとbreedingStateが'inseminated'で固まり、発情判定が二度と走らなくなる
+  const skipReveal = params.get('skip_reveal') === '1';
+  const revealingCow = state.cows.find(cow => cow.breedingState === 'inseminated' && cow.inseminatedDay > 0 && state.day >= cow.inseminatedDay + 2);
+  if (revealingCow && !skipReveal) {
     const success = revealingCow.pregnantDay > 0;
     revealingCow.breedingState = success ? 'pregnant' : 'failed';
     saveLoopState(state);
-    const nextUrl = encodeURIComponent('upkeep.html?skip_tutorial=1');
-    location.href = `truck_talk.html?scene=${success ? 'pregnancy_confirmed' : 'pregnancy_failed'}&next=${nextUrl}`;
+    location.href = `truck_talk.html?scene=${success ? 'pregnancy_confirmed' : 'pregnancy_failed'}&next=${upkeepReturnUrl('skip_reveal')}`;
     return;
   }
 
@@ -59,8 +71,7 @@
   const departingCalves = state.cows.filter(cow => cow.type === 'calf' && cow.saleApplied && state.day === (cow.saleAppliedDay || 0) + 1);
   if (departingCalves.length > 0 && !skipCalfSale) {
     const calfIds = departingCalves.map(cow => cow.id).join(',');
-    const nextUrl = encodeURIComponent('upkeep.html?skip_calf_sale=1');
-    location.href = `calf_sale.html?calfIds=${encodeURIComponent(calfIds)}&next=${nextUrl}`;
+    location.href = `calf_sale.html?calfIds=${encodeURIComponent(calfIds)}&next=${upkeepReturnUrl('skip_calf_sale')}`;
     return;
   }
 
@@ -70,8 +81,7 @@
   const promotingCalves = state.cows.filter(cow => cow.type === 'calf' && !cow.saleApplied && (cow.age || 0) >= 21);
   if (promotingCalves.length > 0 && !skipPromotion) {
     const calfIds = promotingCalves.map(cow => cow.id).join(',');
-    const nextUrl = encodeURIComponent('upkeep.html?skip_promotion=1');
-    location.href = `adult_promotion.html?calfIds=${encodeURIComponent(calfIds)}&next=${nextUrl}`;
+    location.href = `adult_promotion.html?calfIds=${encodeURIComponent(calfIds)}&next=${upkeepReturnUrl('skip_promotion')}`;
     return;
   }
 
@@ -89,8 +99,8 @@
     cow.actualBirthDay = 0;
     cow.breedingState = 'none'; // 通常の発情待ちループに戻す（指示書_発情・種付け・妊娠システム実装.md対応）
     saveLoopState(state);
-    const nextUrl = encodeURIComponent('upkeep.html?skip_tutorial=1');
-    location.href = `truck_talk.html?scene=miscarriage&next=${nextUrl}`;
+    // pregnantDayを0にした時点で再発火しなくなるが、他イベントのフラグを消さないよう専用フラグで戻る
+    location.href = `truck_talk.html?scene=miscarriage&next=${upkeepReturnUrl('skip_miscarriage')}`;
   }
   for (const cow of state.cows) {
     if (cow.pregnantDay > 0 && cow.actualBirthDay > 0 && cow.pregnantDay > cow.actualBirthDay) {
