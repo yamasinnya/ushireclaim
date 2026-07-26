@@ -114,6 +114,89 @@ function spriteFor(cow) {
   return cow.type === 'calf' ? cowSpriteForAge(cow.age) : 'assets/sprites/cow_mother.png';
 }
 
+// ── ぶち牛パターン生成（barn.jsのpreRenderCowと同じ手法。seedから同一模様を再現する） ──
+// 自分の牛だと分かる方が愛着が湧くため、この演出では固有のぶち模様つきで描く（口頭指示対応）
+function makeRng(seed) {
+  let s = seed >>> 0;
+  return () => {
+    s = (s + 0x6D2B79F5) >>> 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = Math.imul(t ^ (t >>> 7), 61 | t) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function isFur(r, g, b) { return (r + g + b) / 3 < 150 && Math.max(r, g, b) - Math.min(r, g, b) < 25; }
+function makeBgTransparent(imageData, tolerance) {
+  const px = imageData.data;
+  const bg = [px[0], px[1], px[2]];
+  for (let i = 0; i < px.length; i += 4) {
+    if (Math.abs(px[i] - bg[0]) <= tolerance && Math.abs(px[i + 1] - bg[1]) <= tolerance && Math.abs(px[i + 2] - bg[2]) <= tolerance) {
+      px[i + 3] = 0;
+    }
+  }
+}
+function growBlob(mask, w, h, si, size, rng) {
+  const vis = new Set(), fr = [si], res = [];
+  while (fr.length && res.length < size) {
+    const p = Math.floor(rng() * fr.length), idx = fr.splice(p, 1)[0];
+    if (vis.has(idx)) continue;
+    if (idx < 0 || idx >= w * h || !mask[idx]) continue;
+    vis.add(idx); res.push(idx);
+    [idx - 1, idx + 1, idx - w, idx + w].forEach(n => { if (!vis.has(n)) fr.push(n); });
+  }
+  return res;
+}
+// 生成したぶち模様をdataURLで返す（img.srcに差し込んで使う）
+function renderCowDataUrl(spriteSrc, seed) {
+  return new Promise(res => {
+    const img = new Image();
+    img.onload = () => {
+      const rng = makeRng(seed);
+      const oc = document.createElement('canvas');
+      oc.width = img.width; oc.height = img.height;
+      const oct = oc.getContext('2d');
+      oct.imageSmoothingEnabled = false;
+      oct.drawImage(img, 0, 0);
+      const d = oct.getImageData(0, 0, oc.width, oc.height);
+      makeBgTransparent(d, 10);
+      const px = d.data;
+      const mask = new Uint8Array(oc.width * oc.height);
+      for (let i = 0; i < mask.length; i++) mask[i] = isFur(px[i * 4], px[i * 4 + 1], px[i * 4 + 2]) ? 1 : 0;
+      const fi = []; for (let i = 0; i < mask.length; i++) if (mask[i]) fi.push(i);
+      if (fi.length) {
+        const col = [[235, 225, 210], [150, 100, 60]][Math.floor(rng() * 2)];
+        for (let p = 0; p < 2 + Math.floor(rng() * 3); p++) {
+          growBlob(mask, oc.width, oc.height, fi[Math.floor(rng() * fi.length)], 60 + Math.floor(rng() * 140), rng)
+            .forEach(i => {
+              const r = px[i * 4], g = px[i * 4 + 1], b = px[i * 4 + 2];
+              const br = Math.min(Math.max((r + g + b) / 3 / 30, 0.5), 1.3);
+              px[i * 4] = Math.min(255, col[0] * br); px[i * 4 + 1] = Math.min(255, col[1] * br); px[i * 4 + 2] = Math.min(255, col[2] * br);
+            });
+        }
+      }
+      oct.putImageData(d, 0, 0);
+      res(oc.toDataURL());
+    };
+    img.onerror = () => res(spriteSrc); // 生成に失敗したら元のスプライトで妥協する
+    img.src = spriteSrc;
+  });
+}
+
+// 演出用の小道具（動かない配置物）を置く
+function placeProp(src, left, top, width) {
+  const layer = document.getElementById('cowLayer');
+  const shadow = document.createElement('div');
+  shadow.className = 'shadow-blob';
+  shadow.style.cssText = `left:${left + 1}%; top:${top + 8}%; width:${width - 2}%; height:2%; z-index:3;`;
+  layer.appendChild(shadow);
+
+  const img = document.createElement('img');
+  img.className = 'placed';
+  img.style.cssText = `left:${left}%; top:${top}%; width:${width}%; z-index:4;`;
+  img.src = src;
+  layer.appendChild(img);
+}
+
 // 演出用の牛を1頭配置し、あとから位置を動かせるハンドルを返す
 function placeActor(cow, left, top, width) {
   const layer = document.getElementById('cowLayer');
@@ -125,7 +208,10 @@ function placeActor(cow, left, top, width) {
   const img = document.createElement('img');
   img.className = 'placed actor';
   img.style.cssText = `left:${left}%; top:${top}%; width:${width}%; z-index:4;`;
-  img.src = spriteFor(cow);
+  const baseSrc = spriteFor(cow);
+  img.src = baseSrc;
+  // ぶち模様の生成は非同期なので、先に素のスプライトを出しておいて後から差し替える
+  renderCowDataUrl(baseSrc, cow.seed).then(url => { img.src = url; });
   layer.appendChild(img);
 
   return {
@@ -167,7 +253,9 @@ document.getElementById('sceneWrap').addEventListener('click', () => {
   // 候補の組み立て：親子じゃれ合いは母牛・子牛が両方いる時のみ
   const candidates = ['money', 'wara'];
   if (mothers.length > 0 && calves.length > 0) candidates.push('play');
-  const kind = pickRandom(candidates);
+  // 動作確認用に日付で種類を固定できる。候補に無い種類が指定されていたらランダムに戻す
+  const forcedKind = GOOD_EVENT_FORCE_BY_DAY[state.day];
+  const kind = candidates.includes(forcedKind) ? forcedKind : pickRandom(candidates);
 
   let text = '';
   if (kind === 'play') {
@@ -177,10 +265,10 @@ document.getElementById('sceneWrap').addEventListener('click', () => {
     text = t('good_event_play')
       .replace(/\{mother\}/g, mother.name)
       .replace('{calf}', calf.name);
-    // 親子が近づいてじゃれ合う見せ方
-    const motherActor = placeActor(mother, 22, 67, 13);
-    const calfActor = placeActor(calf, 52, 70, 10);
-    setTimeout(() => { motherActor.moveTo(30); calfActor.moveTo(44); }, 350);
+    // 親子が近づいてじゃれ合う見せ方（ぶち模様が見えるよう大きめに描く）
+    const motherActor = placeActor(mother, 14, 62, 26);
+    const calfActor = placeActor(calf, 58, 68, 19);
+    setTimeout(() => { motherActor.moveTo(26); calfActor.moveTo(46); }, 350);
   } else {
     const cow = pickRandom(state.cows);
     if (kind === 'money') {
@@ -190,10 +278,12 @@ document.getElementById('sceneWrap').addEventListener('click', () => {
     } else {
       state.wrapWara = (state.wrapWara || 0) + GOOD_EVENT_WARA_DAYS * WRAP_WARA_PT_PER_DAY;
       text = t('good_event_wara').replace('{name}', cow.name);
+      // もらったラップ藁を、倉庫に積まれた状態のスプライトで牛の傍らに置く
+      placeProp('assets/sprites/wrap_wara.png', 50, 60, 26);
     }
-    // 1頭が数歩あるく見せ方
-    const actor = placeActor(cow, 24, 68, cow.type === 'calf' ? 10 : 13);
-    setTimeout(() => actor.moveTo(38), 350);
+    // 1頭が数歩あるく見せ方（ぶち模様が見えるよう大きめに描く）
+    const actor = placeActor(cow, 16, 64, cow.type === 'calf' ? 19 : 26);
+    setTimeout(() => actor.moveTo(30), 350);
   }
 
   saveLoopState(state);

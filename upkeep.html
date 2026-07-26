@@ -92,7 +92,7 @@
   // ここでは発生の有無だけ判定し、種類の抽選と効果の適用はgood_event.html側で行う
   const skipGoodEvent = params.get('skip_good_event') === '1';
   const goodEventFires = state.cows.length > 0
-    && (state.day === GOOD_EVENT_FORCE_DAY || Math.random() < GOOD_EVENT_RATE);
+    && (GOOD_EVENT_FORCE_BY_DAY[state.day] !== undefined || Math.random() < GOOD_EVENT_RATE);
   if (goodEventFires && !skipGoodEvent) {
     location.href = `good_event.html?next=${upkeepReturnUrl('skip_good_event')}`;
     return;

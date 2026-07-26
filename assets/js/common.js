@@ -183,7 +183,10 @@ const WRAP_WARA_PT_PER_DAY = 5;
 // 良いランダムイベント（指示書_良いランダムイベント（人形芝居演出）実装.md対応）
 // 病気と対になるポジティブイベント。牧場全体で1日1回判定する（牛ごとではない）
 const GOOD_EVENT_RATE = 0.05;        // 1日あたりの発生確率
-const GOOD_EVENT_FORCE_DAY = 3;      // この日は確率判定を無視して必ず発生させる（動作確認用）
+// 動作確認用：この日は確率判定を無視し、指定の種類を必ず発生させる。
+// 候補に無い種類（例：子牛がいない日の'play'）を指定した場合は、その日の候補からランダムに選ぶ
+// 親子じゃれ合いは子牛が必要なため、初期牛の出産(Day13〜17頃)より後の28日目に置いている
+const GOOD_EVENT_FORCE_BY_DAY = { 4: 'money', 5: 'wara', 28: 'play' };
 const GOOD_EVENT_QUALITY_GAIN = 4;   // 親子じゃれ合い：母牛のqualityPointに加算
 const GOOD_EVENT_MONEY_MIN = 50;     // お金拾い：加算額の下限
 const GOOD_EVENT_MONEY_MAX = 150;    // 同・上限
