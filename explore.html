@@ -430,7 +430,7 @@ let todayItems = [];
 let todayCoins = 0;
 let firstSel   = null;
 let locked     = false;
-let skillMaxUsesToday = 0; // 回転斬りの1日の使用可能回数（ふうかの品質次第。設計まとめ.md「品質（4段階）」の表に対応）
+let skillMaxUsesToday = 0; // 回転斬りの1日の使用可能回数（母牛全頭の品質から合算。設計まとめ.md「品質（4段階）」の表に対応）
 let skillUsesLeft = 0;
 let cardElsRef = []; // DOM参照を保持（スキルでのぞき見用）
 let hasHerdboyseye = false;   // ふうかのskillが"herdboys_eye"の場合のみミスマッチ表示を延長
@@ -966,9 +966,11 @@ function start() {
   hasOkanemochi = loopState.cows.some(c => c.type === 'mother' && c.skill === 'okanemochi');
   hasHarvestMemory = loopState.cows.some(c => c.type === 'mother' && c.skill === 'trace');
   hasZennoshin = loopState.cows.some(c => c.type === 'mother' && c.skill === 'zenno');
-  // 回転斬りも子牛は対象外（母牛の品質のみで判定。品質はqualityPointの累計から都度算出する。口頭指示対応）
-  const primaryMother = loopState.cows.find(cow => cow.type === 'mother');
-  skillMaxUsesToday = rotationSlashMaxUses(primaryMother ? getQualityTier(primaryMother.qualityPoint) : 0);
+  // 回転斬りは母牛全頭の合計回数（子牛は対象外）。魔力(calcTotalMagic)と同じく全頭を合算する。
+  // 品質はqualityPointの累計から都度算出する（口頭指示対応）
+  skillMaxUsesToday = loopState.cows
+    .filter(cow => cow.type === 'mother')
+    .reduce((sum, cow) => sum + rotationSlashMaxUses(getQualityTier(cow.qualityPoint)), 0);
   updatePassiveIcons();
 
   if (!load()) {
