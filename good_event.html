@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>やまやま牧場 - 牧場のできごと</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#0a1506; min-height:100vh;
+  font-family:'Hiragino Kaku Gothic ProN','MS Gothic',sans-serif;
+  display:flex; flex-direction:column; align-items:center;
+}
+.scene-wrap {
+  width:100%; max-width:440px;
+  min-height:100vh;
+  position:relative;
+  overflow:hidden;
+  aspect-ratio: 941 / 1350;
+  cursor:pointer;
+  user-select:none; -webkit-user-select:none;
+}
+.bg-img {
+  position:absolute; top:0; left:0;
+  width:100%; display:block;
+}
+/* ホーム画面と同じ配置物の見せ方を流用する */
+.placed {
+  position:absolute;
+  image-rendering:pixelated;
+  filter:drop-shadow(0 6px 4px rgba(0,0,0,0.35));
+}
+.shadow-blob {
+  position:absolute;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0) 70%);
+  border-radius:50%;
+}
+/* 人形芝居：left/topをCSSトランジションで動かすだけの簡単な演出 */
+.actor, .actor-shadow {
+  transition: left 1.1s ease-in-out, top 1.1s ease-in-out;
+}
+
+.dialogue-box {
+  position:absolute; left:0; right:0; bottom:0;
+  background:linear-gradient(180deg, rgba(10,8,4,0) 0%, rgba(10,8,4,0.94) 30%);
+  padding:22px 24px 26px;
+  min-height:110px;
+  z-index:20;
+  display:none;
+}
+.dialogue-box.show { display:block; }
+.dialogue-text {
+  color:#e8d8c0; font-size:15px; line-height:1.9; letter-spacing:1px;
+}
+.tap-hint {
+  text-align:right; color:#786040; font-size:11px; margin-top:10px; letter-spacing:1px;
+}
+</style>
+</head>
+<body>
+
+<div class="scene-wrap" id="sceneWrap">
+  <img class="bg-img" src="mapback.png" alt="牧場">
+  <div id="buildingLayer"></div>
+  <div id="cowLayer"></div>
+
+  <div class="dialogue-box" id="dialogueBox">
+    <div class="dialogue-text" id="dialogueText"></div>
+    <div class="tap-hint" id="tapHint"></div>
+  </div>
+</div>
+
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+// 良いランダムイベント（指示書_良いランダムイベント（人形芝居演出）実装.md対応）
+// 発生の有無はupkeep.html側で判定済み。ここでは種類の抽選・効果の適用・演出を行う。
+// 背景と配置物はホーム画面(home.html)と同じ見せ方を流用している
+let nextUrl = 'home.html';
+let tapEnabled = false;
+
+const BUILDING_SPRITES = {
+  gyusha_small:     { src:'assets/sprites/gyusha_small.png', style:'left:22%; top:54%; width:26%; z-index:2;', shadow:'left:23%; top:68%; width:22%; height:6.5%; z-index:1;' },
+  magicWaterTrough: { src:'assets/sprites/mizunomiba.png',   style:'left:4%; top:40%; width:14%; z-index:2;',  shadow:'left:5%; top:47%; width:12%; height:2.5%; z-index:1;' },
+};
+
+function renderBuildings(state) {
+  const layer = document.getElementById('buildingLayer');
+  Object.keys(BUILDING_SPRITES).forEach(key => {
+    if (!state.buildings[key]) return;
+    const def = BUILDING_SPRITES[key];
+    const shadow = document.createElement('div');
+    shadow.className = 'shadow-blob';
+    shadow.style.cssText = def.shadow;
+    layer.appendChild(shadow);
+    const img = document.createElement('img');
+    img.className = 'placed';
+    img.style.cssText = def.style;
+    img.src = def.src;
+    layer.appendChild(img);
+  });
+}
+
+// 成牛は月齢に関係なく成牛スプライト（home.htmlと同じ分岐）
+function cowSpriteForAge(ageDays) {
+  const months = ageDays / 2;
+  if (months < 2) return 'assets/sprites/cow_newborn.png';
+  if (months < 4) return 'assets/sprites/cow_2m.png';
+  if (months < 10) return 'assets/sprites/cow_4m.png';
+  if (months < 24) return 'assets/sprites/cow_10m.png';
+  return 'assets/sprites/cow_mother.png';
+}
+function spriteFor(cow) {
+  return cow.type === 'calf' ? cowSpriteForAge(cow.age) : 'assets/sprites/cow_mother.png';
+}
+
+// 演出用の牛を1頭配置し、あとから位置を動かせるハンドルを返す
+function placeActor(cow, left, top, width) {
+  const layer = document.getElementById('cowLayer');
+  const shadow = document.createElement('div');
+  shadow.className = 'shadow-blob actor-shadow';
+  shadow.style.cssText = `left:${left + 1}%; top:${top + 7}%; width:${width - 1}%; height:2%; z-index:3;`;
+  layer.appendChild(shadow);
+
+  const img = document.createElement('img');
+  img.className = 'placed actor';
+  img.style.cssText = `left:${left}%; top:${top}%; width:${width}%; z-index:4;`;
+  img.src = spriteFor(cow);
+  layer.appendChild(img);
+
+  return {
+    moveTo(nextLeft) {
+      img.style.left = nextLeft + '%';
+      shadow.style.left = (nextLeft + 1) + '%';
+    },
+  };
+}
+
+function pickRandom(list) {
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+function showText(text) {
+  document.getElementById('dialogueText').textContent = text;
+  document.getElementById('dialogueBox').classList.add('show');
+  tapEnabled = true;
+}
+
+document.getElementById('sceneWrap').addEventListener('click', () => {
+  if (!tapEnabled) return;
+  location.href = nextUrl;
+});
+
+(async function () {
+  await loadDict();
+
+  const params = new URLSearchParams(location.search);
+  nextUrl = params.get('next') || 'home.html';
+
+  const state = loadLoopState();
+  if (state.cows.length === 0) { location.href = nextUrl; return; }
+  renderBuildings(state);
+
+  const mothers = state.cows.filter(c => c.type === 'mother');
+  const calves = state.cows.filter(c => c.type === 'calf');
+
+  // 候補の組み立て：親子じゃれ合いは母牛・子牛が両方いる時のみ
+  const candidates = ['money', 'wara'];
+  if (mothers.length > 0 && calves.length > 0) candidates.push('play');
+  const kind = pickRandom(candidates);
+
+  let text = '';
+  if (kind === 'play') {
+    const mother = pickRandom(mothers);
+    const calf = pickRandom(calves);
+    mother.qualityPoint = (mother.qualityPoint || 0) + GOOD_EVENT_QUALITY_GAIN;
+    text = t('good_event_play')
+      .replace(/\{mother\}/g, mother.name)
+      .replace('{calf}', calf.name);
+    // 親子が近づいてじゃれ合う見せ方
+    const motherActor = placeActor(mother, 22, 67, 13);
+    const calfActor = placeActor(calf, 52, 70, 10);
+    setTimeout(() => { motherActor.moveTo(30); calfActor.moveTo(44); }, 350);
+  } else {
+    const cow = pickRandom(state.cows);
+    if (kind === 'money') {
+      const gain = GOOD_EVENT_MONEY_MIN + Math.floor(Math.random() * (GOOD_EVENT_MONEY_MAX - GOOD_EVENT_MONEY_MIN + 1));
+      state.money += gain;
+      text = t('good_event_money').replace('{name}', cow.name);
+    } else {
+      state.wrapWara = (state.wrapWara || 0) + GOOD_EVENT_WARA_DAYS * WRAP_WARA_PT_PER_DAY;
+      text = t('good_event_wara').replace('{name}', cow.name);
+    }
+    // 1頭が数歩あるく見せ方
+    const actor = placeActor(cow, 24, 68, cow.type === 'calf' ? 10 : 13);
+    setTimeout(() => actor.moveTo(38), 350);
+  }
+
+  saveLoopState(state);
+
+  document.getElementById('tapHint').textContent = t('prologue_tap_hint');
+  // 動きが終わってからテキストを出す（移動1.1s + 開始待ち0.35s）
+  setTimeout(() => showText(text), 1600);
+})();
+</script>
+
+</body>
+</html>

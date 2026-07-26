@@ -157,6 +157,10 @@
   "tutorial_day10_05": "まさかと思うが、出産当日に牛舎に行かないなんてことするなよ。流産してしまうからな",
   "tutorial_day10_06": "とにかく大事な時期だ、気にかけてやれ",
 
+  "good_event_play": "{mother}と{calf}が、じゃれ合っている。心なしか、{mother}の毛艶が良くなった気がする",
+  "good_event_money": "{name}が、何かをつついている。……お金だ！",
+  "good_event_wara": "{name}のところに、誰かがラップ藁を置いていってくれたようだ",
+
   "condition_up": "の体調が上がった！",
   "condition_down": "が少し元気がなさそうだ…",
   "quality_tier_up": "の品質が上がった！",

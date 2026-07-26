@@ -177,6 +177,18 @@ function getCalfStage(age) {
   return 'growing';                 // 育成期（4ヶ月〜）
 }
 
+// ラップ藁は草ポイント単位で保持する（5pt = 1日分）
+const WRAP_WARA_PT_PER_DAY = 5;
+
+// 良いランダムイベント（指示書_良いランダムイベント（人形芝居演出）実装.md対応）
+// 病気と対になるポジティブイベント。牧場全体で1日1回判定する（牛ごとではない）
+const GOOD_EVENT_RATE = 0.05;        // 1日あたりの発生確率
+const GOOD_EVENT_FORCE_DAY = 3;      // この日は確率判定を無視して必ず発生させる（動作確認用）
+const GOOD_EVENT_QUALITY_GAIN = 4;   // 親子じゃれ合い：母牛のqualityPointに加算
+const GOOD_EVENT_MONEY_MIN = 50;     // お金拾い：加算額の下限
+const GOOD_EVENT_MONEY_MAX = 150;    // 同・上限
+const GOOD_EVENT_WARA_DAYS = 2;      // 藁ラップもらい：加算する日数
+
 // 病気（指示書_病気システム本体の実装.md対応）。フラグは既存のcow.diseaseAlertを流用する
 const ILLNESS_START_DAY = 7;          // この日以降のみ発症判定を行う（day7チュートリアルより前に発症させない）
 const ILLNESS_ONSET_RATE = 0.05;      // 対象の母牛1頭あたりの1日の発症確率
