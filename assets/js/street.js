@@ -58,6 +58,8 @@ const SHOPS = {
     products: [
       // 子牛売買申込み（指示書_子牛売買申込み（オスメス両対応・ドナドナ演出）実装.md対応）
       { nameKey: 'product_seri_shuppin', type: 'calf_sale' },
+      // 成牛売却申込み（指示書_成牛（母牛・オス成牛）の売却申込み実装.md対応）
+      { nameKey: 'product_seigyuu_baikyaku', type: 'adult_sale' },
       { nameKey: 'product_bogyuu_kounyuu', type: 'market_cow' },
     ],
   },
@@ -100,6 +102,10 @@ function openShopSheet(shopId) {
     }
     if (p.type === 'calf_sale') {
       list.appendChild(buildCalfSaleRow(state, p));
+      return;
+    }
+    if (p.type === 'adult_sale') {
+      list.appendChild(buildAdultSaleRow(state, p));
       return;
     }
 
@@ -181,6 +187,76 @@ function buildCalfSaleRow(state, product) {
   });
 
   return wrap;
+}
+
+// ── 競り市場：成牛売却申込み（指示書_成牛（母牛・オス成牛）の売却申込み実装.md対応） ──
+// 母牛・オス成牛が対象。妊娠中や発情中でも申込める（口頭指示対応）
+function buildAdultSaleRow(state, product) {
+  const wrap = document.createElement('div');
+  wrap.className = 'market-cow-row';
+
+  const title = document.createElement('div');
+  title.className = 'market-cow-summary';
+  title.textContent = t(product.nameKey);
+  wrap.appendChild(title);
+
+  const eligible = state.cows.filter(cow => isAdultCow(cow) && !cow.saleApplied);
+  if (eligible.length === 0) {
+    const note = document.createElement('div');
+    note.className = 'product-note';
+    note.textContent = t('adult_sale_no_target');
+    wrap.appendChild(note);
+    return wrap;
+  }
+
+  eligible.forEach(cow => {
+    const row = document.createElement('div');
+    row.className = 'product-row';
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'product-name';
+    const genderIcon = cow.gender === 'female' ? t('calf_gender_female') : t('calf_gender_male');
+    const price = calcAdultCowSalePrice(cowAgeInYears(cow.age), cow.qualityPoint, cow.type);
+    nameSpan.textContent = `${genderIcon} ${cow.name}（${formatCowAge(cow.age)}・${price.toLocaleString()}G）`;
+    row.appendChild(nameSpan);
+
+    const btn = document.createElement('button');
+    btn.className = 'btn-buy';
+    btn.textContent = t('adult_sale_apply_btn');
+    btn.addEventListener('click', () => openAdultSaleConfirm(cow, price));
+    row.appendChild(btn);
+
+    wrap.appendChild(row);
+  });
+
+  return wrap;
+}
+
+// 誤操作防止の確認ダイアログ（取り消せない操作のため必ず挟む）
+let pendingAdultSaleCowId = null;
+function openAdultSaleConfirm(cow, price) {
+  pendingAdultSaleCowId = cow.id;
+  document.getElementById('adultSaleConfirmText').textContent =
+    t('adult_sale_confirm').replace('{name}', cow.name).replace('{price}', price.toLocaleString());
+  document.getElementById('adultSaleConfirmYes').textContent = t('adult_sale_confirm_yes');
+  document.getElementById('adultSaleConfirmNo').textContent = t('btn_cancel');
+  document.getElementById('adultSaleConfirmOverlay').classList.add('open');
+}
+function closeAdultSaleConfirm() {
+  document.getElementById('adultSaleConfirmOverlay').classList.remove('open');
+  pendingAdultSaleCowId = null;
+}
+function confirmAdultSale() {
+  const state = loadLoopState();
+  const cow = state.cows.find(c => c.id === pendingAdultSaleCowId);
+  if (!cow || cow.saleApplied) { closeAdultSaleConfirm(); return; }
+  cow.saleApplied = true;
+  cow.saleAppliedDay = state.day;
+  saveLoopState(state);
+
+  closeAdultSaleConfirm();
+  renderHeader('gameHeader');
+  if (currentShopId) openShopSheet(currentShopId); // 対象リストを再描画
+  showShopMessage(t('adult_sale_applied_msg').replace('{name}', cow.name));
 }
 
 function applyCalfSale(calfId) {
@@ -463,6 +539,16 @@ document.getElementById('cowPickerCancelBtn').addEventListener('click', (e) => {
   closeCowPicker();
 });
 document.getElementById('cowPickerBox').addEventListener('click', (e) => e.stopPropagation());
+
+document.getElementById('adultSaleConfirmYes').addEventListener('click', (e) => {
+  e.stopPropagation();
+  confirmAdultSale();
+});
+document.getElementById('adultSaleConfirmNo').addEventListener('click', (e) => {
+  e.stopPropagation();
+  closeAdultSaleConfirm();
+});
+document.getElementById('adultSaleConfirmBox').addEventListener('click', (e) => e.stopPropagation());
 
 (async function () {
   await loadDict();

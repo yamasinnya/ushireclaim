@@ -248,6 +248,13 @@
   "promotion_male_note": "{name}は、母牛にはなれなかった。だが、まだやれることはある",
   "promotion_forced_sale": "{name}は成牛になった。牛舎がいっぱいのため、安めの{price}ゴールドで売った。",
 
+  "product_seigyuu_baikyaku": "成牛売却申込",
+  "adult_sale_no_target": "対象の成牛がいません",
+  "adult_sale_apply_btn": "売却する",
+  "adult_sale_confirm": "本当に{name}を売却しますか？\n売値：{price}円\nこの操作は取り消せません。",
+  "adult_sale_confirm_yes": "売却する",
+  "adult_sale_applied_msg": "{name}の売却を申込んだ",
+
   "calf_sale_departed": "{name}が、旅立っていった",
   "calf_sale_price": "売値：{price}円",
 

@@ -133,7 +133,10 @@ document.getElementById('sceneWrap').addEventListener('click', () => {
     const idx = state.cows.findIndex(c => c.id === id);
     if (idx === -1) return;
     const cow = state.cows[idx];
-    const price = calcCalfSalePrice(cow.qualityPoint, cow.gender);
+    // 子牛と成牛で売却額の計算式が異なる（成牛は年齢・品質・性別から算出する）
+    const price = isAdultCow(cow)
+      ? calcAdultCowSalePrice(cowAgeInYears(cow.age), cow.qualityPoint, cow.type)
+      : calcCalfSalePrice(cow.qualityPoint, cow.gender);
     state.money += price;
     results.push({ name: cow.name, price });
     state.cows.splice(idx, 1);

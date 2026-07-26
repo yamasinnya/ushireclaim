@@ -65,10 +65,12 @@
     return;
   }
 
-  // 子牛売買（ドナドナ演出）：申込み翌日の「1日の始まり」で専用ページへ遷移する
-  // （指示書_子牛売買申込み（オスメス両対応・ドナドナ演出）実装.md対応）
+  // 売買（ドナドナ演出）：申込み翌日の「1日の始まり」で専用ページへ遷移する
+  // 子牛（指示書_子牛売買申込み.md対応）と成牛（指示書_成牛の売却申込み.md対応）で同じ演出を共用する。
+  // 判定を「>=」にしているのは、date_change後・upkeep到達前にブラウザを閉じるとその日のupkeepが
+  // 実行されず、「===」だと申込み済みのまま永久に出荷されない状態になりうるため
   const skipCalfSale = params.get('skip_calf_sale') === '1';
-  const departingCalves = state.cows.filter(cow => cow.type === 'calf' && cow.saleApplied && state.day === (cow.saleAppliedDay || 0) + 1);
+  const departingCalves = state.cows.filter(cow => cow.saleApplied && state.day >= (cow.saleAppliedDay || 0) + 1);
   if (departingCalves.length > 0 && !skipCalfSale) {
     const calfIds = departingCalves.map(cow => cow.id).join(',');
     location.href = `calf_sale.html?calfIds=${encodeURIComponent(calfIds)}&next=${upkeepReturnUrl('skip_calf_sale')}`;

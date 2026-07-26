@@ -126,6 +126,8 @@ hr.divider{border:none;border-top:1px solid #3a2e18;margin:0 16px 12px;}
   padding:20px 24px 26px;text-align:center;
 }
 .naming-title{color:#f0e090;font-size:15px;font-weight:bold;letter-spacing:2px;margin-bottom:14px;}
+/* 成牛売却の確認文は複数行あるので改行を反映させる */
+#adultSaleConfirmText{white-space:pre-line;line-height:1.7;}
 .naming-input{
   width:100%;padding:12px 14px;background:rgba(0,0,0,0.4);
   border:1.5px solid #7a5a28;border-radius:8px;color:#f0e8d0;
@@ -189,6 +191,15 @@ hr.divider{border:none;border-top:1px solid #3a2e18;margin:0 16px 12px;}
     <div class="naming-title" id="cowPickerTitle"></div>
     <div id="cowPickerList"></div>
     <button class="naming-cancel-btn" id="cowPickerCancelBtn"></button>
+  </div>
+</div>
+
+<!-- 成牛売却の確認ダイアログ（取り消せない操作のため必ず挟む） -->
+<div class="naming-overlay" id="adultSaleConfirmOverlay" onclick="closeAdultSaleConfirm()">
+  <div class="naming-box" id="adultSaleConfirmBox">
+    <div class="naming-title" id="adultSaleConfirmText"></div>
+    <button class="naming-confirm-btn" id="adultSaleConfirmYes"></button>
+    <button class="naming-cancel-btn" id="adultSaleConfirmNo"></button>
   </div>
 </div>
 

@@ -111,8 +111,24 @@ function rollPromotionSkill(qualityPoint) {
   return tier.skills[Math.floor(Math.random() * tier.skills.length)];
 }
 
-// 成牛の売却額。専用の計算式が未決定のため子牛売却式を暫定流用している（決まり次第差し替える）
-// 頭数超過による強制売却では、さらに1割引き(×0.9)を適用する
+// 成牛（母牛・オス成牛）の売却額（指示書_成牛（母牛・オス成牛）の売却申込み実装.md対応）
+// 年齢が上がるほど基本額が下がり、9歳以降は下げ止まる。3歳未満は3歳と同じ扱い
+const ADULT_SALE_BASE_MAX = 500000;   // 3歳（またはそれ以下）の基本額
+const ADULT_SALE_BASE_MIN = 300000;   // 9歳以降の下げ止まり額
+const ADULT_SALE_AGE_STEP = 33334;    // 1歳ごとの下落額
+const ADULT_SALE_QUALITY_RATE = 1000; // qualityPoint 1ptあたりの上乗せ額
+const BULL_SALE_MULTIPLIER = 1.1;     // オス成牛の体格ボーナス
+function calcAdultCowSalePrice(ageInYears, qualityPoint, cowType) {
+  const clampedAge = Math.max(3, ageInYears || 0); // 3歳未満は3歳扱い
+  const ageBase = Math.max(
+    ADULT_SALE_BASE_MIN,
+    ADULT_SALE_BASE_MAX - (clampedAge - 3) * ADULT_SALE_AGE_STEP
+  );
+  const price = ageBase + (qualityPoint || 0) * ADULT_SALE_QUALITY_RATE;
+  return cowType === 'bull' ? Math.round(price * BULL_SALE_MULTIPLIER) : Math.round(price);
+}
+
+// 頭数超過による強制売却は上記の売却式とは別物で、子牛売却式の1割引きを使う（指示書の指定通り据え置き）
 const FORCED_SALE_DISCOUNT = 0.9;
 function calcForcedAdultSalePrice(qualityPoint, gender) {
   return Math.round(calcCalfSalePrice(qualityPoint, gender) * FORCED_SALE_DISCOUNT);
@@ -135,6 +151,11 @@ function calcCalfSalePrice(qualityPoint, gender) {
 // サイロ建設前は+1、建設後(buildings.silo === true)は+2（サイロ建設処理自体は別フェーズ）
 function getCalfFeedGain(buildings) {
   return buildings && buildings.silo ? 2 : 1;
+}
+
+// 日齢 → 年齢[歳]（1年=24日換算。売却額の算出や市場の表示で使う）
+function cowAgeInYears(ageDays) {
+  return Math.floor((ageDays || 0) / 24);
 }
 
 // 成牛の年齢表示（口頭指示対応）：12ヶ月未満は「〇ヶ月」、12ヶ月以上は「〇才〇ヶ月」
