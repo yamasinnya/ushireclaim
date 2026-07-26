@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>やまやま牧場 - 成牛への昇格</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#0a1506; min-height:100vh;
+  font-family:'Hiragino Kaku Gothic ProN','MS Gothic',sans-serif;
+  display:flex; flex-direction:column; align-items:center;
+}
+.scene-wrap {
+  width:100%; max-width:440px;
+  min-height:100vh;
+  position:relative;
+  overflow:hidden;
+  aspect-ratio: 375 / 666;
+  cursor:pointer;
+  user-select:none; -webkit-user-select:none;
+}
+.bg-img {
+  position:absolute; top:0; left:0;
+  width:100%; display:block;
+}
+/* 昇格した牛：中央にやや大きめ。ぶち模様はseedから手続き生成する */
+#cowCanvas {
+  position:absolute; left:50%; top:44%;
+  transform:translate(-50%, -50%);
+  width:52%;
+  image-rendering:pixelated;
+  filter:drop-shadow(0 8px 6px rgba(0,0,0,0.45));
+}
+
+/* 会話ボックス（他イベントページと共通の演出） */
+.dialogue-box {
+  position:absolute; left:0; right:0; bottom:0;
+  background:linear-gradient(180deg, rgba(10,8,4,0) 0%, rgba(10,8,4,0.94) 30%);
+  padding:22px 24px 26px;
+  min-height:110px;
+  z-index:20;
+}
+.dialogue-text {
+  color:#e8d8c0; font-size:15px; line-height:1.9; letter-spacing:1px;
+  white-space:pre-line;
+}
+.tap-hint {
+  text-align:right; color:#786040; font-size:11px; margin-top:10px; letter-spacing:1px;
+}
+</style>
+</head>
+<body>
+
+<div class="scene-wrap" id="sceneWrap">
+  <img class="bg-img" src="assets/images/barn_bg.png" alt="牛舎">
+  <canvas id="cowCanvas"></canvas>
+
+  <div class="dialogue-box">
+    <div class="dialogue-text" id="dialogueText"></div>
+    <div class="tap-hint" id="tapHint"></div>
+  </div>
+</div>
+
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/common.js"></script>
+<script>
+// 成牛昇格イベント（指示書_子牛の成牛昇格イベント実装.md対応）
+// 昇格処理（type変更・スキル抽選・頭数超過時の強制売却）はページ読み込み時にまとめて確定させ、
+// 演出では結果を1頭ずつ順番に見せるだけにする（calf_sale.htmlと同じ方針）
+let results = [];
+let nextUrl = 'home.html';
+let resultIndex = 0;
+
+// ── ぶち牛パターン生成（barn.jsのpreRenderCowと同じ手法。seedから同一模様を再現する） ──
+function makeRng(seed) {
+  let s = seed >>> 0;
+  return () => {
+    s = (s + 0x6D2B79F5) >>> 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = Math.imul(t ^ (t >>> 7), 61 | t) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function isFur(r, g, b) { return (r + g + b) / 3 < 150 && Math.max(r, g, b) - Math.min(r, g, b) < 25; }
+function makeBgTransparent(imageData, tolerance) {
+  const px = imageData.data;
+  const bg = [px[0], px[1], px[2]];
+  for (let i = 0; i < px.length; i += 4) {
+    if (Math.abs(px[i] - bg[0]) <= tolerance && Math.abs(px[i + 1] - bg[1]) <= tolerance && Math.abs(px[i + 2] - bg[2]) <= tolerance) {
+      px[i + 3] = 0;
+    }
+  }
+}
+function growBlob(mask, w, h, si, size, rng) {
+  const vis = new Set(), fr = [si], res = [];
+  while (fr.length && res.length < size) {
+    const p = Math.floor(rng() * fr.length), idx = fr.splice(p, 1)[0];
+    if (vis.has(idx)) continue;
+    if (idx < 0 || idx >= w * h || !mask[idx]) continue;
+    vis.add(idx); res.push(idx);
+    [idx - 1, idx + 1, idx - w, idx + w].forEach(n => { if (!vis.has(n)) fr.push(n); });
+  }
+  return res;
+}
+function renderCowTo(canvas, seed) {
+  return new Promise(res => {
+    const img = new Image();
+    img.onload = () => {
+      const rng = makeRng(seed);
+      canvas.width = img.width; canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(img, 0, 0);
+      const d = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      makeBgTransparent(d, 10);
+      const px = d.data;
+      const mask = new Uint8Array(canvas.width * canvas.height);
+      for (let i = 0; i < mask.length; i++) mask[i] = isFur(px[i * 4], px[i * 4 + 1], px[i * 4 + 2]) ? 1 : 0;
+      const fi = []; for (let i = 0; i < mask.length; i++) if (mask[i]) fi.push(i);
+      if (fi.length) {
+        const col = [[235, 225, 210], [150, 100, 60]][Math.floor(rng() * 2)];
+        for (let p = 0; p < 2 + Math.floor(rng() * 3); p++) {
+          growBlob(mask, canvas.width, canvas.height, fi[Math.floor(rng() * fi.length)], 60 + Math.floor(rng() * 140), rng)
+            .forEach(i => {
+              const r = px[i * 4], g = px[i * 4 + 1], b = px[i * 4 + 2];
+              const br = Math.min(Math.max((r + g + b) / 3 / 30, 0.5), 1.3);
+              px[i * 4] = Math.min(255, col[0] * br); px[i * 4 + 1] = Math.min(255, col[1] * br); px[i * 4 + 2] = Math.min(255, col[2] * br);
+            });
+        }
+      }
+      ctx.putImageData(d, 0, 0);
+      res();
+    };
+    img.onerror = () => res();
+    img.src = 'assets/sprites/cow_mother.png';
+  });
+}
+
+async function showResult(i) {
+  const r = results[i];
+  await renderCowTo(document.getElementById('cowCanvas'), r.seed);
+  document.getElementById('dialogueText').textContent = r.text;
+}
+
+document.getElementById('sceneWrap').addEventListener('click', async () => {
+  resultIndex++;
+  if (resultIndex >= results.length) {
+    location.href = nextUrl;
+    return;
+  }
+  await showResult(resultIndex);
+});
+
+(async function () {
+  await loadDict();
+
+  const params = new URLSearchParams(location.search);
+  const calfIds = (params.get('calfIds') || '').split(',').filter(Boolean);
+  nextUrl = params.get('next') || 'home.html';
+
+  const state = loadLoopState();
+  calfIds.forEach(id => {
+    const cow = state.cows.find(c => c.id === id);
+    if (!cow || cow.type !== 'calf') return;
+
+    // 牛房が埋まっている場合は、昇格しようとした牛を1割引きで強制売却する（口頭指示対応）
+    if (countAdultCows(state.cows) >= ADULT_COW_LIMIT) {
+      const price = calcForcedAdultSalePrice(cow.qualityPoint, cow.gender);
+      state.money += price;
+      results.push({
+        seed: cow.seed,
+        text: t('promotion_forced_sale').replace('{name}', cow.name).replace('{price}', price.toLocaleString()),
+      });
+      state.cows.splice(state.cows.indexOf(cow), 1);
+      return;
+    }
+
+    if (cow.gender === 'female') {
+      // メス：母牛に昇格。qualityPoint・体調は子牛時代の値をそのまま引き継ぐ
+      cow.type = 'mother';
+      cow.skill = rollPromotionSkill(cow.qualityPoint);
+      cow.breedingState = 'none';
+      cow.breedingGrade = null;
+      cow.inseminatedDay = 0;
+      const skill = SKILL_DISPLAY[cow.skill];
+      const skillLabel = skill ? `${skill.emoji} ${t(skill.nameKey)}` : cow.skill;
+      results.push({
+        seed: cow.seed,
+        text: t('promotion_became_adult').replace('{name}', cow.name) + '\n' +
+              t('promotion_skill_gained').replace('{name}', cow.name).replace('{skill}', skillLabel),
+      });
+    } else {
+      // オス：魔力もスキルも持たない成牛になる（スキル抽選なし）
+      cow.type = 'bull';
+      cow.skill = null;
+      results.push({
+        seed: cow.seed,
+        text: t('promotion_became_adult').replace('{name}', cow.name) + '\n' +
+              t('promotion_male_note').replace('{name}', cow.name),
+      });
+    }
+  });
+  saveLoopState(state);
+
+  if (results.length === 0) {
+    location.href = nextUrl;
+    return;
+  }
+
+  document.getElementById('tapHint').textContent = t('prologue_tap_hint');
+  await showResult(0);
+})();
+</script>
+
+</body>
+</html>

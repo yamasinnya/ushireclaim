@@ -71,7 +71,7 @@ const MARKET_COW = {
   qualityPoint: 30,        // 品質は保存せずqualityPointの累計から都度算出する（口頭指示：レベル制→スコープ制へ変更）
   price: 400000,           // デバッグ用の100Gから本来の40万Gに戻した（口頭指示対応）
 };
-const MARKET_MOTHER_LIMIT = 3;
+// 牛房の空き判定はcommon.jsのADULT_COW_LIMITを参照する（母牛とオス成牛で上段3枠を共用するため）
 
 let currentShopId = null;
 
@@ -349,8 +349,7 @@ function buildMarketCowRow(state) {
   wrap.appendChild(skillLine);
   wrap.appendChild(price);
 
-  const motherCount = state.cows.filter(c => c.type === 'mother').length;
-  const isFull = motherCount >= MARKET_MOTHER_LIMIT;
+  const isFull = countAdultCows(state.cows) >= ADULT_COW_LIMIT;
   const canAfford = state.money >= MARKET_COW.price;
   const enabled = canAfford && !isFull;
 
@@ -403,8 +402,7 @@ function confirmMarketNaming() {
   if (!result.valid) return;
 
   const state = loadLoopState();
-  const motherCount = state.cows.filter(c => c.type === 'mother').length;
-  if (state.money < MARKET_COW.price || motherCount >= MARKET_MOTHER_LIMIT) { closeMarketNaming(); return; }
+  if (state.money < MARKET_COW.price || countAdultCows(state.cows) >= ADULT_COW_LIMIT) { closeMarketNaming(); return; }
 
   state.money -= MARKET_COW.price;
   const newCow = {

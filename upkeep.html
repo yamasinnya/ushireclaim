@@ -64,6 +64,17 @@
     return;
   }
 
+  // 成牛昇格イベント：生後21日を迎えた未申込みの子牛を専用ページで昇格させる
+  // （指示書_子牛の成牛昇格イベント実装.md対応。申込み済みは上記のドナドナで出荷済みなので対象外）
+  const skipPromotion = params.get('skip_promotion') === '1';
+  const promotingCalves = state.cows.filter(cow => cow.type === 'calf' && !cow.saleApplied && (cow.age || 0) >= 21);
+  if (promotingCalves.length > 0 && !skipPromotion) {
+    const calfIds = promotingCalves.map(cow => cow.id).join(',');
+    const nextUrl = encodeURIComponent('upkeep.html?skip_promotion=1');
+    location.href = `adult_promotion.html?calfIds=${encodeURIComponent(calfIds)}&next=${nextUrl}`;
+    return;
+  }
+
   // 出産予定日の確定：pregnantDayが15に達した時点でactualBirthDayをランダム確定（指示書_出産システムの実装.md対応）
   state.cows.forEach(cow => {
     if (cow.pregnantDay === 15 && !cow.actualBirthDay) {

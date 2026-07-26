@@ -242,6 +242,11 @@
   "calf_sale_age_label": "生後{age}日",
   "calf_sale_apply_btn": "申込む",
   "calf_sale_applied_msg": "{name}の申込みを受け付けた",
+  "promotion_became_adult": "{name}が成牛になった！",
+  "promotion_skill_gained": "{name}は{skill}のスキルを獲得した！",
+  "promotion_male_note": "{name}は、母牛にはなれなかった。だが、まだやれることはある",
+  "promotion_forced_sale": "{name}は成牛になった。牛舎がいっぱいのため、安めの{price}ゴールドで売った。",
+
   "calf_sale_departed": "{name}が、旅立っていった",
   "calf_sale_price": "売値：{price}円",
 

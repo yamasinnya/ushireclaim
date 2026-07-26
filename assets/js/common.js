@@ -89,6 +89,35 @@ function conditionToLabel(condition) {
   return '危険';
 }
 
+// ── 成牛（母牛・オス成牛）の枠（指示書_子牛の成牛昇格イベント実装.md対応） ──
+// 牛舎の上段3部屋(s0〜s2)を成牛枠として、母牛とオス成牛で共用する（口頭指示対応）
+const ADULT_COW_LIMIT = 3;
+function isAdultCow(cow) {
+  return cow.type === 'mother' || cow.type === 'bull';
+}
+function countAdultCows(cows) {
+  return cows.filter(isAdultCow).length;
+}
+
+// 成牛昇格時のスキル抽選：qualityPointでティアを決め、ティア内の2つから50%ずつで選ぶ
+const PROMOTION_SKILL_TIERS = [
+  { maxQualityPoint: 30,       skills: ['herdboys_eye', 'okanemochi'] },   // 弱
+  { maxQualityPoint: 60,       skills: ['hatarakimono', 'takeuchi'] },     // 普通
+  { maxQualityPoint: Infinity, skills: ['roku', 'trace'] },                // 強
+];
+function rollPromotionSkill(qualityPoint) {
+  const qp = Math.floor(qualityPoint || 0);
+  const tier = PROMOTION_SKILL_TIERS.find(t => qp <= t.maxQualityPoint) || PROMOTION_SKILL_TIERS[PROMOTION_SKILL_TIERS.length - 1];
+  return tier.skills[Math.floor(Math.random() * tier.skills.length)];
+}
+
+// 成牛の売却額。専用の計算式が未決定のため子牛売却式を暫定流用している（決まり次第差し替える）
+// 頭数超過による強制売却では、さらに1割引き(×0.9)を適用する
+const FORCED_SALE_DISCOUNT = 0.9;
+function calcForcedAdultSalePrice(qualityPoint, gender) {
+  return Math.round(calcCalfSalePrice(qualityPoint, gender) * FORCED_SALE_DISCOUNT);
+}
+
 // 子牛売買（ドナドナ）の売値計算（指示書_子牛売買申込み（オスメス両対応・ドナドナ演出）実装.md対応）
 // 下振れなし。計算式通りの金額が最低保証で、そこから0〜8%上乗せされる。数値調整用に1箇所にまとめる
 const CALF_SALE_BASE_MALE = 400000;    // オス基本額

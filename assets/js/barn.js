@@ -37,10 +37,11 @@ const EXIT_HITBOX = { x1:0, y1:605, x2:375, y2:666 };
 const loopState = loadLoopState();
 // 魔法の水飲み場：建設済みならqualityPointの実数値をティア表示に添える（指示書_建設屋「魔法の水飲み場」実装.md対応）
 const magicWaterTroughBuilt = !!loopState.buildings.magicWaterTrough;
-// 母牛は上段(s0〜s2)固定・子牛は下段(s4〜s6)固定でスロットに割り当てる（指示書_牛舎スロットの固定割り当て.md対応）
+// 成牛(母牛・オス成牛)は上段(s0〜s2)固定・子牛は下段(s4〜s6)固定でスロットに割り当てる
+// （指示書_牛舎スロットの固定割り当て.md対応。オス成牛の上段共用は口頭指示対応）
 const MOTHER_SLOT_IDS = ['s0', 's1', 's2'];
 const CALF_SLOT_IDS = ['s4', 's5', 's6'];
-loopState.cows.filter(c => c.type === 'mother').forEach((cow, i) => {
+loopState.cows.filter(isAdultCow).forEach((cow, i) => {
   const stall = STALLS.find(s => s.id === MOTHER_SLOT_IDS[i]);
   if (stall) { stall.type = 'cow'; stall.cowRef = cow; }
 });
