@@ -402,7 +402,10 @@ function openSheet(stall) {
     currentCalfStall = stall;
     const genderIcon = c.gender === 'female' ? t('calf_gender_female') : t('calf_gender_male');
     document.getElementById('sName').textContent = `${genderIcon} ${c.name}`;
-    document.getElementById('sAge').textContent = getAgeLabel(c.age);
+    // 月齢ラベルに成牛までの残り日数を併記する（オスメス問わず生後21日で昇格する。口頭指示対応）
+    document.getElementById('sAge').textContent = t('calf_age_with_countdown')
+      .replace('{age}', getAgeLabel(c.age))
+      .replace('{days}', Math.max(0, 21 - c.age));
     document.getElementById('sCondLbl').textContent = t('barn_condition_label');
     document.getElementById('sCondFill').style.width = (c.condition * 10) + '%';
     document.getElementById('sCondNum').textContent = c.condition;
@@ -420,9 +423,9 @@ function openSheet(stall) {
     const saleEligible = !c.saleApplied && c.age >= 17 && c.age <= 20;
     document.getElementById('sPregnant').textContent =
       saleEligible ? t('calf_sale_eligible_label').replace('{days}', 20 - c.age) : '';
-    // 成牛(21日目)までの日数はメスのみ表示。オスは競りに出すだけなので表示しない
-    document.getElementById('sComment').textContent =
-      c.gender === 'female' ? t('calf_days_to_adult').replace('{days}', 21 - c.age) : '';
+    // 成牛までの日数は年齢欄に移したため、コメント欄は母牛と同じ愛着フレーバーにする
+    const calfFlavorDigit = Math.floor(c.qualityPoint || 0) % 10;
+    document.getElementById('sComment').textContent = t(`barn_flavor_comment_${calfFlavorDigit}`);
 
     const calfSc = document.getElementById('sheetCanvas');
     const calfImg = IMG[getCalfSprite(c.age)];
@@ -452,7 +455,7 @@ function openSheet(stall) {
   }
   if (c) {
     document.getElementById('sName').textContent = c.name;
-    document.getElementById('sAge').textContent = Math.floor(c.age * 0.5) + t('barn_months_suffix');
+    document.getElementById('sAge').textContent = formatCowAge(c.age);
     document.getElementById('sCondLbl').textContent = t('barn_condition_label');
     document.getElementById('sCondFill').style.width = (c.condition * 10) + '%';
     document.getElementById('sCondNum').textContent = c.condition;

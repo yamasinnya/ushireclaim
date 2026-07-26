@@ -137,6 +137,18 @@ function getCalfFeedGain(buildings) {
   return buildings && buildings.silo ? 2 : 1;
 }
 
+// 成牛の年齢表示（口頭指示対応）：12ヶ月未満は「〇ヶ月」、12ヶ月以上は「〇才〇ヶ月」
+// ゲーム内は1年=24日=12ヶ月換算（月齢 = 日齢 ÷ 2）
+function formatCowAge(ageDays) {
+  const months = Math.floor((ageDays || 0) * 0.5);
+  if (months < 12) return months + t('barn_months_suffix');
+  const years = Math.floor(months / 12);
+  const restMonths = months % 12;
+  return restMonths === 0
+    ? years + t('barn_years_suffix')
+    : years + t('barn_years_suffix') + restMonths + t('barn_months_suffix');
+}
+
 // 子牛の成長ステージ（指示書_子牛の成長ステージと特殊ルール実装.md対応）
 function getCalfStage(age) {
   if (age < 4) return 'nursing';   // 哺乳期（生まれたて〜2ヶ月）

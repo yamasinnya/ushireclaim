@@ -71,7 +71,7 @@
   "birth_gender_reveal_female": "……女の子だ。",
   "birth_gender_reveal_male": "……男の子だ。",
 
-  "calf_days_to_adult": "成牛まであと{days}日",
+  "calf_age_with_countdown": "{age}（成牛まであと{days}日）",
   "calf_gender_female": "♀",
   "calf_gender_male": "♂",
   "calf_age_newborn": "生まれたて",
@@ -156,6 +156,7 @@
   "barn_quality_label": "品質",
   "barn_quality_point_label": "品質PT",
   "barn_months_suffix": "ヶ月",
+  "barn_years_suffix": "才",
   "barn_pregnant_days": "🤰 あと{days}日で出産予定",
   "barn_state_estrus": "🐮 発情",
   "barn_state_inseminated": "💉 授精済み",
