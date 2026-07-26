@@ -207,14 +207,20 @@ function draw() {
   }
 }
 
-// 💩・😷の表示枠：フェーズ2で増加/発動ロジックが入るまではpoopCount=0・diseaseAlert=falseなので何も描画されない
+// 病気アラートアイコンの見た目（口頭指示で調整）。牛のスプライトに重ならないよう左上に離して大きめに描く。
+// 絵文字(😷)はOSのフォント依存で見た目が変わる（Windowsだと笑って見える）ため、ドット絵スプライトを使う
+const DISEASE_ICON_SIZE = 30;      // 描画サイズ(px)。元画像は70x68の正方形に近い比率
+const DISEASE_ICON_OFFSET_X = -58; // 牛房中心からの横方向オフセット（アイコン左上を基準）
+const DISEASE_ICON_OFFSET_Y = -70; // 同・縦方向オフセット
+
+// 💩・病気アイコンの表示枠：発動ロジックが入るまではpoopCount=0・diseaseAlert=falseなので何も描画されない
 function drawStatusIcons(stall) {
   const c = stall.cowRef;
   if (!c) return;
-  if (c.diseaseAlert) {
-    ctx.font = '16px serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('😷', stall.cx - 40, stall.cy - 32);
+  if (c.diseaseAlert && IMG.icon_disease) {
+    const img = IMG.icon_disease;
+    const h = DISEASE_ICON_SIZE * (img.height / img.width);
+    ctx.drawImage(img, stall.cx + DISEASE_ICON_OFFSET_X, stall.cy + DISEASE_ICON_OFFSET_Y, DISEASE_ICON_SIZE, h);
   }
   if (c.poopCount > 0) {
     ctx.font = '14px serif';
@@ -230,6 +236,17 @@ function poopHitboxFor(stall) {
   return { x1: stall.cx + 8, y1: stall.cy + 24, x2: stall.cx + 82, y2: stall.cy + 56 };
 }
 
+// 病気アイコンのタップ判定領域（描画位置と揃える。指で押しやすいよう少し広めに取る）
+function diseaseHitboxFor(stall) {
+  const pad = 6;
+  return {
+    x1: stall.cx + DISEASE_ICON_OFFSET_X - pad,
+    y1: stall.cy + DISEASE_ICON_OFFSET_Y - pad,
+    x2: stall.cx + DISEASE_ICON_OFFSET_X + DISEASE_ICON_SIZE + pad,
+    y2: stall.cy + DISEASE_ICON_OFFSET_Y + DISEASE_ICON_SIZE + pad,
+  };
+}
+
 // ── ゲームループ ──
 function loop() {
   if (player.walking) player.anim++;
@@ -239,11 +256,24 @@ function loop() {
 
 // ── タップ ──
 canvas.addEventListener('click', e => {
-  if (player.walking || document.getElementById('sheetOverlay').classList.contains('open') || document.getElementById('poopSheetOverlay').classList.contains('open')) return;
+  if (player.walking
+    || document.getElementById('sheetOverlay').classList.contains('open')
+    || document.getElementById('poopSheetOverlay').classList.contains('open')
+    || document.getElementById('diseaseSheetOverlay').classList.contains('open')) return;
   const rect = canvas.getBoundingClientRect();
   const scale = W / rect.width;
   const tx = (e.clientX - rect.left) * scale;
   const ty = (e.clientY - rect.top) * scale;
+
+  // 病気アイコンも牛房タップより優先（💩と同じく、歩いて近づく演出なしで即座にシートを開く）
+  for (const s of STALLS) {
+    if (s.type !== 'cow' || !s.cowRef || !s.cowRef.diseaseAlert) continue;
+    const hb = diseaseHitboxFor(s);
+    if (tx >= hb.x1 && tx <= hb.x2 && ty >= hb.y1 && ty <= hb.y2) {
+      openDiseaseSheet(s);
+      return;
+    }
+  }
 
   // 💩アイコンは牛房タップより優先（歩いて近づく演出はなく即座に床替えシートを開く）
   for (const s of STALLS) {
@@ -541,6 +571,19 @@ function closePoopSheet() {
   currentPoopStall = null;
 }
 
+// ── 病気シート：アイコンをタップした時の案内表示（治療ロジックは未実装のためテキストのみ） ──
+function openDiseaseSheet(stall) {
+  const c = stall.cowRef;
+  if (!c) return;
+  document.getElementById('diseaseText').textContent = t('barn_disease_message').replace('{name}', c.name);
+  document.getElementById('diseaseCloseBtn').textContent = t('barn_close_btn');
+  document.getElementById('diseaseSheetOverlay').classList.add('open');
+}
+
+function closeDiseaseSheet() {
+  document.getElementById('diseaseSheetOverlay').classList.remove('open');
+}
+
 function confirmPoopSelf() {
   if (!currentPoopStall) return;
   const state = loadLoopState();
@@ -584,6 +627,7 @@ async function initBarn() {
     loadImg('player_walk_down', 'assets/sprites/char_walk_down.png'),
     loadImg('player_walk_left', 'assets/sprites/char_walk_left.png'),
     loadImg('player_walk_right', 'assets/sprites/char_walk_right.png'),
+    loadImg('icon_disease', 'assets/sprites/icon_event.png'),
     loadImg('cow_newborn', 'assets/sprites/cow_newborn.png'),
     loadImg('cow_2m', 'assets/sprites/cow_2m.png'),
     loadImg('cow_4m', 'assets/sprites/cow_4m.png'),

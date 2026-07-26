@@ -88,6 +88,8 @@ hr.divider{border:none;border-top:1px solid #3a2e18;margin:0 16px 12px;}
 }
 /* 床替えシート */
 .poop-comment{font-size:12px;color:#c88860;text-align:center;padding:0 20px 8px;letter-spacing:1px;min-height:1em;}
+/* 病気シート：アイコンをタップした時の案内文 */
+.disease-text{font-size:14px;color:#e8a860;text-align:center;padding:6px 24px 4px;letter-spacing:1px;line-height:1.9;white-space:pre-line;}
 .poop-title{font-size:16px;color:#f0e090;text-align:center;padding:0 16px 14px;letter-spacing:1px;}
 .poop-option-btn{
   display:block;width:calc(100% - 32px);margin:0 auto 10px;padding:12px 0;
@@ -159,6 +161,14 @@ hr.divider{border:none;border-top:1px solid #3a2e18;margin:0 16px 12px;}
     <button class="poop-option-btn" id="poopBtnSelf" onclick="confirmPoopSelf()"></button>
     <button class="poop-option-btn" id="poopBtnShop" onclick="confirmPoopShop()"></button>
     <button class="sheet-close-btn" id="poopBtnCancel" onclick="closePoopSheet()"></button>
+  </div>
+</div>
+
+<div class="sheet-overlay" id="diseaseSheetOverlay" onclick="closeDiseaseSheet()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="disease-text" id="diseaseText"></div>
+    <button class="sheet-close-btn" id="diseaseCloseBtn" onclick="closeDiseaseSheet()"></button>
   </div>
 </div>
 

@@ -77,17 +77,20 @@ body {
 // 軽トラが喋る汎用会話ページ（指示書_軽トラ会話汎用ページ(truck_talk.html)の実装.md対応）
 // シーンIDを追加するだけで新しい会話イベントに流用できる
 const SCENE_DEF = {
+  // スキル紹介のみの3行。病気は7日目、年齢によるスキル喪失は31日目へ移管した
   day2_tutorial: [
     { speaker: '軽トラ', textKey: 'tutorial_day2_00' },
     { speaker: '軽トラ', textKey: 'tutorial_day2_01' },
     { speaker: '軽トラ', textKey: 'tutorial_day2_02' },
-    { speaker: '軽トラ', textKey: 'tutorial_day2_03' },
-    { speaker: '軽トラ', textKey: 'tutorial_day2_04' },
-    { speaker: '軽トラ', textKey: 'tutorial_day2_05' },
-    { speaker: '軽トラ', textKey: 'tutorial_day2_06' },
-    { speaker: '軽トラ', textKey: 'tutorial_day2_07' },
-    { speaker: '軽トラ', textKey: 'tutorial_day2_08' },
-    { speaker: '軽トラ', textKey: 'tutorial_day2_09' },
+  ],
+  illness_tutorial: [
+    { speaker: '軽トラ', textKey: 'tutorial_illness_00' },
+    { speaker: '軽トラ', textKey: 'tutorial_illness_01' },
+    { speaker: '軽トラ', textKey: 'tutorial_illness_02' },
+    { speaker: '軽トラ', textKey: 'tutorial_illness_03' },
+    { speaker: '軽トラ', textKey: 'tutorial_illness_04' },
+    { speaker: '軽トラ', textKey: 'tutorial_illness_05' },
+    { speaker: '軽トラ', textKey: 'tutorial_illness_06' },
   ],
   day3_tutorial: [
     { speaker: '軽トラ', textKey: 'tutorial_day3_00' },

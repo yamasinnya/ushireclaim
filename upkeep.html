@@ -44,7 +44,7 @@
 
   // 序盤チュートリアルはtruck_talk.htmlに移譲（指示書_軽トラ会話汎用ページ(truck_talk.html)の実装.md、指示書_3日目チュートリアル（街の説明）.md対応）
   const skipTutorial = params.get('skip_tutorial') === '1';
-  const TUTORIAL_SCENE_FOR_DAY = { 2: 'day2_tutorial', 3: 'day3_tutorial', 4: 'day4_tutorial', 5: 'day5_tutorial', 10: 'day10_tutorial', 14: 'calf_tutorial', 16: 'breeding_tutorial', 20: 'daichi_tutorial', 22: 'grass_shortage_tutorial', 30: 'calf_sale_tutorial', 31: 'adult_tutorial' };
+  const TUTORIAL_SCENE_FOR_DAY = { 2: 'day2_tutorial', 3: 'day3_tutorial', 4: 'day4_tutorial', 5: 'day5_tutorial', 7: 'illness_tutorial', 10: 'day10_tutorial', 14: 'calf_tutorial', 16: 'breeding_tutorial', 20: 'daichi_tutorial', 22: 'grass_shortage_tutorial', 30: 'calf_sale_tutorial', 31: 'adult_tutorial' };
   const tutorialScene = TUTORIAL_SCENE_FOR_DAY[state.day];
   if (tutorialScene && !skipTutorial) {
     location.href = `truck_talk.html?scene=${tutorialScene}&next=${upkeepReturnUrl('skip_tutorial')}`;
@@ -113,6 +113,28 @@
       triggerMiscarriage(cow, 'quality');
       return;
     }
+  }
+
+  // 病気の放置ペナルティ：発症中は毎日 体調-1（下限1）。品質へはこの体調低下を通じて間接的に効くので、
+  // 病気専用のqualityPoint減少処理は作らない（指示書_病気システム本体の実装.md対応）
+  // 下記の発症判定より先に行うことで、その日に発症したばかりの牛はまだ減点されない（気づく猶予を1日設ける）
+  state.cows.forEach(cow => {
+    if (!cow.diseaseAlert) return;
+    cow.condition = Math.max(1, cow.condition - ILLNESS_CONDITION_PENALTY);
+  });
+
+  // 病気の発症判定（指示書_病気システム本体の実装.md対応）
+  // 7日目以降のみ（day7チュートリアルで説明する前に発症させないため）。
+  // 対象はスキルを持つ母牛のみで、発症中の牛は二重発症させない。事前通知は行わず牛舎の「!」で気づかせる
+  if (state.day >= ILLNESS_START_DAY) {
+    state.cows.forEach(cow => {
+      if (cow.type !== 'mother') return;
+      if (!cow.skill) return;
+      if (cow.diseaseAlert) return;
+      if (Math.random() < ILLNESS_ONSET_RATE) {
+        cow.diseaseAlert = true;
+      }
+    });
   }
 
   // 床替え：3日に1回、母牛の💩を+1（上限4）。4個で品質ポイントも-1（指示書_牛舎実装フェーズ2_床替え.md対応、頻度は口頭で3日に1回と修正）

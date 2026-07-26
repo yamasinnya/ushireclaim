@@ -177,6 +177,12 @@ function getCalfStage(age) {
   return 'growing';                 // 育成期（4ヶ月〜）
 }
 
+// 病気（指示書_病気システム本体の実装.md対応）。フラグは既存のcow.diseaseAlertを流用する
+const ILLNESS_START_DAY = 7;          // この日以降のみ発症判定を行う（day7チュートリアルより前に発症させない）
+const ILLNESS_ONSET_RATE = 0.05;      // 対象の母牛1頭あたりの1日の発症確率
+const ILLNESS_CONDITION_PENALTY = 1;  // 発症中に毎日下がる体調（下限1。品質へは体調経由で間接的に効く）
+const ILLNESS_TREATMENT_COST = 200;   // 街の獣医での治療費
+
 // 発情確率（品質ティア別。指示書_発情・種付け・妊娠システム実装.md対応。優90%/良75%/可50%/劣25%）
 const ESTRUS_PROBABILITY = { 4: 0.90, 3: 0.75, 2: 0.50, 1: 0.25 };
 

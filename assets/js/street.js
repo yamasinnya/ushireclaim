@@ -28,7 +28,8 @@ const SHOPS = {
       { nameKey: 'product_tanetsuke_koukyu', type: 'insemination', grade: 'premium', cost: 20000 },
       { nameKey: 'product_tanetsuke_futsuu', type: 'insemination', grade: 'normal', cost: 5000 },
       { nameKey: 'product_tanetsuke_yasui', type: 'insemination', grade: 'cheap', cost: 1000 },
-      { nameKey: 'product_byouki_chiryo' },
+      // 病気治療（指示書_病気システム本体の実装.md対応。発症中の牛を選んで治療する）
+      { nameKey: 'product_byouki_chiryo', type: 'treatment' },
     ],
   },
   shop_contractor: {
@@ -106,6 +107,10 @@ function openShopSheet(shopId) {
     }
     if (p.type === 'adult_sale') {
       list.appendChild(buildAdultSaleRow(state, p));
+      return;
+    }
+    if (p.type === 'treatment') {
+      list.appendChild(buildTreatmentRow(state, p));
       return;
     }
 
@@ -187,6 +192,64 @@ function buildCalfSaleRow(state, product) {
   });
 
   return wrap;
+}
+
+// ── 獣医：病気治療（指示書_病気システム本体の実装.md対応） ──
+// 発症中(diseaseAlert)の牛を一覧表示し、選んで治療すると即座に治癒する
+function buildTreatmentRow(state, product) {
+  const wrap = document.createElement('div');
+  wrap.className = 'market-cow-row';
+
+  const title = document.createElement('div');
+  title.className = 'market-cow-summary';
+  title.textContent = `${t(product.nameKey)}（${ILLNESS_TREATMENT_COST}G）`;
+  wrap.appendChild(title);
+
+  const sick = state.cows.filter(cow => cow.diseaseAlert);
+  if (sick.length === 0) {
+    const note = document.createElement('div');
+    note.className = 'product-note';
+    note.textContent = t('treatment_no_target');
+    wrap.appendChild(note);
+    return wrap;
+  }
+
+  const canAfford = state.money >= ILLNESS_TREATMENT_COST;
+  sick.forEach(cow => {
+    const row = document.createElement('div');
+    row.className = 'product-row';
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'product-name';
+    const genderIcon = cow.gender === 'female' ? t('calf_gender_female') : t('calf_gender_male');
+    nameSpan.textContent = `${genderIcon} ${cow.name}`;
+    row.appendChild(nameSpan);
+
+    const btn = document.createElement('button');
+    btn.className = canAfford ? 'btn-buy' : 'btn-buy-disabled';
+    btn.textContent = canAfford ? t('treatment_btn') : t('btn_cant_buy');
+    btn.disabled = !canAfford;
+    if (canAfford) btn.addEventListener('click', () => applyTreatment(cow.id));
+    row.appendChild(btn);
+
+    wrap.appendChild(row);
+  });
+
+  return wrap;
+}
+
+function applyTreatment(cowId) {
+  const state = loadLoopState();
+  const cow = state.cows.find(c => c.id === cowId);
+  if (!cow || !cow.diseaseAlert) return;
+  if (state.money < ILLNESS_TREATMENT_COST) return;
+
+  state.money -= ILLNESS_TREATMENT_COST;
+  cow.diseaseAlert = false; // 即座に治癒（牛舎の「!」マークも消える）。下がった体調は戻さない
+  saveLoopState(state);
+
+  renderHeader('gameHeader');
+  if (currentShopId) openShopSheet(currentShopId); // 所持金・対象リストを再描画
+  showShopMessage(t('treatment_done_msg').replace('{name}', cow.name));
 }
 
 // ── 競り市場：成牛売却申込み（指示書_成牛（母牛・オス成牛）の売却申込み実装.md対応） ──
