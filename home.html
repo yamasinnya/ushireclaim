@@ -209,7 +209,9 @@ function renderCows(state) {
     const img = document.createElement('img');
     img.className = 'placed';
     img.style.cssText = `left:${slot.left}%; top:${slot.top}%; width:${slot.width}%; z-index:4; cursor:pointer;`;
-    img.src = cowSpriteForAge(cow.age);
+    // 成牛(mother/bull)は月齢に関係なく成牛スプライトで描画する（barn.js側と同じくtypeで分岐）
+    // 昇格は生後21日だが、cowSpriteForAge()はage48未満を子牛扱いにするため、typeを見ないと見た目が子牛のままになる
+    img.src = (cow.type === 'calf') ? cowSpriteForAge(cow.age) : 'assets/sprites/cow_mother.png';
     img.alt = cow.name;
     img.addEventListener('click', () => { location.href = 'barn.html'; });
     layer.appendChild(img);
