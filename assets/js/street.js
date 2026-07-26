@@ -214,15 +214,15 @@ function buildAdultSaleRow(state, product) {
     row.className = 'product-row';
     const nameSpan = document.createElement('span');
     nameSpan.className = 'product-name';
+    // 金額はここでは出さない（申込み＝即入金ではないため、出荷後の演出まで伏せる）
     const genderIcon = cow.gender === 'female' ? t('calf_gender_female') : t('calf_gender_male');
-    const price = calcAdultCowSalePrice(cowAgeInYears(cow.age), cow.qualityPoint, cow.type);
-    nameSpan.textContent = `${genderIcon} ${cow.name}（${formatCowAge(cow.age)}・${price.toLocaleString()}G）`;
+    nameSpan.textContent = `${genderIcon} ${cow.name}（${formatCowAge(cow.age)}）`;
     row.appendChild(nameSpan);
 
     const btn = document.createElement('button');
     btn.className = 'btn-buy';
     btn.textContent = t('adult_sale_apply_btn');
-    btn.addEventListener('click', () => openAdultSaleConfirm(cow, price));
+    btn.addEventListener('click', () => openAdultSaleConfirm(cow));
     row.appendChild(btn);
 
     wrap.appendChild(row);
@@ -233,10 +233,10 @@ function buildAdultSaleRow(state, product) {
 
 // 誤操作防止の確認ダイアログ（取り消せない操作のため必ず挟む）
 let pendingAdultSaleCowId = null;
-function openAdultSaleConfirm(cow, price) {
+function openAdultSaleConfirm(cow) {
   pendingAdultSaleCowId = cow.id;
   document.getElementById('adultSaleConfirmText').textContent =
-    t('adult_sale_confirm').replace('{name}', cow.name).replace('{price}', price.toLocaleString());
+    t('adult_sale_confirm').replace('{name}', cow.name);
   document.getElementById('adultSaleConfirmYes').textContent = t('adult_sale_confirm_yes');
   document.getElementById('adultSaleConfirmNo').textContent = t('btn_cancel');
   document.getElementById('adultSaleConfirmOverlay').classList.add('open');
