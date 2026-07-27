@@ -210,8 +210,11 @@ function placeActor(cow, left, top, width) {
   img.style.cssText = `left:${left}%; top:${top}%; width:${width}%; z-index:4;`;
   const baseSrc = spriteFor(cow);
   img.src = baseSrc;
-  // ぶち模様の生成は非同期なので、先に素のスプライトを出しておいて後から差し替える
-  renderCowDataUrl(baseSrc, cow.seed).then(url => { img.src = url; });
+  // ぶち模様は成牛のみ。子牛は月齢別スプライトをそのまま使う（模様生成用の共通元画像が無いため）
+  if (cow.type !== 'calf') {
+    // 模様の生成は非同期なので、先に素のスプライトを出しておいて後から差し替える
+    renderCowDataUrl(baseSrc, cow.seed).then(url => { img.src = url; });
+  }
   layer.appendChild(img);
 
   return {
