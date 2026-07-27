@@ -172,6 +172,12 @@ document.getElementById('sceneWrap').addEventListener('click', async () => {
         seed: cow.seed,
         text: t('promotion_forced_sale').replace('{name}', cow.name).replace('{price}', price.toLocaleString()),
       });
+      // 日誌：牛房が足りずに手放した記録（昇格ではなく出荷として残す）
+      addJournalEntry({
+        day: state.day, category: 'ship',
+        cowId: cow.id, cowName: cow.name,
+        text: `牛舎がいっぱいで、${cow.name}を手放すことになった。`,
+      });
       state.cows.splice(state.cows.indexOf(cow), 1);
       return;
     }
@@ -190,6 +196,12 @@ document.getElementById('sceneWrap').addEventListener('click', async () => {
         text: t('promotion_became_adult').replace('{name}', cow.name) + '\n' +
               t('promotion_skill_gained').replace('{name}', cow.name).replace('{skill}', skillLabel),
       });
+      // 日誌：母牛になった記録
+      addJournalEntry({
+        day: state.day, category: 'promote',
+        cowId: cow.id, cowName: cow.name,
+        text: `${cow.name}が成牛になった。${t(skill ? skill.nameKey : '')}を覚えたようだ。`,
+      });
     } else {
       // オス：魔力もスキルも持たない成牛になる（スキル抽選なし）
       cow.type = 'bull';
@@ -198,6 +210,12 @@ document.getElementById('sceneWrap').addEventListener('click', async () => {
         seed: cow.seed,
         text: t('promotion_became_adult').replace('{name}', cow.name) + '\n' +
               t('promotion_male_note').replace('{name}', cow.name),
+      });
+      // 日誌：オスが成牛になった記録
+      addJournalEntry({
+        day: state.day, category: 'promote',
+        cowId: cow.id, cowName: cow.name,
+        text: `${cow.name}が、立派な成牛になった。`,
       });
     }
   });

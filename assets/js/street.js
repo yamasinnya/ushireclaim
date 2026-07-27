@@ -247,6 +247,13 @@ function applyTreatment(cowId) {
   cow.diseaseAlert = false; // 即座に治癒（牛舎の「!」マークも消える）。下がった体調は戻さない
   saveLoopState(state);
 
+  // 日誌：治療が終わった記録
+  addJournalEntry({
+    day: state.day, category: 'cure',
+    cowId: cow.id, cowName: cow.name,
+    text: `${cow.name}、治療を終えて元気を取り戻した。`,
+  });
+
   renderHeader('gameHeader');
   if (currentShopId) openShopSheet(currentShopId); // 所持金・対象リストを再描画
   showShopMessage(t('treatment_done_msg').replace('{name}', cow.name));
@@ -464,6 +471,12 @@ function handleBuyBuilding(product) {
   state.buildings[product.buildingKey] = true;
   saveLoopState(state);
 
+  // 日誌：施設が建った記録
+  addJournalEntry({
+    day: state.day, category: 'build',
+    text: `建設屋に頼んで、${t(product.nameKey)}を建てた。`,
+  });
+
   renderHeader('gameHeader');
   if (currentShopId) openShopSheet(currentShopId); // ボタン状態（建設済み）を再描画
   showShopMessage(t('msg_building_purchased').replace('{name}', t(product.nameKey)));
@@ -565,6 +578,13 @@ function confirmMarketNaming() {
   };
   state.cows.push(newCow);
   saveLoopState(state);
+
+  // 日誌：買った牛が牧場に来た記録
+  addJournalEntry({
+    day: state.day, category: 'arrive',
+    cowId: newCow.id, cowName: newCow.name,
+    text: `競り市場から${newCow.name}を迎え入れた。`,
+  });
 
   closeMarketNaming();
   renderHeader('gameHeader');

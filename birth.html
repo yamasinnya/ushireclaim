@@ -228,8 +228,18 @@ function confirmNaming() {
     mother.breedingGrade = null;
     mother.inseminatedDay = 0;
   }
-  state.cows.push(createCalf(input.value, calfGender, breedingGrade));
+  const calf = createCalf(input.value, calfGender, breedingGrade);
+  state.cows.push(calf);
   saveLoopState(state);
+
+  // 日誌：出産の記録（母牛と子牛どちらも分かるよう、cowIdは生まれた子牛にする）
+  addJournalEntry({
+    day: state.day, category: 'birth',
+    cowId: calf.id, cowName: calf.name,
+    text: mother
+      ? `${mother.name}が、子を産んだ。${calf.name}と名づけた。`
+      : `子が産まれた。${calf.name}と名づけた。`,
+  });
 
   document.getElementById('namingBox').classList.remove('show');
   location.href = 'home.html';

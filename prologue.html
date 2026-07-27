@@ -343,6 +343,13 @@ function confirmNaming() {
   };
   saveLoopState(state);
 
+  // 日誌：最初の牛が牧場に来た記録
+  addJournalEntry({
+    day: state.day, category: 'arrive',
+    cowId: state.cows[0].id, cowName: cowName,
+    text: `${cowName}が、初めてこの牧場に来た。`,
+  });
+
   document.getElementById('namingBox').classList.remove('show');
   nextScene();
 }

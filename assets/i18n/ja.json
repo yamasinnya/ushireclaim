@@ -290,6 +290,17 @@
   "truck_hello_evening": "今日もお疲れさん",
   "truck_hello_night": "こんな時間まで働いてるのか",
 
+  "journal_title": "牧場日誌",
+  "journal_subtitle": "相棒との記録",
+  "journal_lead": "この牧場で過ごした日々の、節目だけを綴っています。",
+  "journal_empty": "まだ何も書かれていない。\nこれからの日々を、ここに綴っていこう。",
+  "journal_year_suffix": "年目",
+  "journal_month_suffix": "月",
+  "journal_page_end": "ここまでの記録",
+  "journal_prev": "◀ 前のページ",
+  "journal_next": "次のページ ▶",
+  "journal_page_indicator": "{cur} / {total}",
+
   "title_start": "はじめから",
   "title_continue": "つづきから",
   "title_password": "ふっかつのじゅもん",

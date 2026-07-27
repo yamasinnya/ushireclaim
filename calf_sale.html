@@ -139,6 +139,16 @@ document.getElementById('sceneWrap').addEventListener('click', () => {
       : calcCalfSalePrice(cow.qualityPoint, cow.gender);
     state.money += price;
     results.push({ name: cow.name, price });
+
+    // 日誌：旅立った記録（申込み日ではなく、実際に出荷されたこの日を残す）
+    addJournalEntry({
+      day: state.day, category: 'ship',
+      cowId: cow.id, cowName: cow.name,
+      text: isAdultCow(cow)
+        ? `${cow.name}を、街の市場へ送り出した。`
+        : `育てた子牛の${cow.name}を、街の市場へ送り出した。`,
+    });
+
     state.cows.splice(idx, 1);
   });
   saveLoopState(state);

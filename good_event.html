@@ -268,6 +268,13 @@ document.getElementById('sceneWrap').addEventListener('click', () => {
     text = t('good_event_play')
       .replace(/\{mother\}/g, mother.name)
       .replace('{calf}', calf.name);
+    // 日誌：じゃれ合いの記録
+    addJournalEntry({
+      day: state.day, category: 'lucky',
+      cowId: mother.id, cowName: mother.name,
+      text: `${mother.name}と${calf.name}が、じゃれ合っているのを見た。`,
+      image: 'diary_cow_calf_rest',
+    });
     // 親子が近づいてじゃれ合う見せ方（ぶち模様が見えるよう大きめに描く）
     const motherActor = placeActor(mother, 14, 62, 26);
     const calfActor = placeActor(calf, 58, 68, 19);
@@ -278,9 +285,23 @@ document.getElementById('sceneWrap').addEventListener('click', () => {
       const gain = GOOD_EVENT_MONEY_MIN + Math.floor(Math.random() * (GOOD_EVENT_MONEY_MAX - GOOD_EVENT_MONEY_MIN + 1));
       state.money += gain;
       text = t('good_event_money').replace('{name}', cow.name);
+      // 日誌：お金拾いの記録
+      addJournalEntry({
+        day: state.day, category: 'lucky',
+        cowId: cow.id, cowName: cow.name,
+        text: '道端でお金を拾った。ちょっとした得。',
+        image: 'diary_money',
+      });
     } else {
       state.wrapWara = (state.wrapWara || 0) + GOOD_EVENT_WARA_DAYS * WRAP_WARA_PT_PER_DAY;
       text = t('good_event_wara').replace('{name}', cow.name);
+      // 日誌：ラップ藁をもらった記録
+      addJournalEntry({
+        day: state.day, category: 'lucky',
+        cowId: cow.id, cowName: cow.name,
+        text: '誰かがラップ藁を置いていってくれた。ありがたい。',
+        image: 'diary_wrap_bale',
+      });
       // もらったラップ藁を、倉庫に積まれた状態のスプライトで牛の傍らに置く
       placeProp('assets/sprites/wrap_wara.png', 50, 60, 26);
     }

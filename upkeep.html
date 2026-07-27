@@ -144,6 +144,12 @@
       if (cow.diseaseAlert) return;
       if (Math.random() < ILLNESS_ONSET_RATE) {
         cow.diseaseAlert = true;
+        // 日誌：発症の記録
+        addJournalEntry({
+          day: state.day, category: 'sick',
+          cowId: cow.id, cowName: cow.name,
+          text: `${cow.name}の様子がおかしい。獣医に診てもらったほうがよさそうだ。`,
+        });
       }
     });
   }

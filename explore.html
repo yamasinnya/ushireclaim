@@ -823,6 +823,17 @@ function onCardClick(el, idx) {
           todayMatchedGoodPositions.add(idx);
         }
 
+        // 日誌：レア成立の記録。同じ日に何度も書かないよう1日1件に抑える
+        if (matchedDef.key === 'rare') {
+          const journalDay = loadLoopState().day;
+          if (!hasJournalEntry(journalDay, 'rare', null)) {
+            addJournalEntry({
+              day: journalDay, category: 'rare',
+              text: `${field.name}で、めったに出会えない${matchedDef.label}を見つけた。`,
+            });
+          }
+        }
+
         // フィールドごとのペア成立ボーナス（湿地帯のアンコモン+100G・レア+500G等）
         const pairBonus = field.pairBonus[matchedDef.key] || 0;
         if (pairBonus > 0) claimCoin(pairBonus, 'ボーナス');

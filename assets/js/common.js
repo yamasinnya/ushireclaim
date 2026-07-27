@@ -88,6 +88,66 @@ function saveLoopState(state) {
   localStorage.setItem(LOOP_SAVE_KEY, JSON.stringify(state));
 }
 
+// ── 牧場日誌（指示書_牧場日誌（思い出ログ）実装.md対応） ──
+// 進行状況(yamayama_loop_v1)とは完全に別のキーで持つ。日誌が壊れても・消えても
+// ゲームの進行には一切影響させないため、読み書きは全てtry/catchで握りつぶす。
+// ふっかつのじゅもんの出力・読み込みでもこのキーには触らない
+const JOURNAL_SAVE_KEY = 'yamayama_journal_v1';
+const JOURNAL_MAX_ENTRIES = 500;   // これを超えたら古いものから捨てる
+const JOURNAL_IMAGE_EVERY = 7;     // 通し番号がこの倍数のログだけ画像を添える
+
+// カテゴリ→添える画像。来訪(arrive)は対応する絵が無いのでnull
+const JOURNAL_CATEGORY_IMAGE = {
+  arrive:  null,
+  birth:   'diary_cow_calf_rest',
+  ship:    'diary_shipping',
+  promote: 'diary_cow_walk',
+  sick:    'diary_cow_sick',
+  cure:    'diary_cow_healed',
+  lucky:   'diary_gift',
+  rare:    'diary_grass_shine',
+  build:   'diary_construction',
+};
+
+function loadJournal() {
+  try {
+    const raw = localStorage.getItem(JOURNAL_SAVE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+// 日誌に1件追記する。imageはカテゴリ既定の絵を上書きしたい時だけ渡す（良イベントの種類別など）
+function addJournalEntry({ day, category, cowId = null, cowName = null, text, image }) {
+  try {
+    const entries = loadJournal();
+    // 通し番号は配列長だと500件で頭打ちになり画像が付かなくなるため、直前のseqから継承する
+    const seq = (entries.length ? (entries[entries.length - 1].seq || entries.length) : 0) + 1;
+    const candidate = image !== undefined ? image : JOURNAL_CATEGORY_IMAGE[category];
+    entries.push({
+      seq,
+      day,
+      category,
+      cowId,
+      cowName,
+      text,
+      imageKey: (seq % JOURNAL_IMAGE_EVERY === 0 && candidate) ? candidate : null,
+    });
+    while (entries.length > JOURNAL_MAX_ENTRIES) entries.shift();
+    localStorage.setItem(JOURNAL_SAVE_KEY, JSON.stringify(entries));
+  } catch (e) {
+    // 日誌の失敗でゲーム進行を止めない
+  }
+}
+
+// 同じ出来事を何度も書かないためのガード（1日1回だけ記録したいカテゴリで使う）
+function hasJournalEntry(day, category, cowId) {
+  return loadJournal().some(e => e.day === day && e.category === category && e.cowId === cowId);
+}
+
 // ── ふっかつのじゅもん（指示書_セーブ引き継ぎ（ふっかつのじゅもん）実装.md対応） ──
 // yamayama_loop_v1 の中身を1つの文字列にして、別ブラウザ・別端末へ引き継げるようにする。
 // 先頭のプレフィックスで圧縮方式を見分ける（読み込み側が判別できる必要があるため）
