@@ -101,17 +101,17 @@ function renderBuildings(state) {
   });
 }
 
-// 成牛は月齢に関係なく成牛スプライト（home.htmlと同じ分岐）
+// 子牛は月齢別スプライト、成牛は模様生成用の共通元画像（COW_BASE_SPRITE）を使う。
+// 成牛だけ共通画像なのは、牛舎と同じぶち模様を再現するため（元画像が違うと模様が変わる）
 function cowSpriteForAge(ageDays) {
   const months = ageDays / 2;
   if (months < 2) return 'assets/sprites/cow_newborn.png';
   if (months < 4) return 'assets/sprites/cow_2m.png';
   if (months < 10) return 'assets/sprites/cow_4m.png';
-  if (months < 24) return 'assets/sprites/cow_10m.png';
-  return 'assets/sprites/cow_mother.png';
+  return 'assets/sprites/cow_10m.png';
 }
 function spriteFor(cow) {
-  return cow.type === 'calf' ? cowSpriteForAge(cow.age) : 'assets/sprites/cow_mother.png';
+  return cow.type === 'calf' ? cowSpriteForAge(cow.age) : COW_BASE_SPRITE;
 }
 
 // ── ぶち牛パターン生成（barn.jsのpreRenderCowと同じ手法。seedから同一模様を再現する） ──

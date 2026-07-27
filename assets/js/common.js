@@ -177,6 +177,12 @@ function getCalfStage(age) {
   return 'growing';                 // 育成期（4ヶ月〜）
 }
 
+// ぶち模様を生成する時の元画像（牛舎・成牛昇格・良いイベントで共通）
+// 模様は元画像の毛色ピクセルからマスクを作って生成するため、元画像が違うと同じseedでも別模様になる。
+// 見た目を揃えるため、模様を生成する箇所では必ずこの画像を使うこと
+// （もとはbarn.jsにbase64で埋め込まれていたものを、他ページからも参照できるようファイルへ切り出した）
+const COW_BASE_SPRITE = 'assets/sprites/cow_mother_base.png';
+
 // ラップ藁は草ポイント単位で保持する（5pt = 1日分）
 const WRAP_WARA_PT_PER_DAY = 5;
 
