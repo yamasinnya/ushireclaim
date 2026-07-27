@@ -1,46 +1,52 @@
 // やまやま牧場：ループ全体の共有セーブ・共通ロジック
 const LOOP_SAVE_KEY = 'yamayama_loop_v1';
 
+// ★ 牛1頭ぶんのデフォルト値。牛に新しいフィールドを増やす時は、必ずここに書き足すこと。
+// loadLoopState()が全頭にこれを適用するため、古いセーブ（そのフィールドが無かった頃のデータ）を
+// 読んでもここの値で補完される。id・nameは牛ごとに固有なので持たせない
+const COW_DEFAULT = {
+  gender: 'female',
+  age: 0,              // ゲーム内日数（1年=24日換算）
+  seed: 1234,          // ブチ模様の乱数シード（4桁）
+  condition: 6,        // 体調（内部値 1-10）。初期値6＝普通
+  skill: null,         // スキル識別子。子牛とオス成牛は持たない
+  type: 'mother',      // 'mother' | 'calf' | 'bull'
+  // 品質(優良可)は保存せず、qualityPointの累計からgetQualityTier()で都度算出する
+  qualityPoint: 0,     // 牛ごとの品質ポイント累計（薬草獲得・体調日次加算等で増減する。下がればティアも下がる）
+  lastKnownQualityTier: 1, // 品質ティア変化通知の前日比較用
+  pregnantDay: 0,      // 妊娠経過日数。0=非妊娠。毎日アップキープで+1
+  actualBirthDay: 0,   // 実際の出産日（pregnantDayの値、16〜20のランダム）。0=未確定
+  // 繁殖状態（指示書_発情・種付け・妊娠システム実装.md対応）。表示優先度はbarn.js参照
+  // 'none'=通常 / 'estrus'=発情中 / 'inseminated'=種付け済み(着床判定〜結果通知まで) / 'pregnant'=妊娠確定済み / 'failed'=着床失敗（次の発情まで表示）
+  breedingState: 'none',
+  breedingGrade: null, // 直近の種付けで使ったグレード('cheap'/'normal'/'premium')。出産時の子牛品質ポイントロールに使用
+  inseminatedDay: 0,   // 種付けを実行した日（着床判定は+1日後、結果通知は+2日後）
+  poopCount: 0,        // 💩の数（0〜4）。3日に1回アップキープで+1、床替えで0にリセット
+  diseaseAlert: false, // 病気フラグ。牛舎の「!」マーク表示にも使う
+  lastFedDay: 0,       // 育成飼料を最後にあげた日（子牛のみ使用）
+  saleApplied: false,  // 売却申込み済みか
+  saleAppliedDay: 0,   // 申込みを行った日（翌日に出荷）
+};
+
 const LOOP_DEFAULT_STATE = {
   version: 1,
   day: 1,
+  // 初期牛。プロローグの命名時に上書きされるため、COW_DEFAULTとは役割が別（差分だけ書く）
   cows: [
-    {
-      id: 'cow_001',
-      name: 'ふうか',
-      gender: 'female',
-      age: 48,          // ゲーム内日数（2歳=48日、1年=24日換算）
-      seed: 1234,       // ブチ模様の乱数シード（4桁）
-      condition: 6,     // 体調（内部値 1-10）。初期値6＝普通
-      skill: 'zenno',
-      type: 'mother',     // 'mother' | 'calf'（床替え等、母牛のみが対象の処理で使用）
-      // 品質(優良可)はもう保存しない。qualityPointの累計からgetQualityTier()で都度算出する（口頭指示：レベル制→スコープ制へ変更）
-      qualityPoint: 30,  // 牛ごとの品質ポイント累計（薬草獲得・体調日次加算等で増減する。下がればティアも下がる）
-      pregnantDay: 0,    // 妊娠経過日数。0=非妊娠。毎日アップキープで+1
-      actualBirthDay: 0, // 実際の出産日（pregnantDayの値、16〜20のランダム）。0=未確定。pregnantDay===15でupkeep.htmlが確定させる
-      // 繁殖状態（指示書_発情・種付け・妊娠システム実装.md対応）。表示優先度はbarn.js参照
-      // 'none'=通常 / 'estrus'=発情中 / 'inseminated'=種付け済み(着床判定〜結果通知まで) / 'pregnant'=妊娠確定済み / 'failed'=着床失敗（次の発情まで表示）
-      breedingState: 'none',
-      breedingGrade: null, // 直近の種付けで使ったグレード('cheap'/'normal'/'premium')。出産時の子牛品質ポイントロールに使用
-      inseminatedDay: 0,   // 種付けを実行した日（着床判定は+1日後、結果通知は+2日後）
-      poopCount: 0,      // 💩の数（0〜4）。毎日アップキープで+1、床替えで0にリセット
-      diseaseAlert: false, // 😷アイコン表示フラグ。フェーズ3で発動ロジックを実装予定
-    },
+    { ...COW_DEFAULT, id: 'cow_001', name: 'ふうか', age: 48, condition: 6, skill: 'zenno', qualityPoint: 30 },
   ],
   money: 0,
   grassStock: 0,  // 探索で集めた草の合計ポイント（翌日の体調変動に使い、アップキープ時に0へリセット）
   manaUsed: 0,  // 本日すでに消費した魔力の合計（探索・床替え等で共有。date_change.htmlで日付が変わるたびに0へリセット）
-  wrapWara: 0,  // ラップ藁の在庫数。購入実装は別フェーズ、現時点では表示のみ
+  wrapWara: 0,  // ラップ藁の在庫数（草ポイント単位。5pt=1日分）
+  // ★ 建設屋の施設フラグ。施設を追加する時は、未購入の初期値falseで必ずここに書き足すこと。
+  // loadLoopState()がキー単位でマージするため、古いセーブにもここの値で補完される
   buildings: {
-    gyusha_small: true, // 牛舎（小）。初期状態から表示。将来、建設屋で建てた施設をここに追加していく
+    gyusha_small: true,        // 牛舎（小）。初期状態から所持
+    magicWaterTrough: false,   // 魔法の水飲み場（qualityPointの実数値表示）
+    silo: false,               // サイロ（育成飼料の効果が2倍。建設処理は別フェーズ）
   },
 };
-
-// 牛ごとのマージ：デフォルトに無いフィールドの補完のみ行い、skillを含め進行中の値はセーブ側を優先する。
-function mergeCowWithDefault(savedCow, defaultCow) {
-  if (!defaultCow) return savedCow; // デフォルトに居ない牛（将来のガチャ牛など）はそのまま
-  return { ...defaultCow, ...savedCow };
-}
 
 function loadLoopState() {
   try {
@@ -55,10 +61,10 @@ function loadLoopState() {
       }
       delete parsed.qualityPoint;
     }
-    const defaultCowsById = {};
-    LOOP_DEFAULT_STATE.cows.forEach(c => { defaultCowsById[c.id] = c; });
-    const mergedCows = (parsed.cows || []).map(saved => mergeCowWithDefault(saved, defaultCowsById[saved.id]));
-    // buildingsも浅いスプレッドだけだと、将来デフォルトに新しい施設フラグを追加した時に
+    // 牛はidに関係なく全頭へCOW_DEFAULTを適用する。以前はデフォルト側に居るcow_001しか
+    // 補完されず、購入牛・出生牛はフィールドが欠けたまま素通りしていた（体調未定義でNaNになる等の実害あり）
+    const mergedCows = (parsed.cows || []).map(saved => ({ ...COW_DEFAULT, ...saved }));
+    // buildingsも浅いスプレッドだけだと、デフォルトに新しい施設フラグを追加した時に
     // 既存セーブ側の値がbuildingsごと丸ごと勝ってしまい新フラグが消える。cows同様キー単位でマージする。
     const mergedBuildings = { ...LOOP_DEFAULT_STATE.buildings, ...(parsed.buildings || {}) };
     return { ...LOOP_DEFAULT_STATE, ...parsed, cows: mergedCows, buildings: mergedBuildings };
