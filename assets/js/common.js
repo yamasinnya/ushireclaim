@@ -1,6 +1,17 @@
 // やまやま牧場：ループ全体の共有セーブ・共通ロジック
 const LOOP_SAVE_KEY = 'yamayama_loop_v1';
 
+// 探索盤面のセーブキー一覧。explore.htmlのFIELD_DEFのsaveKeyと対応しているので、
+// フィールドを追加したらここにも足すこと（「はじめから」「じゅもん読み込み」で削除する対象）
+const EXPLORE_SAVE_KEYS = [
+  'yamayama_explore_v1',
+  'yamayama_explore_wetland_v1',
+  'yamayama_explore_plateau_v1',
+];
+function clearExploreSaves() {
+  EXPLORE_SAVE_KEYS.forEach(key => localStorage.removeItem(key));
+}
+
 // ★ 牛1頭ぶんのデフォルト値。牛に新しいフィールドを増やす時は、必ずここに書き足すこと。
 // loadLoopState()が全頭にこれを適用するため、古いセーブ（そのフィールドが無かった頃のデータ）を
 // 読んでもここの値で補完される。id・nameは牛ごとに固有なので持たせない
@@ -75,6 +86,63 @@ function loadLoopState() {
 
 function saveLoopState(state) {
   localStorage.setItem(LOOP_SAVE_KEY, JSON.stringify(state));
+}
+
+// ── ふっかつのじゅもん（指示書_セーブ引き継ぎ（ふっかつのじゅもん）実装.md対応） ──
+// yamayama_loop_v1 の中身を1つの文字列にして、別ブラウザ・別端末へ引き継げるようにする。
+// 先頭のプレフィックスで圧縮方式を見分ける（読み込み側が判別できる必要があるため）
+const PASSWORD_PREFIX_GZIP = 'UR1G-'; // gzip圧縮あり
+const PASSWORD_PREFIX_RAW  = 'UR1R-'; // 無圧縮（CompressionStream非対応環境のフォールバック）
+
+// 日本語の牛名が入るため、btoaに直接渡さず必ずUTF-8バイト列を経由する
+function bytesToBase64(bytes) {
+  let bin = '';
+  const CHUNK = 0x8000; // 引数の数が多すぎるとapplyが失敗するので分割する
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(bin);
+}
+function base64ToBytes(b64) {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+// セーブ文字列 → じゅもん。CompressionStreamが無い環境では無圧縮で出力する
+async function encodePassword(json) {
+  const bytes = new TextEncoder().encode(json);
+  if (typeof CompressionStream === 'function') {
+    try {
+      const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream('gzip'));
+      const gz = new Uint8Array(await new Response(stream).arrayBuffer());
+      return PASSWORD_PREFIX_GZIP + bytesToBase64(gz);
+    } catch (e) {
+      // 圧縮に失敗したら無圧縮へフォールバックする
+    }
+  }
+  return PASSWORD_PREFIX_RAW + bytesToBase64(bytes);
+}
+
+// じゅもん → セーブ文字列。解析できない場合は例外を投げる（呼び出し側でエラー表示する）
+async function decodePassword(password) {
+  const trimmed = (password || '').trim().replace(/\s/g, ''); // 改行や折り返しの空白を除去
+  let body;
+  let gzipped;
+  if (trimmed.startsWith(PASSWORD_PREFIX_GZIP)) {
+    body = trimmed.slice(PASSWORD_PREFIX_GZIP.length);
+    gzipped = true;
+  } else if (trimmed.startsWith(PASSWORD_PREFIX_RAW)) {
+    body = trimmed.slice(PASSWORD_PREFIX_RAW.length);
+    gzipped = false;
+  } else {
+    throw new Error('unknown prefix');
+  }
+  const bytes = base64ToBytes(body);
+  if (!gzipped) return new TextDecoder().decode(bytes);
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+  return new TextDecoder().decode(await new Response(stream).arrayBuffer());
 }
 
 // 体調（1-10）→ 1日あたりの魔力（探索回数）

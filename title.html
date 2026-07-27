@@ -72,6 +72,27 @@ body {
   color:#f0e090; font-size:14px; font-family:inherit; cursor:pointer;
 }
 .modal-btn.secondary { color:#a89060; }
+
+/* ふっかつのじゅもん：出力・読み込みを1つのモーダルにまとめる */
+.modal-box.wide { width:92%; max-width:400px; text-align:left; }
+.pw-section { margin-bottom:18px; }
+.pw-label { color:#f0e090; font-size:13px; font-weight:bold; letter-spacing:1px; margin-bottom:8px; }
+.pw-note { color:#a89060; font-size:11px; line-height:1.7; margin-bottom:8px; }
+.pw-area {
+  width:100%; height:88px; resize:none;
+  background:rgba(0,0,0,0.45); border:1.5px solid #7a5a28; border-radius:8px;
+  color:#e8d8a0; font-size:11px; line-height:1.5; padding:8px 10px;
+  font-family:monospace; word-break:break-all;
+}
+.pw-btn {
+  width:100%; padding:10px 0; margin-top:8px;
+  background:rgba(20,16,8,0.85); border:1px solid #7a5a28; border-radius:8px;
+  color:#f0e090; font-size:14px; font-family:inherit; cursor:pointer;
+}
+.pw-btn:disabled { color:#665a3c; border-color:#4a3818; cursor:default; }
+.pw-status { color:#90d060; font-size:11px; margin-top:6px; min-height:1.2em; }
+.pw-status.error { color:#e08060; }
+hr.pw-divider { border:none; border-top:1px solid #4a3818; margin:0 0 18px; }
 </style>
 </head>
 <body>
@@ -99,10 +120,46 @@ body {
   </div>
 </div>
 
-<div class="modal-overlay" id="soonOverlay">
+<!-- 汎用のメッセージ表示（じゅもんのエラー等） -->
+<div class="modal-overlay" id="msgOverlay">
   <div class="modal-box">
-    <div class="modal-text" id="soonText"></div>
-    <button class="modal-btn secondary" id="soonClose" style="width:100%;"></button>
+    <div class="modal-text" id="msgText"></div>
+    <button class="modal-btn secondary" id="msgClose" style="width:100%;"></button>
+  </div>
+</div>
+
+<!-- ふっかつのじゅもん（出力・読み込み） -->
+<div class="modal-overlay" id="pwOverlay">
+  <div class="modal-box wide">
+    <div class="pw-section">
+      <div class="pw-label" id="pwExportLabel"></div>
+      <div class="pw-note" id="pwExportNote"></div>
+      <textarea class="pw-area" id="pwExportArea" readonly></textarea>
+      <button class="pw-btn" id="pwCopyBtn"></button>
+      <div class="pw-status" id="pwCopyStatus"></div>
+    </div>
+
+    <hr class="pw-divider">
+
+    <div class="pw-section">
+      <div class="pw-label" id="pwImportLabel"></div>
+      <div class="pw-note" id="pwImportNote"></div>
+      <textarea class="pw-area" id="pwImportArea"></textarea>
+      <button class="pw-btn" id="pwLoadBtn"></button>
+    </div>
+
+    <button class="modal-btn secondary" id="pwClose" style="width:100%;"></button>
+  </div>
+</div>
+
+<!-- じゅもん読み込み前の確認（上書きは取り消せないため必ず挟む） -->
+<div class="modal-overlay" id="pwConfirmOverlay">
+  <div class="modal-box">
+    <div class="modal-text" id="pwConfirmText"></div>
+    <div class="modal-btn-row">
+      <button class="modal-btn" id="pwConfirmYes"></button>
+      <button class="modal-btn secondary" id="pwConfirmNo"></button>
+    </div>
   </div>
 </div>
 
@@ -146,10 +203,7 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
   document.getElementById('confirmYes').addEventListener('click', () => {
     localStorage.removeItem(LOOP_SAVE_KEY);
     // 探索セーブも削除（指示書_プロローグ更新版.md追記対応。牛データ増殖防止）
-    // フィールド追加(湿地帯・台地)でセーブキーが増えたため、explore.htmlのFIELD_DEFと合わせて全て削除する
-    localStorage.removeItem('yamayama_explore_v1');
-    localStorage.removeItem('yamayama_explore_wetland_v1');
-    localStorage.removeItem('yamayama_explore_plateau_v1');
+    clearExploreSaves();
     location.href = 'prologue.html';
   });
   document.getElementById('confirmNo').addEventListener('click', () => {
@@ -161,14 +215,108 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
     location.href = 'home.html';
   });
 
-  passwordBtn.addEventListener('click', () => {
-    document.getElementById('soonText').textContent = t('btn_coming_soon');
-    document.getElementById('soonClose').textContent = t('barn_close_btn');
-    openModal('soonOverlay');
-  });
-  document.getElementById('soonClose').addEventListener('click', () => closeModal('soonOverlay'));
-
   aboutBtn.addEventListener('click', () => { location.href = 'about.html'; });
+
+  // ── ふっかつのじゅもん（指示書_セーブ引き継ぎ（ふっかつのじゅもん）実装.md対応） ──
+  function showMessage(text) {
+    document.getElementById('msgText').textContent = text;
+    document.getElementById('msgClose').textContent = t('barn_close_btn');
+    openModal('msgOverlay');
+  }
+  document.getElementById('msgClose').addEventListener('click', () => closeModal('msgOverlay'));
+
+  const exportArea = document.getElementById('pwExportArea');
+  const importArea = document.getElementById('pwImportArea');
+  const copyBtn = document.getElementById('pwCopyBtn');
+  const copyStatus = document.getElementById('pwCopyStatus');
+
+  passwordBtn.addEventListener('click', async () => {
+    document.getElementById('pwExportLabel').textContent = t('password_export_label');
+    document.getElementById('pwExportNote').textContent = t('password_export_note');
+    document.getElementById('pwImportLabel').textContent = t('password_import_label');
+    document.getElementById('pwImportNote').textContent = t('password_import_note');
+    copyBtn.textContent = t('password_copy_btn');
+    document.getElementById('pwLoadBtn').textContent = t('password_load_btn');
+    document.getElementById('pwClose').textContent = t('barn_close_btn');
+    importArea.placeholder = t('password_import_placeholder');
+    copyStatus.textContent = '';
+    copyStatus.classList.remove('error');
+    importArea.value = '';
+
+    const raw = localStorage.getItem(LOOP_SAVE_KEY);
+    if (!raw) {
+      // セーブが無ければ出力するものが無いので、その旨だけ出してコピーは無効にする
+      exportArea.value = '';
+      exportArea.placeholder = t('password_no_save');
+      copyBtn.disabled = true;
+    } else {
+      exportArea.value = await encodePassword(raw);
+      copyBtn.disabled = false;
+    }
+    openModal('pwOverlay');
+  });
+  document.getElementById('pwClose').addEventListener('click', () => closeModal('pwOverlay'));
+
+  copyBtn.addEventListener('click', async () => {
+    copyStatus.classList.remove('error');
+    try {
+      await navigator.clipboard.writeText(exportArea.value);
+      copyStatus.textContent = t('password_copied');
+    } catch (e) {
+      // Clipboard APIが使えない環境では、選択状態にして手動コピーを促す
+      exportArea.focus();
+      exportArea.select();
+      copyStatus.textContent = t('password_copy_failed');
+      copyStatus.classList.add('error');
+    }
+  });
+
+  // 読み込みは上書きが取り消せないため、確認ダイアログを必ず挟む
+  document.getElementById('pwLoadBtn').addEventListener('click', () => {
+    if (!importArea.value.trim()) return;
+    document.getElementById('pwConfirmText').textContent = t('password_confirm');
+    document.getElementById('pwConfirmYes').textContent = t('password_confirm_yes');
+    document.getElementById('pwConfirmNo').textContent = t('title_confirm_no');
+    openModal('pwConfirmOverlay');
+  });
+  document.getElementById('pwConfirmNo').addEventListener('click', () => closeModal('pwConfirmOverlay'));
+
+  document.getElementById('pwConfirmYes').addEventListener('click', async () => {
+    closeModal('pwConfirmOverlay');
+
+    // 解析に失敗した時点で中断する。既存のセーブには一切触れない
+    let json;
+    try {
+      json = await decodePassword(importArea.value);
+    } catch (e) {
+      showMessage(t('password_error_broken'));
+      return;
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(json);
+    } catch (e) {
+      showMessage(t('password_error_broken'));
+      return;
+    }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      showMessage(t('password_error_broken'));
+      return;
+    }
+
+    // バージョン違いは「壊れている」のとは区別して伝える
+    if (parsed.version !== LOOP_DEFAULT_STATE.version) {
+      showMessage(t('password_error_version'));
+      return;
+    }
+
+    // ここまで通ってから初めて書き込む。探索盤面は引き継がないので削除する
+    localStorage.setItem(LOOP_SAVE_KEY, json);
+    clearExploreSaves();
+    closeModal('pwOverlay');
+    location.href = 'home.html';
+  });
 })();
 </script>
 
