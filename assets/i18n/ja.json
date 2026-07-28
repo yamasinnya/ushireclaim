@@ -5,7 +5,6 @@
   "btn_go_home": "牧場へ戻る",
 
   "feeding_title": "牛たちに草を与えている",
-  "feeding_note": "（今後：牛のステータスUP演出をここに追加予定）",
 
   "date_change_title": "日付が変わりました",
 
@@ -162,7 +161,7 @@
   "good_event_wara": "{name}のところに、誰かがラップ藁を置いていってくれたようだ",
 
   "condition_up": "の体調が上がった！",
-  "condition_down": "が少し元気がなさそうだ…",
+  "condition_down": "が食べ足りないようだ…（体調が下がった）",
   "quality_tier_up": "の品質が上がった！",
   "quality_tier_down": "の品質が下がった…",
 

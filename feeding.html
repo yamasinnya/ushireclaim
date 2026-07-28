@@ -16,10 +16,8 @@
 <div class="screen-wrap">
   <div class="screen-title" id="title"></div>
   <img class="screen-gif" src="cow_feeding.gif" alt="餌やり">
-  <!-- 今後：牛のステータスUP演出をここに追加予定 -->
   <div class="condition-note" id="condition-note"></div>
   <div class="wara-note" id="wara-note"></div>
-  <div class="screen-note" id="note"></div>
   <button class="btn-main" id="btn-next"></button>
 </div>
 
@@ -93,7 +91,6 @@
   document.getElementById('title').textContent = t('feeding_title');
   document.getElementById('condition-note').textContent = conditionNote;
   document.getElementById('wara-note').textContent = waraNote;
-  document.getElementById('note').textContent = t('feeding_note');
 
   const btn = document.getElementById('btn-next');
   btn.textContent = t('btn_next');
