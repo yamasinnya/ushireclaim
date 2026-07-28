@@ -164,7 +164,7 @@ function openShopSheet(shopId) {
   list.innerHTML = '';
   shop.products.forEach(p => {
     if (p.type === 'market_cow') {
-      list.appendChild(buildMarketCowRow(state));
+      list.appendChild(buildMarketCowRow(state, p));
       return;
     }
     if (p.type === 'insemination') {
@@ -188,30 +188,23 @@ function openShopSheet(shopId) {
       return;
     }
 
-    const row = document.createElement('div');
-    row.className = 'product-row';
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'product-name';
-    nameSpan.textContent = t(p.nameKey);
-    row.appendChild(nameSpan);
-
+    // 特別な処理を持たない商品（ラップ藁・準備中の品）も同じ[?]付きの行で並べる
+    const btn = document.createElement('button');
+    let priceText = '';
     if (p.buy) {
       const canAfford = state.money >= p.buy.cost;
-      const btn = document.createElement('button');
+      priceText = `${p.buy.cost.toLocaleString()}G`;
       btn.className = canAfford ? 'btn-buy' : 'btn-buy-disabled';
       btn.textContent = canAfford ? t('btn_buy') : t('btn_cant_buy');
       btn.disabled = !canAfford;
       if (canAfford) btn.addEventListener('click', () => handleBuyWara(p));
-      row.appendChild(btn);
     } else {
-      const btn = document.createElement('button');
       btn.className = 'btn-coming-soon';
       btn.disabled = true;
       btn.textContent = t('btn_coming_soon');
-      row.appendChild(btn);
     }
 
-    list.appendChild(row);
+    list.appendChild(buildItemRow(p, priceText, btn));
     if (p.noteKey) {
       const note = document.createElement('div');
       note.className = 'product-note';
@@ -245,21 +238,17 @@ function closeShopSheet() {
 // 生後17〜20日の未申込み子牛（オスメス問わず）が対象
 function buildCalfSaleRow(state, product) {
   const wrap = document.createElement('div');
-  wrap.className = 'market-cow-row';
-
-  const title = document.createElement('div');
-  title.className = 'market-cow-summary';
-  title.textContent = t(product.nameKey);
-  wrap.appendChild(title);
-
   const eligible = state.cows.filter(cow => cow.type === 'calf' && !cow.saleApplied && cow.age >= 17 && cow.age <= 20);
+
+  // 見出しは他の商品と同じ[?]付きの行。金額は出さない（申込み＝即入金ではないため）
+  let right = null;
   if (eligible.length === 0) {
-    const note = document.createElement('div');
-    note.className = 'product-note';
-    note.textContent = t('calf_sale_no_target');
-    wrap.appendChild(note);
-    return wrap;
+    right = document.createElement('span');
+    right.className = 'item-note';
+    right.textContent = t('calf_sale_no_target');
   }
+  wrap.appendChild(buildItemRow(product, '', right));
+  if (eligible.length === 0) return wrap;
 
   eligible.forEach(cow => {
     const row = document.createElement('div');
@@ -348,21 +337,17 @@ function applyTreatment(cowId) {
 // 母牛・オス成牛が対象。妊娠中や発情中でも申込める（口頭指示対応）
 function buildAdultSaleRow(state, product) {
   const wrap = document.createElement('div');
-  wrap.className = 'market-cow-row';
-
-  const title = document.createElement('div');
-  title.className = 'market-cow-summary';
-  title.textContent = t(product.nameKey);
-  wrap.appendChild(title);
-
   const eligible = state.cows.filter(cow => isAdultCow(cow) && !cow.saleApplied);
+
+  // 見出しは他の商品と同じ[?]付きの行。金額は出さない（申込み＝即入金ではないため）
+  let right = null;
   if (eligible.length === 0) {
-    const note = document.createElement('div');
-    note.className = 'product-note';
-    note.textContent = t('adult_sale_no_target');
-    wrap.appendChild(note);
-    return wrap;
+    right = document.createElement('span');
+    right.className = 'item-note';
+    right.textContent = t('adult_sale_no_target');
   }
+  wrap.appendChild(buildItemRow(product, '', right));
+  if (eligible.length === 0) return wrap;
 
   eligible.forEach(cow => {
     const row = document.createElement('div');
@@ -513,14 +498,6 @@ function closeCowPicker() {
 
 // ── 建設屋：一度買うと恒久的にbuildings.{buildingKey}=trueになる施設（指示書_建設屋「魔法の水飲み場」実装.md対応） ──
 function buildBuildingRow(state, product) {
-  const row = document.createElement('div');
-  row.className = 'product-row';
-
-  const nameSpan = document.createElement('span');
-  nameSpan.className = 'product-name';
-  nameSpan.textContent = t(product.nameKey);
-  row.appendChild(nameSpan);
-
   const built = !!state.buildings[product.buildingKey];
   const canAfford = state.money >= product.cost;
   const btn = document.createElement('button');
@@ -534,9 +511,8 @@ function buildBuildingRow(state, product) {
     btn.textContent = canAfford ? t('btn_buy') : t('btn_cant_buy');
     if (canAfford) btn.addEventListener('click', () => handleBuyBuilding(product));
   }
-  row.appendChild(btn);
 
-  return row;
+  return buildItemRow(product, `${product.cost.toLocaleString()}G`, btn);
 }
 
 function handleBuyBuilding(product) {
@@ -560,23 +536,8 @@ function handleBuyBuilding(product) {
 }
 
 // ── 競り市場：母牛購入（指示書_qualityPoint移行と母牛購入.md対応） ──
-function buildMarketCowRow(state) {
+function buildMarketCowRow(state, product) {
   const wrap = document.createElement('div');
-  wrap.className = 'market-cow-row';
-
-  const skill = SKILL_DISPLAY[MARKET_COW.skill];
-  const summary = document.createElement('div');
-  summary.className = 'market-cow-summary';
-  summary.textContent = `🐄 ${t('market_gender_female')}・${Math.floor(MARKET_COW.age / 24)}${t('market_age_unit')}・${t('barn_condition_label')}${MARKET_COW.condition}・${t(qualityPointToLabelKey(MARKET_COW.qualityPoint))}`;
-  const skillLine = document.createElement('div');
-  skillLine.className = 'market-cow-skill';
-  skillLine.textContent = `${t('market_skill_label')}${skill ? skill.emoji + ' ' + t(skill.nameKey) : ''}`;
-  const price = document.createElement('div');
-  price.className = 'market-cow-price';
-  price.textContent = MARKET_COW.price + 'G';
-  wrap.appendChild(summary);
-  wrap.appendChild(skillLine);
-  wrap.appendChild(price);
 
   const isFull = countAdultCows(state.cows) >= ADULT_COW_LIMIT;
   const canAfford = state.money >= MARKET_COW.price;
@@ -587,14 +548,30 @@ function buildMarketCowRow(state) {
   btn.textContent = enabled ? t('btn_buy') : t('btn_cant_buy');
   btn.disabled = !enabled;
   if (enabled) btn.addEventListener('click', () => openMarketNaming());
-  wrap.appendChild(btn);
+
+  // 見出しは他の商品と同じ[?]付きの行。値段もそこに出すので専用の価格表示は持たない
+  wrap.appendChild(buildItemRow(product, `${MARKET_COW.price.toLocaleString()}G`, btn));
+
+  // 出品されている牛の中身は行の下に続けて出す
+  const detail = document.createElement('div');
+  detail.className = 'market-cow-row';
+  const skill = SKILL_DISPLAY[MARKET_COW.skill];
+  const summary = document.createElement('div');
+  summary.className = 'market-cow-summary';
+  summary.textContent = `🐄 ${t('market_gender_female')}・${Math.floor(MARKET_COW.age / 24)}${t('market_age_unit')}・${t('barn_condition_label')}${MARKET_COW.condition}・${t(qualityPointToLabelKey(MARKET_COW.qualityPoint))}`;
+  const skillLine = document.createElement('div');
+  skillLine.className = 'market-cow-skill';
+  skillLine.textContent = `${t('market_skill_label')}${skill ? skill.emoji + ' ' + t(skill.nameKey) : ''}`;
+  detail.appendChild(summary);
+  detail.appendChild(skillLine);
 
   if (isFull) {
     const note = document.createElement('div');
     note.className = 'product-note';
     note.textContent = t('market_full');
-    wrap.appendChild(note);
+    detail.appendChild(note);
   }
+  wrap.appendChild(detail);
 
   return wrap;
 }
