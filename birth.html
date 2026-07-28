@@ -34,6 +34,13 @@ body {
 .cow-sprite    { left:20%; top:56%; width:24%; }
 /* 主人公：右寄り */
 .player-sprite { left:62%; top:60%; width:14%; }
+/* 産まれたばかりの子牛：母牛の傍らに、「産まれた。」のセリフでそっと現れる */
+.calf-sprite {
+  left:40%; top:70%; width:13%;
+  opacity:0; transform:translateY(6px);
+  transition:opacity 1.2s ease, transform 1.2s ease;
+}
+.calf-sprite.show { opacity:1; transform:translateY(0); }
 
 /* 会話ボックス（プロローグと共通の演出） */
 .dialogue-box {
@@ -96,6 +103,7 @@ body {
   <img class="bg-img" src="assets/images/birth_bg.png" alt="産室">
 
   <img class="sprite cow-sprite" src="assets/sprites/cow_mother.png" alt="母牛">
+  <img class="sprite calf-sprite" id="calfSprite" src="assets/sprites/cow_newborn.png" alt="産まれた子牛">
   <img class="sprite player-sprite" src="assets/sprites/char_down.png" alt="主人公">
 
   <div class="naming-box" id="namingBox">
@@ -121,7 +129,7 @@ body {
 const BIRTH_SCENES = [
   { key:'birth_scene_00', isNarration:true },
   { key:'birth_scene_01', isNarration:true },
-  { key:'birth_scene_02', isNarration:true },
+  { key:'birth_scene_02', isNarration:true, calfAppears:true }, // 「産まれた。」でここから子牛が姿を見せる
   { key:'birth_scene_03', isNarration:true },
   { isGenderReveal:true },
   { isNaming:true },
@@ -135,6 +143,12 @@ let motherCow = null;
 function showScene(i) {
   const scene = BIRTH_SCENES[i];
   if (!scene) return;
+
+  // 一度出たら以降のシーン（命名まで）ずっと表示したままにする
+  if (BIRTH_SCENES.slice(0, i + 1).some(s => s.calfAppears)) {
+    document.getElementById('calfSprite').classList.add('show');
+  }
+
   if (scene.isNaming) { showNamingUI(); return; }
 
   document.getElementById('namingBox').classList.remove('show');
