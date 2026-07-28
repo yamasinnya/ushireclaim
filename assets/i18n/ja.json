@@ -223,6 +223,14 @@
   "product_tanetsuke_yasui": "種付け 安い",
   "product_byouki_chiryo": "病気治療",
 
+  "truck_bubble_label": "軽トラ",
+  "truck_info_tanetsuke_koukyu": "けっこうな値段だぞ。だがまあ、良い子が生まれやすいのは確かだなぁ。懐に余裕がある時に頼むといいぞ。",
+  "truck_info_tanetsuke_futsuu": "値段も、生まれてくる子の質も、まあまあ標準ってやつだぞ。迷ったらこれでいいだろ。",
+  "truck_info_tanetsuke_yasui": "安いぶん、生まれる子の質は運まかせだなぁ。とりあえず頭数を増やしたい時に使うといいぞ。",
+  "truck_info_byouki_chiryo": "具合が悪そうな牛がいたら、ここで診てもらえ。放っておくと体調がどんどん落ちるからなぁ。",
+  "truck_enter_shop_juui_1": "ここは獣医だぞ。体調の悪い牛がいたら頼むといいぞ。",
+  "truck_enter_shop_juui_2": "牛のことで困ったら、まずここだなぁ。種付けもここで頼めるだろ。",
+
   "treatment_no_target": "病気の牛はいません",
   "treatment_btn": "治療する",
   "treatment_done_msg": "{name}の治療が終わった",

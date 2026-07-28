@@ -70,6 +70,53 @@ body{
 hr.divider{border:none;border-top:1px solid #3a2e18;margin:0 16px 12px;}
 .product-row{display:flex;justify-content:space-between;align-items:center;padding:8px 20px;gap:12px;}
 .product-name{font-size:14px;color:#d8c8a0;}
+
+/* ── 軽トラの説明UI（指示書_街UIの軽トラ説明化＋衰弱演出の土台.md対応。デモ準拠） ── */
+.shop-sheet-wrap{width:100%;max-width:432px;margin:0 auto;position:relative;}
+.shop-truck{
+  position:absolute;right:14px;top:-52px;width:64px;
+  image-rendering:pixelated;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,0.45));
+  transition:transform 0.2s;
+  pointer-events:none;
+}
+.shop-truck.talking{transform:translateY(-3px);}
+.truck-bubble{
+  position:absolute;right:10px;top:-150px;width:230px;
+  background:#fdf6e3;color:#3b2b1d;
+  border-radius:12px;padding:10px 12px;
+  font-size:12px;line-height:1.65;
+  box-shadow:0 6px 16px rgba(0,0,0,0.35);
+  opacity:0;transform:translateY(6px) scale(0.96);
+  pointer-events:none;
+  transition:opacity 0.18s ease, transform 0.18s ease;
+  z-index:2;
+}
+.truck-bubble.show{opacity:1;transform:translateY(0) scale(1);}
+.truck-bubble::after{
+  content:'';position:absolute;bottom:-8px;right:26px;
+  width:14px;height:14px;background:#fdf6e3;
+  clip-path:polygon(0 0, 100% 0, 0 100%);
+}
+.truck-bubble-label{font-size:10px;color:#8a7659;margin-bottom:3px;letter-spacing:1px;}
+/* 無言のときは、間が持たない感じを薄い文字で表す */
+.truck-bubble.silent #shopBubbleText{color:#a89a86;letter-spacing:3px;}
+
+/* 商品行：[?] [名前/価格] [ボタン] の3列（デモのレイアウト） */
+.item-row{display:flex;align-items:center;gap:10px;padding:10px 20px;border-bottom:1px solid rgba(255,255,255,0.06);}
+.item-main{flex:1;min-width:0;}
+.item-name{font-size:14px;color:#f0e8d8;}
+.item-price{font-size:11px;color:#b89a5a;margin-top:2px;}
+.info-btn{
+  flex:none;width:24px;height:24px;border-radius:50%;
+  border:1.5px solid #b89a5a;color:#b89a5a;background:transparent;
+  font-size:12px;font-weight:700;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:transform 0.15s, background 0.15s;
+}
+.info-btn:active{transform:scale(0.9);}
+.info-btn.on{background:#e8c874;color:#1c1006;border-color:#e8c874;}
+.item-note{flex:none;font-size:11px;color:rgba(255,255,255,0.4);text-align:right;}
 .product-note{font-size:10px;color:#786040;padding:0 20px 8px;text-align:right;}
 .btn-coming-soon {
   background: #2a2a2a;
@@ -163,13 +210,22 @@ hr.divider{border:none;border-top:1px solid #3a2e18;margin:0 16px 12px;}
 </div>
 
 <div class="sheet-overlay" id="shopSheetOverlay" onclick="closeShopSheet()">
-  <div class="sheet" onclick="event.stopPropagation()">
-    <div class="sheet-handle"></div>
-    <div class="shop-name" id="shopName"></div>
-    <div class="shop-desc" id="shopDesc"></div>
-    <hr class="divider">
-    <div id="shopProducts"></div>
-    <button class="sheet-close-btn" id="shopCloseBtn" onclick="closeShopSheet()"></button>
+  <!-- 軽トラと吹き出しはシートの外に置く（.sheetはoverflow-y:autoなので、はみ出す位置に置くと切れてしまう） -->
+  <div class="shop-sheet-wrap" onclick="event.stopPropagation()">
+    <img class="shop-truck" id="shopTruck" src="assets/sprites/keitora.png" alt="軽トラ">
+    <div class="truck-bubble" id="shopBubble">
+      <div class="truck-bubble-label" id="shopBubbleLabel"></div>
+      <div id="shopBubbleText"></div>
+    </div>
+
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="shop-name" id="shopName"></div>
+      <div class="shop-desc" id="shopDesc"></div>
+      <hr class="divider">
+      <div id="shopProducts"></div>
+      <button class="sheet-close-btn" id="shopCloseBtn" onclick="closeShopSheet()"></button>
+    </div>
   </div>
 </div>
 

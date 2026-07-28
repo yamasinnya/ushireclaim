@@ -78,12 +78,86 @@ const MARKET_COW = {
 
 let currentShopId = null;
 
+// ── 軽トラの説明UI（指示書_街UIの軽トラ説明化＋衰弱演出の土台.md対応） ──
+// 他の施設にも同じ部品を展開できるよう、商品定義に手を入れずnameKeyから説明キーを引く形にしている。
+// 説明が用意されていない商品は「無言」として成立する（将来、軽トラが語れない項目を足せるように）
+let activeInfoBtn = null;
+
+// product_tanetsuke_koukyu -> truck_info_tanetsuke_koukyu
+function truckInfoKeyFor(product) {
+  return 'truck_info_' + String(product.nameKey || '').replace(/^product_/, '');
+}
+
+// 辞書に無いキーはt()がキー名をそのまま返すため、未定義扱いにして無言にする
+function lookupTruckText(key) {
+  const v = t(key);
+  return (!v || v === key) ? '' : v;
+}
+
+function showTruckBubble(rawText) {
+  const bubble = document.getElementById('shopBubble');
+  const line = truckLine(rawText, loadLoopState().day);
+  document.getElementById('shopBubbleLabel').textContent = t('truck_bubble_label');
+  document.getElementById('shopBubbleText').textContent = line.text;
+  bubble.classList.toggle('silent', line.silent);
+  bubble.classList.add('show');
+  document.getElementById('shopTruck').classList.add('talking');
+}
+
+function closeTruckBubble() {
+  if (activeInfoBtn) activeInfoBtn.classList.remove('on');
+  activeInfoBtn = null;
+  document.getElementById('shopBubble').classList.remove('show');
+  document.getElementById('shopTruck').classList.remove('talking');
+}
+
+// 商品行の先頭に置く「？」ボタン。同じものを再度押すと閉じ、別のものを押すと内容だけ切り替わる
+function buildInfoButton(product) {
+  const btn = document.createElement('button');
+  btn.className = 'info-btn';
+  btn.textContent = '?';
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (activeInfoBtn === btn) { closeTruckBubble(); return; }
+    if (activeInfoBtn) activeInfoBtn.classList.remove('on');
+    activeInfoBtn = btn;
+    btn.classList.add('on');
+    showTruckBubble(lookupTruckText(truckInfoKeyFor(product)));
+  });
+  return btn;
+}
+
+// [?] [名前 / 価格] [右側の要素] という3列の行を作る共通部品
+function buildItemRow(product, priceText, rightEl) {
+  const row = document.createElement('div');
+  row.className = 'item-row';
+  row.appendChild(buildInfoButton(product));
+
+  const main = document.createElement('div');
+  main.className = 'item-main';
+  const name = document.createElement('div');
+  name.className = 'item-name';
+  name.textContent = t(product.nameKey);
+  main.appendChild(name);
+  if (priceText) {
+    const price = document.createElement('div');
+    price.className = 'item-price';
+    price.textContent = priceText;
+    main.appendChild(price);
+  }
+  row.appendChild(main);
+
+  if (rightEl) row.appendChild(rightEl);
+  return row;
+}
+
 function openShopSheet(shopId) {
   const shop = SHOPS[shopId];
   if (!shop) return;
   currentShopId = shopId;
   document.getElementById('shopName').textContent = t(shop.nameKey);
   document.getElementById('shopDesc').textContent = t(shop.descKey);
+  closeTruckBubble();
 
   const state = loadLoopState();
   const list = document.getElementById('shopProducts');
@@ -147,9 +221,23 @@ function openShopSheet(shopId) {
   });
 
   document.getElementById('shopSheetOverlay').classList.add('open');
+
+  // 入店時の一言。用意されていない施設では何も出さない（無言のまま成立させる）
+  const greeting = pickTruckGreeting(shopId);
+  if (greeting) showTruckBubble(greeting);
+}
+
+// 施設ごとに1〜2パターン用意しておき、あればランダムに1つ選ぶ
+function pickTruckGreeting(shopId) {
+  const lines = [1, 2]
+    .map(n => lookupTruckText(`truck_enter_${shopId}_${n}`))
+    .filter(Boolean);
+  if (lines.length === 0) return '';
+  return lines[Math.floor(Math.random() * lines.length)];
 }
 
 function closeShopSheet() {
+  closeTruckBubble();
   document.getElementById('shopSheetOverlay').classList.remove('open');
 }
 
@@ -198,22 +286,19 @@ function buildCalfSaleRow(state, product) {
 // 発症中(diseaseAlert)の牛を一覧表示し、選んで治療すると即座に治癒する
 function buildTreatmentRow(state, product) {
   const wrap = document.createElement('div');
-  wrap.className = 'market-cow-row';
-
-  const title = document.createElement('div');
-  title.className = 'market-cow-summary';
-  title.textContent = `${t(product.nameKey)}（${ILLNESS_TREATMENT_COST}G）`;
-  wrap.appendChild(title);
-
   const sick = state.cows.filter(cow => cow.diseaseAlert);
-  if (sick.length === 0) {
-    const note = document.createElement('div');
-    note.className = 'product-note';
-    note.textContent = t('treatment_no_target');
-    wrap.appendChild(note);
-    return wrap;
-  }
 
+  // 見出しの行は他の商品と同じ形（[?] 名前/価格）。病気の牛がいない時はその旨を右に出す
+  let right = null;
+  if (sick.length === 0) {
+    right = document.createElement('span');
+    right.className = 'item-note';
+    right.textContent = t('treatment_no_target');
+  }
+  wrap.appendChild(buildItemRow(product, `${ILLNESS_TREATMENT_COST.toLocaleString()}G`, right));
+  if (sick.length === 0) return wrap;
+
+  // 病気の牛は1頭ずつ並べて、それぞれ治療できるようにする
   const canAfford = state.money >= ILLNESS_TREATMENT_COST;
   sick.forEach(cow => {
     const row = document.createElement('div');
@@ -352,42 +437,34 @@ function handleBuyWara(product) {
 
 // ── 獣医：種付け（指示書_発情・種付け・妊娠システム実装.md対応） ──
 function buildInseminationRow(state, product) {
-  const wrap = document.createElement('div');
-  wrap.className = 'product-row';
-
-  const nameSpan = document.createElement('span');
-  nameSpan.className = 'product-name';
-  nameSpan.textContent = t(product.nameKey);
-  wrap.appendChild(nameSpan);
-
   const estrusCows = state.cows.filter(c => c.type === 'mother' && c.breedingState === 'estrus');
   const canAfford = state.money >= product.cost;
   const enabled = canAfford && estrusCows.length > 0;
 
-  const btn = document.createElement('button');
-  btn.className = enabled ? 'btn-buy' : 'btn-buy-disabled';
-  btn.textContent = enabled ? t('btn_buy') : t('btn_cant_buy');
-  btn.disabled = !enabled;
-  if (enabled) {
-    btn.addEventListener('click', () => {
-      // 発情中が1頭ならそのまま適用、2頭以上なら選択させる（口頭指示対応）
-      if (estrusCows.length === 1) {
-        applyInsemination(estrusCows[0].id, product);
-      } else {
-        openCowPicker(estrusCows, product);
-      }
-    });
-  }
-  wrap.appendChild(btn);
-
+  // 発情中の牛がいない時は、買えない理由が分かるよう文言に出す（価格は常に表示したまま）
+  let right;
   if (canAfford && estrusCows.length === 0) {
-    const note = document.createElement('div');
-    note.className = 'product-note';
-    note.textContent = t('vet_no_estrus_cow');
-    wrap.appendChild(note);
+    right = document.createElement('span');
+    right.className = 'item-note';
+    right.textContent = t('vet_no_estrus_cow');
+  } else {
+    right = document.createElement('button');
+    right.className = enabled ? 'btn-buy' : 'btn-buy-disabled';
+    right.textContent = enabled ? t('btn_buy') : t('btn_cant_buy');
+    right.disabled = !enabled;
+    if (enabled) {
+      right.addEventListener('click', () => {
+        // 発情中が1頭ならそのまま適用、2頭以上なら選択させる（口頭指示対応）
+        if (estrusCows.length === 1) {
+          applyInsemination(estrusCows[0].id, product);
+        } else {
+          openCowPicker(estrusCows, product);
+        }
+      });
+    }
   }
 
-  return wrap;
+  return buildItemRow(product, `${product.cost.toLocaleString()}G`, right);
 }
 
 function applyInsemination(cowId, product) {
@@ -639,4 +716,7 @@ document.getElementById('adultSaleConfirmBox').addEventListener('click', (e) => 
   document.getElementById('btn-back').textContent = '← ' + t('btn_go_home');
   document.getElementById('btn-back').addEventListener('click', () => { location.href = 'home.html'; });
   document.getElementById('shopCloseBtn').textContent = t('barn_close_btn');
+
+  // 「？」以外の場所をタップしたら吹き出しを閉じる（「？」側はstopPropagationしている）
+  document.addEventListener('click', () => { if (activeInfoBtn) closeTruckBubble(); });
 })();

@@ -88,6 +88,46 @@ function saveLoopState(state) {
   localStorage.setItem(LOOP_SAVE_KEY, JSON.stringify(state));
 }
 
+// ── 軽トラの衰弱（指示書_街UIの軽トラ説明化＋衰弱演出の土台.md対応） ──
+// 物語中盤で軽トラが衰弱していく設定の土台。日数は暫定でバランス調整の対象なので、
+// 変更はこの2つの定数だけで済むようにしてある
+const TRUCK_WEAK_FROM_DAY = 50;    // この日から言い淀むようになる
+const TRUCK_SILENT_FROM_DAY = 70;  // この日から何も話さなくなる
+
+function getTruckState(day) {
+  if (day >= TRUCK_SILENT_FROM_DAY) return 'silent';
+  if (day >= TRUCK_WEAK_FROM_DAY) return 'weak';
+  return 'normal';
+}
+
+// 同じセリフなら毎回同じ言い淀み方になるよう、文字列から安定した値を作る
+function stableHash(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+// 衰弱中の言い淀み：最初の区切りまでを残して、あとは言葉に詰まらせる
+function degradeTruckLine(text) {
+  const fillers = [
+    '……ああ、悪い。なんだったかな……',
+    '……いや、待ってくれ。ええと……',
+    '……すまん、うまく言葉が出てこねぇ……',
+  ];
+  const breakAt = text.search(/[、。]/);
+  const cut = breakAt >= 0 ? breakAt + 1 : Math.max(6, Math.floor(text.length * 0.4));
+  return text.slice(0, cut) + fillers[stableHash(text) % fillers.length];
+}
+
+// 軽トラに喋らせるセリフを、その日の状態に応じて加工する。
+// 元のセリフが無い場合も「無言」として成立させる（将来、軽トラが語れない項目を足せるように）
+function truckLine(rawText, day) {
+  const state = getTruckState(day);
+  if (state === 'silent' || !rawText) return { text: '……', silent: true };
+  if (state === 'weak') return { text: degradeTruckLine(rawText), silent: false };
+  return { text: rawText, silent: false };
+}
+
 // ── 牧場日誌（指示書_牧場日誌（思い出ログ）実装.md対応） ──
 // 進行状況(yamayama_loop_v1)とは完全に別のキーで持つ。日誌が壊れても・消えても
 // ゲームの進行には一切影響させないため、読み書きは全てtry/catchで握りつぶす。
