@@ -441,7 +441,7 @@ function renderHeader(targetElementId) {
     </div>
     <div class="header-stats">
       <span class="stat-mana">🔮 ${manaRemaining(state)}</span>
-      <span class="stat-gold">💰 ${state.money}G</span>
+      <span class="stat-gold">💰 ${(state.money || 0).toLocaleString()}G</span>
       <span class="stat-wara">
         <img src="assets/sprites/icon_wrap_wara.png" class="wrap-icon"> ${Math.floor((state.wrapWara || 0) / 5)}
       </span>

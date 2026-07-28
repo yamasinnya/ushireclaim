@@ -107,6 +107,10 @@ body {
 .btn-sub:disabled {
   opacity:0.35; cursor:not-allowed;
 }
+/* 呪文ボタンを外した跡地。他のボタンが伸びないよう、同じ幅の空き枠として置いておく */
+.btn-sub-placeholder {
+  flex:1;
+}
 
 </style>
 </head>
@@ -128,9 +132,10 @@ body {
     <button class="btn-main" id="btn-explore"></button>
     <div class="sub-row">
       <button class="btn-sub" id="btn-barn">🐄 牛舎</button>
-      <button class="btn-sub" id="btn-shop">🏪 ショップ</button>
+      <button class="btn-sub" id="btn-shop">🏪 街</button>
       <button class="btn-sub" id="btn-diary">📖 日誌</button>
-      <button class="btn-sub" id="btn-spell">🔑 呪文</button>
+      <!-- 呪文はタイトル画面へ移したためボタンは無し。将来ここに別メニューを入れる想定で枠だけ空けておく -->
+      <div class="btn-sub-placeholder"></div>
     </div>
   </div>
 </div>
@@ -263,9 +268,7 @@ function showTruckGreeting() {
   // 牛舎のみDay2から解放（2日目チュートリアルで牛舎に触れる案内をするため。口頭指示で修正）
   document.getElementById('btn-barn').disabled = state.day <= 1;
   const isTutorial = state.day <= 2;
-  ['btn-diary', 'btn-spell'].forEach(id => {
-    document.getElementById(id).disabled = isTutorial;
-  });
+  document.getElementById('btn-diary').disabled = isTutorial;
 
   const shopNoMana = manaRemaining(state) <= 0;
   shopBtn.disabled = isTutorial || shopNoMana;

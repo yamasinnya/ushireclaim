@@ -46,7 +46,7 @@
   "tutorial_day3_15": "一つだけ注意しとくぞ。街は遠い。行くだけで魔力を1消費する",
   "tutorial_day3_16": "その分、草刈りに使える魔力が減る。覚えといてくれ",
 
-  "shop_no_mana": "🏪 ショップ（魔力不足）",
+  "shop_no_mana": "🏪 街（魔力不足）",
 
   "tutorial_day4_00": "牛ってのは生き物だ。食ったら、出す",
   "tutorial_day4_01": "今日、牛舎に行ってみるといい。ちっと見えにくいが、糞が溜まってるはずだ",
@@ -206,7 +206,7 @@
 
   "barn_poop_title": "🧹 床替えしますか？",
   "barn_poop_option_self": "①自分でやる（魔力4消費）",
-  "barn_poop_option_shop": "②ショップに頼む（{cost}G）",
+  "barn_poop_option_shop": "②業者に頼む（{cost}G）",
   "barn_poop_cancel": "キャンセル",
   "poop_comment_3": "なんか臭うな…そろそろ掃除してくれ",
 
