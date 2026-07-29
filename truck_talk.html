@@ -34,6 +34,15 @@ body {
 .truck-sprite  { left:68%; top:56%; width:24%; }
 .cow-sprite    { left:26%; top:63%; width:16%; }
 .player-sprite { left:49%; top:58%; width:13%; }
+.crystal-sprite { left:50%; top:30%; width:20%; transform:translateX(-50%); display:none; }
+
+/* シーン間の一呼吸（暗転→復帰）。プロローグの暗転演出と同じ考え方 */
+.fade-overlay {
+  position:absolute; inset:0; background:#000;
+  opacity:0; z-index:40; pointer-events:none;
+  transition:opacity 0.6s;
+}
+.fade-overlay.show { opacity:1; }
 
 /* 会話ボックス（プロローグと共通の演出） */
 .dialogue-box {
@@ -61,8 +70,11 @@ body {
   <img class="bg-img" src="mapback.png" alt="牧場背景">
 
   <img class="sprite truck-sprite" src="assets/sprites/keitora.png" alt="軽トラック">
-  <img class="sprite cow-sprite" src="assets/sprites/cow_mother.png" alt="牛">
+  <img class="sprite cow-sprite" id="cowSprite" src="assets/sprites/cow_mother.png" alt="牛">
   <img class="sprite player-sprite" src="assets/sprites/char_down.png" alt="主人公">
+  <img class="sprite crystal-sprite" id="crystalSprite" src="assets/sprites/diary_crystal.png" alt="緑の魔石">
+
+  <div class="fade-overlay" id="fadeOverlay"></div>
 
   <div class="dialogue-box">
     <div class="speaker-name" id="speakerName"></div>
@@ -212,15 +224,46 @@ const SCENE_DEF = {
     { speaker: '軽トラ', textKey: 'tutorial_adult_08' },
     { speaker: '軽トラ', textKey: 'tutorial_adult_09' },
   ],
+  // 世界観トーク（指示書_軽トラの世界観トーク新設(day6・day16).md対応。10日おきに追加予定）
+  mana_lore_tutorial: [
+    { speaker: '軽トラ', textKey: 'tutorial_mana_lore_00' },
+    { speaker: '軽トラ', textKey: 'tutorial_mana_lore_01' },
+    { speaker: '軽トラ', textKey: 'tutorial_mana_lore_02' },
+    { speaker: '軽トラ', textKey: 'tutorial_mana_lore_03' },
+    { speaker: '軽トラ', textKey: 'tutorial_mana_lore_04' },
+    { speaker: '軽トラ', textKey: 'tutorial_mana_lore_05' },
+    { speaker: '軽トラ', textKey: 'tutorial_mana_lore_06' },
+  ],
+  truck_lore_day16: [
+    { speaker: '軽トラ', textKey: 'tutorial_lore_day16_00' },
+    { speaker: '軽トラ', textKey: 'tutorial_lore_day16_01' },
+    { speaker: '軽トラ', textKey: 'tutorial_lore_day16_02' },
+    { speaker: '軽トラ', textKey: 'tutorial_lore_day16_03' },
+    { speaker: '軽トラ', textKey: 'tutorial_lore_day16_04' },
+    { speaker: '軽トラ', textKey: 'tutorial_lore_day16_05' },
+  ],
   // 将来のイベントもここに追加していく
+};
+
+// 世界観トーク演出用オプション：牛を退場させ、緑の魔石を登場させる
+const SCENE_OPTIONS = {
+  mana_lore_tutorial: { hideCow: true, showCrystal: true },
+  truck_lore_day16:   { hideCow: true, showCrystal: true },
+};
+
+// day16はbreeding_tutorial（既存10行）の直後に、一呼吸おいてtruck_lore_day16（世界観トーク）を続けて再生する
+const SCENE_CHAIN = {
+  breeding_tutorial: 'truck_lore_day16',
 };
 
 const QUALITY_LABEL = { 1:'劣', 2:'可', 3:'良', 4:'優' };
 
 let sceneIndex = 0;
 let scenes = [];
+let currentSceneId = null;
 let nextUrl = 'home.html';
 let placeholders = {};
+let transitioning = false;
 
 function resolveText(key) {
   let text = t(key);
@@ -236,9 +279,38 @@ function showLine(i) {
   document.getElementById('dialogueText').textContent = resolveText(line.textKey);
 }
 
+// シーンごとの牛・魔石スプライトの出し分け
+function applySceneOptions(sceneId) {
+  const opts = SCENE_OPTIONS[sceneId] || {};
+  document.getElementById('cowSprite').style.display = opts.hideCow ? 'none' : '';
+  document.getElementById('crystalSprite').style.display = opts.showCrystal ? 'block' : 'none';
+}
+
+// 暗転を挟んで別シーンへ切り替える（day16：breeding_tutorial→truck_lore_day16の一呼吸）
+function transitionToScene(sceneId) {
+  transitioning = true;
+  const overlay = document.getElementById('fadeOverlay');
+  overlay.classList.add('show');
+  setTimeout(() => {
+    currentSceneId = sceneId;
+    scenes = SCENE_DEF[sceneId] || [];
+    sceneIndex = 0;
+    applySceneOptions(sceneId);
+    showLine(0);
+    overlay.classList.remove('show');
+    transitioning = false;
+  }, 700);
+}
+
 function nextLine() {
+  if (transitioning) return;
   sceneIndex++;
   if (sceneIndex >= scenes.length) {
+    const chainTo = SCENE_CHAIN[currentSceneId];
+    if (chainTo) {
+      transitionToScene(chainTo);
+      return;
+    }
     location.href = nextUrl;
     return;
   }
@@ -254,11 +326,13 @@ document.getElementById('sceneWrap').addEventListener('click', nextLine);
   const sceneId = params.get('scene');
   nextUrl = params.get('next') || 'home.html'; // URLSearchParamsが自動でデコードする
 
+  currentSceneId = sceneId;
   scenes = SCENE_DEF[sceneId] || [];
   if (scenes.length === 0) {
     location.href = nextUrl;
     return;
   }
+  applySceneOptions(sceneId);
 
   // {cowQuality}/{cowName}/{daysUntilBirth}プレースホルダー用（未使用のシーンでは無害）
   const state = loadLoopState();
