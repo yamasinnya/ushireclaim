@@ -59,6 +59,9 @@ body {
 .dialogue-text {
   color:#e8d8c0; font-size:15px; line-height:1.9; letter-spacing:1px;
 }
+.dialogue-text.narration {
+  font-style:italic; text-align:center; color:#a89878;
+}
 .tap-hint {
   text-align:right; color:#786040; font-size:11px; margin-top:10px; letter-spacing:1px;
 }
@@ -180,12 +183,12 @@ const SCENE_DEF = {
     { speaker: '軽トラ', textKey: 'tutorial_breeding_08' },
     { speaker: '軽トラ', textKey: 'tutorial_breeding_09' },
   ],
-  // 妊娠確定・着床失敗の通知（指示書_発情・種付け・妊娠システム実装.md対応。セリフは仮、別途相談）
+  // 妊娠確定・着床失敗の通知（指示書_発情・種付け・妊娠システム実装.md対応。軽トラではなくナレーションで通知）
   pregnancy_confirmed: [
-    { speaker: '軽トラ', textKey: 'tutorial_pregnancy_confirmed_00' },
+    { speaker: null, textKey: 'tutorial_pregnancy_confirmed_00', isNarration: true },
   ],
   pregnancy_failed: [
-    { speaker: '軽トラ', textKey: 'tutorial_pregnancy_failed_00' },
+    { speaker: null, textKey: 'tutorial_pregnancy_failed_00', isNarration: true },
   ],
   daichi_tutorial: [
     { speaker: '軽トラ', textKey: 'tutorial_daichi_00' },
@@ -275,8 +278,16 @@ function resolveText(key) {
 
 function showLine(i) {
   const line = scenes[i];
-  document.getElementById('speakerName').textContent = line.speaker;
-  document.getElementById('dialogueText').textContent = resolveText(line.textKey);
+  const speakerEl = document.getElementById('speakerName');
+  if (line.speaker) {
+    speakerEl.style.display = 'block';
+    speakerEl.textContent = line.speaker;
+  } else {
+    speakerEl.style.display = 'none';
+  }
+  const textEl = document.getElementById('dialogueText');
+  textEl.textContent = resolveText(line.textKey);
+  textEl.classList.toggle('narration', !!line.isNarration);
 }
 
 // シーンごとの牛・魔石スプライトの出し分け
