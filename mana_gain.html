@@ -15,9 +15,7 @@
 <div class="screen-wrap">
   <div class="screen-title" id="title"></div>
   <img class="screen-gif" src="mana_collect.gif" alt="魔力収集">
-  <!-- 今後：人間の魔力ボーナス演出をここに追加予定 -->
   <div class="mana-amount" id="mana-amount"></div>
-  <div class="screen-note" id="note"></div>
   <button class="btn-main" id="btn-next"></button>
 </div>
 
@@ -42,7 +40,6 @@
   document.getElementById('title').textContent = t('mana_gain_title');
   document.getElementById('mana-amount').textContent =
     `${t('mana_gain_amount_prefix')}：🔮 ${magic}${conditionSuffix}`;
-  document.getElementById('note').textContent = t('mana_gain_note');
 
   const btn = document.getElementById('btn-next');
   btn.textContent = t('btn_next');
