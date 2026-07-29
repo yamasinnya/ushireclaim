@@ -15,7 +15,7 @@ body {
   width:100%; max-width:440px;
   background:linear-gradient(135deg,#0f2a0a,#1a3a10);
   border-bottom:2px solid #3a7a1a;
-  padding:10px 14px 8px;
+  padding:7px 14px 6px;
   display:flex; justify-content:space-between; align-items:center;
 }
 #area-name { color:#a8d870; font-size:16px; letter-spacing:2px; }
@@ -26,7 +26,7 @@ body {
 }
 #mana-wrap {
   width:100%; max-width:440px;
-  padding:7px 14px 6px; background:#0d1f0a;
+  padding:5px 14px 4px; background:#0d1f0a;
   border-bottom:1px solid #1a3a0a;
   display:flex; align-items:center; gap:10px;
 }
@@ -43,7 +43,7 @@ body {
 #mana-msg { color:#cc5544; font-size:10px; white-space:nowrap; }
 #coin-wrap {
   width:100%; max-width:440px;
-  padding:5px 14px; background:#0d1f0a;
+  padding:4px 14px; background:#0d1f0a;
   border-bottom:1px solid #1a3a0a;
   display:flex; align-items:center; gap:8px;
   position:relative; overflow:visible;
@@ -74,7 +74,7 @@ body {
   pointer-events:none;
 }
 #skill-wrap {
-  width:100%; max-width:440px; padding:0 14px 6px; background:#0d1f0a;
+  width:100%; max-width:440px; padding:0 14px 4px; background:#0d1f0a;
 }
 #skill-btn {
   width:100%; padding:8px 0;
@@ -93,7 +93,7 @@ body {
   box-shadow:0 0 10px #d0a0ffaa;
 }
 #passive-wrap {
-  width:100%; max-width:440px; padding:0 14px 6px; background:#0d1f0a;
+  width:100%; max-width:440px; padding:0 14px 4px; background:#0d1f0a;
   display:flex; align-items:center; gap:8px;
 }
 #passive-label { color:#5a8a40; font-size:10px; white-space:nowrap; }
@@ -125,13 +125,13 @@ body {
   box-shadow:0 0 6px #a8d87055;
 }
 #board-wrap {
-  width:100%; max-width:440px; padding:6px; background:#0a1a08; flex:1;
+  width:100%; max-width:440px; padding:5px; background:#0a1a08; flex:1;
 }
-#board { display:grid; grid-template-columns:repeat(8,1fr); gap:4px; }
+#board { display:grid; grid-template-columns:repeat(8,1fr); gap:3px; }
 
-/* カード共通 */
+/* カード共通（縦幅を少し詰めて、盤面全体＋操作ボタンが画面に収まりやすくする） */
 .card {
-  aspect-ratio:1; border-radius:5px; cursor:pointer;
+  aspect-ratio:5/4; border-radius:5px; cursor:pointer;
   display:flex; align-items:center; justify-content:center;
   font-size:clamp(12px,4vw,18px);
   transition:transform 0.1s;
@@ -171,7 +171,7 @@ body {
 
 #item-log {
   width:100%; max-width:440px;
-  padding:7px 14px; background:#0a1a08; border-top:1px solid #1a3a0a;
+  padding:5px 14px; background:#0a1a08; border-top:1px solid #1a3a0a;
 }
 #log-title { color:#4a7a30; font-size:10px; margin-bottom:5px; }
 #log-list  { display:flex; flex-wrap:wrap; gap:5px; min-height:24px; }
@@ -183,7 +183,7 @@ body {
 .ichip.rarity-rare     { background:#421a42; border-color:#aa50aa; color:#f0b0f0; }
 
 #btn-row {
-  width:100%; max-width:440px; padding:8px 14px 14px; display:flex; gap:8px;
+  width:100%; max-width:440px; padding:6px 14px 10px; display:flex; gap:8px;
 }
 .btn {
   flex:1; padding:11px 0; color:#c8e8a0; font-size:13px; font-weight:bold;
@@ -191,7 +191,6 @@ body {
   box-shadow:0 2px 8px #0005;
 }
 #btn-leave { background:linear-gradient(135deg,#2a5010,#3a7018); }
-#btn-reset { background:linear-gradient(135deg,#3a1008,#5a1a10); flex:0 0 auto; padding:11px 14px; font-size:12px; color:#e8c0a0; }
 
 #result {
   display:none; position:fixed; inset:0;
@@ -239,7 +238,7 @@ body {
   <div id="coin-popup"></div>
 </div>
 <div id="skill-wrap">
-  <button id="skill-btn" onclick="useSkill()">🌀 回転斬り（開幕スキル・周囲9マスを一時的に見る）</button>
+  <button id="skill-btn" onclick="useSkill()">🌀 回転斬り（品質が良以上で使えるようになる特殊スキル）</button>
 </div>
 <div id="passive-wrap">
   <div id="passive-label">習得スキル</div>
@@ -263,8 +262,7 @@ body {
 </div>
 
 <div id="btn-row">
-  <button class="btn" id="btn-leave" onclick="leaveArea()">🏠 拠点に戻る</button>
-  <button class="btn" id="btn-reset" onclick="confirmReset()">🔄 新規</button>
+  <button class="btn" id="btn-leave" onclick="leaveArea()">🏠 探索を切り上げ拠点に戻る</button>
 </div>
 
 <div id="result">
@@ -275,7 +273,6 @@ body {
     <div id="ritems"></div>
     <div class="rnote">獲得した草を牛に与えよう！<br>明日は盤面が半分入れ替わる。</div>
     <button class="rbtn" onclick="location.href='feeding.html'">翌日へ</button>
-    <button class="rbtn" style="background:linear-gradient(135deg,#3a1008,#5a1a10);color:#e8c0a0" onclick="confirmReset()">新しいフィールド</button>
   </div>
 </div>
 
@@ -716,13 +713,13 @@ function updateSkillBtn() {
   if (!btn) return;
   if (skillMaxUsesToday <= 0) {
     btn.disabled = true;
-    btn.textContent = '🌀 回転斬り（回数は所持牛の品質による）';
+    btn.textContent = '🌀 回転斬り（品質が良以上で使えるようになる特殊スキル）';
   } else if (skillUsesLeft <= 0) {
     btn.disabled = true;
     btn.textContent = '🌀 回転斬り（本日は使用済み）';
   } else {
     btn.disabled = false;
-    btn.textContent = `🌀 回転斬り（開幕スキル・周囲9マスを一時的に見る・残り${skillUsesLeft}回）`;
+    btn.textContent = `🌀 回転斬り（ランダムな最高9マスを一時的に見る・残り${skillUsesLeft}回）`;
   }
 }
 
@@ -740,11 +737,15 @@ function useSkill() {
   const cr = Math.floor(center / BOARD_COLS);
   const cc = center % BOARD_COLS;
 
+  // 中心が盤面の端・角に寄っても3x3の範囲を盤内に収まるようずらす（最大9マス見えることを保証する）
+  const ROWS = Math.ceil(deck.length / BOARD_COLS);
+  const rowStart = Math.max(0, Math.min(cr - 1, ROWS - 3));
+  const colStart = Math.max(0, Math.min(cc - 1, BOARD_COLS - 3));
+
   const targets = [];
-  for (let dr=-1; dr<=1; dr++) {
-    for (let dc=-1; dc<=1; dc++) {
-      const r = cr+dr, c = cc+dc;
-      if (r<0||c<0||c>=BOARD_COLS) continue;
+  for (let dr=0; dr<3; dr++) {
+    for (let dc=0; dc<3; dc++) {
+      const r = rowStart+dr, c = colStart+dc;
       const idx = r*BOARD_COLS + c;
       if (idx<0 || idx>=deck.length) continue;
       if (deck[idx].matched) continue;
@@ -942,14 +943,6 @@ function leaveArea() {
       .join('');
   }
   document.getElementById('result').classList.add('show');
-}
-
-// ── リセット ──
-function confirmReset() {
-  if (!confirm('フィールドをリセットしますか？\n（進捗がすべて消えます）')) return;
-  localStorage.removeItem(SAVE_KEY);
-  document.getElementById('result').classList.remove('show');
-  start();
 }
 
 // ── 起動 ──
