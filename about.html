@@ -3,19 +3,176 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>やまやま牧場 - このゲームについて</title>
-<link rel="stylesheet" href="assets/css/common.css">
+<title>うしリクレイム - このゲームについて</title>
 <style>
-.about-name { color:#f0e090; font-size:20px; font-weight:bold; letter-spacing:3px; margin-bottom:18px; }
-.about-body { color:#d8c8a0; font-size:14px; line-height:2.1; letter-spacing:1px; white-space:pre-line; margin-bottom:24px; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#060b03; min-height:100vh;
+  font-family:'Hiragino Kaku Gothic ProN','MS Gothic',sans-serif;
+  display:flex; flex-direction:column; align-items:center;
+}
+.page-wrap {
+  width:100%; max-width:440px;
+  padding:0 0 40px;
+  position:relative;
+  background:
+    repeating-linear-gradient(135deg, rgba(255,255,255,0.022) 0px, rgba(255,255,255,0.022) 1px, transparent 1px, transparent 7px),
+    radial-gradient(ellipse 480px 260px at 10% 4%, rgba(96,160,48,0.14), transparent 60%),
+    radial-gradient(ellipse 420px 240px at 96% 22%, rgba(224,176,80,0.08), transparent 60%),
+    radial-gradient(ellipse 480px 260px at 4% 62%, rgba(96,160,48,0.10), transparent 60%),
+    radial-gradient(ellipse 420px 240px at 100% 88%, rgba(96,160,48,0.09), transparent 60%),
+    linear-gradient(180deg, #0e1c09 0%, #0a1506 40%, #0a1506 100%);
+}
+
+/* ヒーロー */
+.hero {
+  position:relative;
+  padding:44px 24px 30px;
+  text-align:center;
+  overflow:hidden;
+  border-bottom:1px solid rgba(200,160,60,0.22);
+}
+.hero-bg {
+  position:absolute; inset:0;
+  background:url('mapback.png') center 15% / cover no-repeat;
+  opacity:0.4;
+}
+.hero-scrim {
+  position:absolute; inset:0;
+  background:linear-gradient(180deg, rgba(6,11,3,0.30) 0%, rgba(6,11,3,0.72) 55%, #0a1506 100%);
+}
+.hero-kicker, .hero-text { position:relative; z-index:1; }
+.hero-kicker {
+  color:#a0e070; font-size:11px; letter-spacing:4px; margin-bottom:16px;
+  text-shadow:0 2px 6px rgba(0,0,0,0.6);
+}
+.hero-text {
+  color:#f4ecd0; font-size:19px; font-weight:bold; line-height:1.9;
+  letter-spacing:1px; white-space:pre-line;
+  text-shadow:0 2px 8px rgba(0,0,0,0.7);
+}
+
+/* 各読み物セクション（②〜⑤共通） */
+.section {
+  padding:30px 24px 0;
+}
+.section-head {
+  display:flex; align-items:center; gap:12px; margin-bottom:16px;
+}
+.section-icon {
+  width:52px; height:52px; flex:none;
+  image-rendering:pixelated;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+}
+.section-title {
+  color:#c8a030; font-size:15px; font-weight:bold; letter-spacing:2px;
+}
+.section-body {
+  color:#d8c8a0; font-size:14px; line-height:2.1; letter-spacing:0.5px;
+  white-space:pre-line;
+}
+.section-body + .section-body { margin-top:16px; }
+.section-warning {
+  color:#f08060; font-size:14px; font-weight:bold; line-height:2.1;
+  letter-spacing:0.5px; white-space:pre-line; margin-top:16px;
+  padding:12px 14px; border:1px solid #6a3020; border-radius:8px;
+  background:rgba(120,40,20,0.12);
+}
+
+/* 技術的な注意事項（読み物とは別枠として区別） */
+.tech-box {
+  margin:30px 24px 0;
+  padding:16px 18px 18px;
+  border:1.5px solid #4a3818; border-radius:10px;
+  background:rgba(0,0,0,0.35);
+}
+.tech-intro {
+  color:#b8ac88; font-size:12.5px; line-height:1.9; white-space:pre-line;
+  margin-bottom:12px;
+}
+.tech-list {
+  list-style:none;
+}
+.tech-list li {
+  color:#e8d8a0; font-size:12.5px; line-height:1.85; white-space:pre-line;
+  padding-left:1.1em; text-indent:-1.1em;
+}
+.tech-list li::before {
+  content:"・";
+}
+
+.back-row {
+  padding:32px 24px 0;
+}
+.btn-back {
+  width:100%; padding:13px 0;
+  background:rgba(20,16,8,0.75);
+  border:1.5px solid #7a5a28; border-radius:10px;
+  color:#f0e090; font-size:15px; font-weight:bold;
+  letter-spacing:2px; font-family:inherit;
+  cursor:pointer;
+}
 </style>
 </head>
 <body>
 
-<div class="screen-wrap">
-  <div class="about-name" id="aboutName"></div>
-  <div class="about-body" id="aboutBody"></div>
-  <button class="btn-main" id="btn-back"></button>
+<div class="page-wrap">
+  <div class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-scrim"></div>
+    <div class="hero-kicker" id="heroKicker"></div>
+    <div class="hero-text" id="heroText"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <img class="section-icon" src="assets/sprites/diary_cow_farmer.png" alt="">
+      <div class="section-title" id="s2Title"></div>
+    </div>
+    <div class="section-body" id="s2p1"></div>
+    <div class="section-body" id="s2p2"></div>
+    <div class="section-body" id="s2p3"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <img class="section-icon" src="assets/sprites/diary_map.png" alt="">
+      <div class="section-title" id="s3Title"></div>
+    </div>
+    <div class="section-body" id="s3p1"></div>
+    <div class="section-body" id="s3p2"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <img class="section-icon" src="assets/sprites/diary_clover.png" alt="">
+      <div class="section-title" id="s4Title"></div>
+    </div>
+    <div class="section-body" id="s4p1"></div>
+    <div class="section-warning" id="s4Warning"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <img class="section-icon" src="assets/sprites/diary_book.png" alt="">
+      <div class="section-title" id="s5Title"></div>
+    </div>
+    <div class="section-body" id="s5p1"></div>
+    <div class="section-body" id="s5p2"></div>
+  </div>
+
+  <div class="tech-box">
+    <div class="tech-intro" id="techIntro"></div>
+    <ul class="tech-list">
+      <li id="techBullet1"></li>
+      <li id="techBullet2"></li>
+      <li id="techBullet3"></li>
+    </ul>
+  </div>
+
+  <div class="back-row">
+    <button class="btn-back" id="btn-back"></button>
+  </div>
 </div>
 
 <script src="assets/js/i18n.js"></script>
@@ -23,8 +180,32 @@
 <script>
 (async function () {
   await loadDict();
-  document.getElementById('aboutName').textContent = t('about_game_name');
-  document.getElementById('aboutBody').textContent = t('about_body');
+
+  document.getElementById('heroKicker').textContent = t('about_game_name');
+  document.getElementById('heroText').textContent = t('about_hero');
+
+  document.getElementById('s2Title').textContent = t('about_section2_heading');
+  document.getElementById('s2p1').textContent = t('about_section2_p1');
+  document.getElementById('s2p2').textContent = t('about_section2_p2');
+  document.getElementById('s2p3').textContent = t('about_section2_p3');
+
+  document.getElementById('s3Title').textContent = t('about_section3_heading');
+  document.getElementById('s3p1').textContent = t('about_section3_p1');
+  document.getElementById('s3p2').textContent = t('about_section3_p2');
+
+  document.getElementById('s4Title').textContent = t('about_section4_heading');
+  document.getElementById('s4p1').textContent = t('about_section4_p1');
+  document.getElementById('s4Warning').textContent = t('about_section4_warning');
+
+  document.getElementById('s5Title').textContent = t('about_section5_heading');
+  document.getElementById('s5p1').textContent = t('about_section5_p1');
+  document.getElementById('s5p2').textContent = t('about_section5_p2');
+
+  document.getElementById('techIntro').textContent = t('about_tech_intro');
+  document.getElementById('techBullet1').textContent = t('about_tech_bullet1');
+  document.getElementById('techBullet2').textContent = t('about_tech_bullet2');
+  document.getElementById('techBullet3').textContent = t('about_tech_bullet3');
+
   const btn = document.getElementById('btn-back');
   btn.textContent = t('about_back_btn');
   btn.addEventListener('click', () => { location.href = 'title.html'; });
